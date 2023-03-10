@@ -1,12 +1,24 @@
-import React from 'react';
-import logo from './logo.svg';
 import './App.css';
+import { Route, Routes } from 'react-router-dom';
+import Home from './components/home/Home';
+import About from './components/about/About';
+import GlobalStyle from './global';
+import NavBar from './components/nav/NavBar';
 
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
+      <GlobalStyle />
+      <NavBar />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
+      </Routes>
+      {/* <Test></Test> */}
+      {/* <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
+        <Test></Test>
+        <Link to="/home">Home</Link>
         <p>
           Edit <code>src/App.tsx</code> and save to reload.
         </p>
@@ -18,7 +30,7 @@ function App() {
         >
           Learn React
         </a>
-      </header>
+      </header> */}
     </div>
   );
 }
