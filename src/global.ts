@@ -1,4 +1,5 @@
 import { createGlobalStyle } from "styled-components"
+import { Colors } from "./Colors";
 
 const GlobalStyle = createGlobalStyle`
     *{
@@ -7,6 +8,10 @@ const GlobalStyle = createGlobalStyle`
         outline:0;
         box-sizing:border-box;
         font-family: 'Open Sans', sans-serif; 
+    }
+
+    body{
+        background-color: ${Colors.BACKGROUND};
     }
 
     #root{
