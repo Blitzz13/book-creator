@@ -26,7 +26,6 @@ export default function NavBar() {
 
 
 const Wrapper = styled(BackgroundWrapper)`
-  background-color: ${Colors.FOREGROUND};
   min-height: 68px;
   display: flex;
   grid-auto-flow: column;
