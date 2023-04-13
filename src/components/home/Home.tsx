@@ -1,13 +1,19 @@
-import React from "react";
+import React, { useEffect } from "react";
 import styled, { css, keyframes } from "styled-components";
 import AnimatedBook from "../AnimatedBook/AnimatedBook";
 import BookCover from "../BookCover/BookCover";
 import BookWithPercentage from "../BookWithPercentage/BookWithPercentage";
 import StyledWrapper from "../StyledWrapper/StyledWrapper";
+import { IServiceBook } from "../../interfaces/service/IServiceBook";
 
 export default function Home() {
   let content = [];
-  for (let i = 0; i < 12; i++) {
+
+  const [books, setBooks] = React.useState([]);
+  const [isShown, setShown] = React.useState(false);
+  const [toggle, setToggle] = React.useState(false);
+
+  for (let i = 0; i < 2; i++) {
     content.push(<BookWithPercentage backCover="https://pictures.abebooks.com/isbn/9780345427656-us.jpg"
       frontCover="https://pictures.abebooks.com/isbn/9780345427656-us.jpg"
       width={130}
@@ -16,13 +22,24 @@ export default function Home() {
       key={i}></BookWithPercentage>);
   }
 
+  useEffect(() => {
+    const fetchBooks = async () => {
+      const response = await fetch('/api/books');
+      const json = await response.json();
+
+      if (response.ok) {
+        setBooks(json);
+        console.log(json);
+      }
+    }
+
+    fetchBooks();
+  }, [])
+
   function onBookClick(): void {
     setShown(!isShown);
     document.body.style.overflow = isShown ? "" : "hidden";
   }
-
-  const [isShown, setShown] = React.useState(false);
-  const [toggle, setToggle] = React.useState(false);
 
   const setTogglee = (toggle: boolean) => {
     setToggle(toggle);
@@ -39,11 +56,9 @@ export default function Home() {
       <Wrapper>
         <BiggerHeader>Freshly Written</BiggerHeader>
         <GridWrapper length={5}>
-          <BookCover bookId="" onClick={onBookClick}></BookCover>
-          <BookCover bookId="" onClick={onBookClick}></BookCover>
-          <BookCover bookId="" onClick={onBookClick}></BookCover>
-          <BookCover bookId="" onClick={onBookClick}></BookCover>
-          <BookCover bookId="" onClick={onBookClick}></BookCover>
+          {books && books.map((book: IServiceBook) => (
+            <BookCover key={book._id} title={book.title} cover={book.coverImage} onClick={onBookClick}></BookCover>
+          ))}
         </GridWrapper>
       </Wrapper>
       {isShown ? <Overlay onClick={onBookClick}></Overlay> : null}
@@ -62,7 +77,7 @@ const GridWrapper = styled.div`
   display: grid;
   grid-auto-flow: column;
   grid-template-columns: ${({ length }: { length: number }) =>
-      css`repeat(${length}, fit-content)`
+    css`repeat(${length}, fit-content)`
   };
   overflow: auto;
 `
