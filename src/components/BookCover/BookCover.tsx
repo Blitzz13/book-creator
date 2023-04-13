@@ -1,8 +1,17 @@
+import React from "react";
 import styled from "styled-components";
+import { Colors } from "../../Colors";
+import { IBookCover } from "../../interfaces/IBookCover";
 
-export default function BookCover(data:{ bookId: string, onClick: Function }, delegated: any) {
+export default function BookCover(data: IBookCover, delegated: any) {
+    const [isLoaded, setLoaded] = React.useState(false);
+
+    function onLoad(): void {
+        setLoaded(!isLoaded)
+    }
+
     return (
-        <Image onClick={data.onClick} {...delegated} src="https://pictures.abebooks.com/isbn/9780345427656-us.jpg"></Image>
+        <Image onLoad={onLoad} onClick={data.onClick} {...delegated} src={data.cover} alt={data.title}></Image>
     );
 }
 
@@ -11,4 +20,5 @@ const Image = styled.img`
     position: relative;
     height: 350px;
     cursor: pointer;
+    background-color: ${Colors.BACKGROUND};
 `
