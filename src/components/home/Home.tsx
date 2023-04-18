@@ -4,12 +4,15 @@ import AnimatedBook from "../AnimatedBook/AnimatedBook";
 import BookCover from "../BookCover/BookCover";
 import BookWithPercentage from "../BookWithPercentage/BookWithPercentage";
 import StyledWrapper from "../StyledWrapper/StyledWrapper";
-import { IServiceBook } from "../../interfaces/service/IServiceBook";
+import { IServiceBook } from "../../interfaces/service/book/IServiceBook";
+import { IBookService } from "../../interfaces/service/book/IBookService";
 
-export default function Home() {
+export default function Home(data: { bookService: IBookService }) {
+  const bookService = data.bookService;
+
   let content = [];
 
-  const [books, setBooks] = React.useState([]);
+  const [books, setBooks] = React.useState([] as IServiceBook[]);
   const [isShown, setShown] = React.useState(false);
   const [toggle, setToggle] = React.useState(false);
 
@@ -23,27 +26,15 @@ export default function Home() {
   }
 
   useEffect(() => {
-    const fetchBooks = async () => {
-      const response = await fetch('/api/books');
-      const json = await response.json();
-
-      if (response.ok) {
-        setBooks(json);
-        console.log(json);
-      }
-    }
-
-    fetchBooks();
-  }, [])
+    bookService.fetchBooks().then((data: IServiceBook[]) => {
+      setBooks(data);
+    });
+  }, [bookService])
 
   function onBookClick(): void {
     setShown(!isShown);
     document.body.style.overflow = isShown ? "" : "hidden";
   }
-
-  const setTogglee = (toggle: boolean) => {
-    setToggle(toggle);
-  };
 
   return (
     <>
@@ -63,7 +54,7 @@ export default function Home() {
       </Wrapper>
       {isShown ? <Overlay onClick={onBookClick}></Overlay> : null}
       <BookOverviewWrapper isShown={isShown} toggle={toggle}>
-        {isShown ? <AnimatedBook setToggle={setTogglee} backCover="https://pictures.abebooks.com/isbn/9780345427656-us.jpg" frontCover="https://pictures.abebooks.com/isbn/9780345427656-us.jpg"></AnimatedBook> : null}
+        {isShown ? <AnimatedBook setToggle={setToggle} backCover="https://pictures.abebooks.com/isbn/9780345427656-us.jpg" frontCover="https://pictures.abebooks.com/isbn/9780345427656-us.jpg"></AnimatedBook> : null}
       </BookOverviewWrapper>
     </>
   );
