@@ -13,7 +13,7 @@ export default function Home(data: { bookService: IBookService }) {
   let content = [];
 
   const [books, setBooks] = React.useState([] as IServiceBook[]);
-  const [isShown, setShown] = React.useState(false);
+  const [isBookPreveiewShown, setBookPreviewShown] = React.useState(false);
   const [toggle, setToggle] = React.useState(false);
 
   for (let i = 0; i < 2; i++) {
@@ -32,8 +32,9 @@ export default function Home(data: { bookService: IBookService }) {
   }, [bookService])
 
   function onBookClick(): void {
-    setShown(!isShown);
-    document.body.style.overflow = isShown ? "" : "hidden";
+    setBookPreviewShown(!isBookPreveiewShown);
+    //This is done in order to stop user from scrolling the background
+    document.body.style.overflow = isBookPreveiewShown ? "" : "hidden";
   }
 
   return (
@@ -48,13 +49,13 @@ export default function Home(data: { bookService: IBookService }) {
         <BiggerHeader>Freshly Written</BiggerHeader>
         <GridWrapper length={5}>
           {books && books.map((book: IServiceBook) => (
-            <BookCover key={book._id} title={book.title} cover={book.coverImage} onClick={onBookClick}></BookCover>
+            <BookCover key={book._id} data={{title: book.title, cover: book.coverImage, onBookClick: onBookClick}}></BookCover>
           ))}
         </GridWrapper>
       </Wrapper>
-      {isShown ? <Overlay onClick={onBookClick}></Overlay> : null}
-      <BookOverviewWrapper isShown={isShown} toggle={toggle}>
-        {isShown ? <AnimatedBook setToggle={setToggle} backCover="https://pictures.abebooks.com/isbn/9780345427656-us.jpg" frontCover="https://pictures.abebooks.com/isbn/9780345427656-us.jpg"></AnimatedBook> : null}
+      {isBookPreveiewShown ? <Overlay onClick={onBookClick}></Overlay> : null}
+      <BookOverviewWrapper isShown={isBookPreveiewShown} toggle={toggle}>
+        {isBookPreveiewShown ? <AnimatedBook setToggle={setToggle} backCover="https://pictures.abebooks.com/isbn/9780345427656-us.jpg" frontCover="https://pictures.abebooks.com/isbn/9780345427656-us.jpg"></AnimatedBook> : null}
       </BookOverviewWrapper>
     </>
   );

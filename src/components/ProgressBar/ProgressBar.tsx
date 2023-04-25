@@ -18,13 +18,11 @@ export default function ProgressBar(data: IProgressBar) {
     grid-row: 1;
   `
   return (
-    <>
       <Wrapper>
         <BackgroundProgress></BackgroundProgress>
         <ForegroundProgress></ForegroundProgress>
         <Percentage>{data.percentage}</Percentage>
       </Wrapper>
-    </>
   );
 }
 

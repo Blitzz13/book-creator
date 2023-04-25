@@ -4,13 +4,11 @@ import { IAddedBook } from "../../interfaces/IAddedBook";
 
 export default function AddedBook(data: IAddedBook) {
   return (
-    <>
       <Wrapper>
         <BackImage src={data.backCover}></BackImage>
         <Pages></Pages>
         <FrontImage src={data.frontCover}></FrontImage> 
       </Wrapper>
-    </>
   );
 }
 

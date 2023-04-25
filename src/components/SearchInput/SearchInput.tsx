@@ -1,38 +1,33 @@
 import { Search } from 'react-feather';
 import styled from 'styled-components/macro';
-import { Colors } from '../../Colors';
+import Input from '../Input/Input';
 
-// import VisuallyHidden from '../VisuallyHidden';
-// import Icon from '../Icon';
-
-const SearchInput = ({ ...delegated }) => {
-    return (
-        <Label>
-            {/* <VisuallyHidden>Search</VisuallyHidden> */}
-            <SearchIcon></SearchIcon>
-            <Input {...delegated} placeholder="Search Book" />
-            {/* <SearchIcon id="search" strokeWidth={1} size={16} /> */}
-        </Label>
-    );
+const SearchInput = (data: any) => {
+  return (
+    <Label>
+      <SearchIcon></SearchIcon>
+      <Input {...data} placeholder="Search Book" />
+    </Label>
+  );
 };
 
 const Label = styled.label`
   position: relative;
 `;
 
-const Input = styled.input`
-  border: none;
-  background: ${Colors.ACCENT};
-  border-radius: 20px;
-  padding-left: 34px;
-  font-size: ${22 / 16}rem;
-  color: ${Colors.TEXT};
-  width: ${226 / 16}rem;
+// const Input = styled.input`
+//   border: none;
+//   background: ${Colors.ACCENT};
+//   border-radius: 20px;
+//   padding-left: 34px;
+//   font-size: ${22 / 16}rem;
+//   color: ${Colors.TEXT};
+//   width: ${226 / 16}rem;
 
-  &::placeholder {
-    color: ${Colors.BUTTON_TEXT};
-  }
-`;
+//   &::placeholder {
+//     color: ${Colors.BUTTON_TEXT};
+//   }
+// `;
 
 const SearchIcon = styled(Search)`
   position: absolute;

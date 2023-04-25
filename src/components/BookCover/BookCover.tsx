@@ -3,15 +3,15 @@ import styled from "styled-components";
 import { Colors } from "../../Colors";
 import { IBookCover } from "../../interfaces/IBookCover";
 
-export default function BookCover(data: IBookCover, delegated: any) {
+export default function BookCover({data, ...delegated}: IBookCover) {
     const [isLoaded, setLoaded] = React.useState(false);
 
     function onLoad(): void {
         setLoaded(!isLoaded)
     }
-
+    
     return (
-        <Image onLoad={onLoad} onClick={data.onClick} {...delegated} src={data.cover} alt={data.title}></Image>
+        <Image onLoad={onLoad} onClick={() => data.onBookClick()} {...delegated} src={data.cover} alt={data.title}></Image>
     );
 }
 

@@ -4,23 +4,31 @@ import styled from 'styled-components';
 import { Colors } from '../../Colors';
 import BackgroundWrapper from '../StyledWrapper/StyledWrapper';
 import SearchInput from '../SearchInput/SearchInput';
+import RegisterModal from '../RegisterModal/RegisterModal';
+import IUserService from '../../interfaces/service/user/IUserService';
 
-export default function NavBar() {
+export default function NavBar(data: { userService: IUserService }) {
+  function onRegisterClick(): void {
+    setRegisterOpen(!isRegisterOpen);
+  }
+
+  const [isRegisterOpen, setRegisterOpen] = React.useState(false);
+
   return (
-    <>
-      <Wrapper>
-        <NavLinkWrapper>
-          <Logo to="/">LOGO</Logo>
-          <NavLink to="/">Browse</NavLink>
-          <NavLink to="/about">Genres</NavLink>
-        </NavLinkWrapper>
-        <NavButtonWrapper>
-          <NavSearch></NavSearch>
-          <NavButton>Register</NavButton>
-          <NavButton>Login</NavButton>
-        </NavButtonWrapper>
-      </Wrapper>
-    </>
+    <Wrapper>
+      <NavLinkWrapper>
+        <Logo to="/">LOGO</Logo>
+        <NavLink to="/">Browse</NavLink>
+        <NavLink to="/about">Genres</NavLink>
+      </NavLinkWrapper>
+      <NavButtonWrapper>
+        <NavSearch></NavSearch>
+        <NavButton onClick={onRegisterClick}>Register</NavButton>
+        <NavButton>Login</NavButton>
+      </NavButtonWrapper>
+      <RegisterModal userService={data.userService} width="50%" isOpen={isRegisterOpen} setOpen={setRegisterOpen}>
+      </RegisterModal>
+    </Wrapper>
   );
 }
 
@@ -54,9 +62,6 @@ const NavLink = styled(Link)`
 `;
 
 const NavSearch = styled(SearchInput)`
-  padding-top: 4px;
-  padding-bottom: 4px;
-  padding-right: 24px;
   max-width: 190px;
 `
 
@@ -67,12 +72,13 @@ const NavButtonWrapper = styled.div`
   gap: 9px;
 `;
 
-const NavButton = styled.div`
+const NavButton = styled.button`
   background-color: ${Colors.ACCENT};
   border-radius: 20px;
   color: ${Colors.BUTTON_TEXT};
   font-size: ${22 / 16}rem;
   padding: 4px 10px;
+  border-width: 0;
 `;
 
 const Logo = styled(NavLink)`
