@@ -7,6 +7,7 @@ export default interface IButtonData {
         radius: number;
         onClick: Function;
         id?: string;
+        type?: string;
     };
     children: React.ReactNode;
 }

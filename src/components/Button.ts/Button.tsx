@@ -3,7 +3,7 @@ import IButtonData from "../../interfaces/IButtonData";
 
 export default function Button({ data, ...delegated }: IButtonData) {
   return (
-    <CustomButton onClick={() => data.onClick()} data={data} {...delegated}>
+    <CustomButton onClick={(e) => data.onClick(e)} data={data} {...delegated}>
     </CustomButton>
   );
 };

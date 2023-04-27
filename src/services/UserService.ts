@@ -12,6 +12,7 @@ export default class UserService implements IUserService {
   public async login(request: ILoginRequest): Promise<void> {
     const response = await fetch(`${this._url}/login`, {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(request),
     });
 
@@ -19,11 +20,14 @@ export default class UserService implements IUserService {
 
     if (response.ok) {
       localStorage.setItem("user", JSON.stringify(json));
-      this._auth.dispatch({ type: UserAction.Login, payload: json });
-      // return json;
+      this._auth.dispatch({
+        type: UserAction.Login,
+        payload: json,
+      });
+    } else {
+      throw new Error(`Login failed with ${response.statusText}`);
     }
 
-    throw new Error(`Fetching books failed with ${response.statusText}`);
   }
 
   public async logout(): Promise<void> {
