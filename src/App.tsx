@@ -10,9 +10,9 @@ function App() {
   const services = new Services();
 
   return (
-    <div className="App">
+    <div id="App" className="App">
       <GlobalStyle />
-      <NavBar />
+      <NavBar userService={services.userService}/>
       <Routes>
         <Route path="/" element={<Home bookService={services.bookService} />} />
         <Route path="/about" element={<About />} />

@@ -11,7 +11,6 @@ export default function AnimatedBook(data: IAnimatedBook) {
   const [toggle, setToggle] = React.useState(false);
 
   return (
-    <>
       <Wrapper toggle={toggle}>
         <Back src={data.backCover} onClick={onClick} toggle={toggle}></Back>
         <Page1 onClick={onClick} toggle={toggle}></Page1>
@@ -22,7 +21,6 @@ export default function AnimatedBook(data: IAnimatedBook) {
         <Page6 onClick={onClick} toggle={toggle}></Page6>
         <Front src={data.frontCover} onClick={onClick} toggle={toggle}></Front>
       </Wrapper>
-    </>
   );
 }
 

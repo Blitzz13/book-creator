@@ -4,26 +4,70 @@ import styled from 'styled-components';
 import { Colors } from '../../Colors';
 import BackgroundWrapper from '../StyledWrapper/StyledWrapper';
 import SearchInput from '../SearchInput/SearchInput';
+import LoginRegisterModal from '../LoginRegisterModal/LoginRegisterModal';
+import IUserService from '../../interfaces/service/user/IUserService';
+import { useAuthContext } from '../../hooks/useAuthContext';
+import DesktopProfileModal from '../DesktopProfileModal/DesktopProfileModal';
 
-export default function NavBar() {
+export default function NavBar(data: { userService: IUserService }) {
+  function onRegisterClick(): void {
+    setRegisterOpen(!isRegisterOpen);
+  }
+
+  function onLoginClick(): void {
+    setLoginOpen(!isLoginOpen);
+  }
+
+  function onProfileClick(): void {
+    setProfileMenuOpen(!isProfileMenuOpen);
+  }
+
+  function handleLogout(): void {
+    data.userService.logout();
+  }
+
+  const authContext = useAuthContext();
+
+  const [isRegisterOpen, setRegisterOpen] = React.useState(false);
+  const [isLoginOpen, setLoginOpen] = React.useState(false);
+  const [isProfileMenuOpen, setProfileMenuOpen] = React.useState(false);
+  const [height, setHeight] = React.useState(0);
+
+  React.useEffect(() => {
+    let box = document.getElementById('nav-bar');
+    if (box) {
+      setHeight(box.offsetHeight);
+    }
+  }, []);
+
   return (
-    <>
-      <Wrapper>
-        <NavLinkWrapper>
-          <Logo to="/">LOGO</Logo>
-          <NavLink to="/">Browse</NavLink>
-          <NavLink to="/about">Genres</NavLink>
-        </NavLinkWrapper>
-        <NavButtonWrapper>
-          <NavSearch></NavSearch>
-          <NavButton>Register</NavButton>
-          <NavButton>Login</NavButton>
-        </NavButtonWrapper>
-      </Wrapper>
-    </>
+    <Wrapper id="nav-bar">
+      <NavLinkWrapper>
+        <Logo to="/">LOGO</Logo>
+        <NavLink to="/">Browse</NavLink>
+        <NavLink to="/about">Genres</NavLink>
+      </NavLinkWrapper>
+      <NavButtonWrapper>
+        <NavSearch />
+        {authContext.user ? <React.Fragment>
+          <NavLink onClick={onProfileClick} to="">{authContext.user.displayName}</NavLink>
+        </React.Fragment> :
+          <React.Fragment>
+            <NavButton onClick={onRegisterClick}>Register</NavButton>
+            <NavButton onClick={onLoginClick}>Login</NavButton>
+          </React.Fragment>
+        }
+      </NavButtonWrapper>
+      <LoginRegisterModal isLogin={false} userService={data.userService} width="50%" isOpen={isRegisterOpen} setOpen={setRegisterOpen}>
+      </LoginRegisterModal>
+      <LoginRegisterModal isLogin={true} userService={data.userService} width="50%" isOpen={isLoginOpen} setOpen={setLoginOpen}>
+      </LoginRegisterModal>
+      <DesktopProfileModal logout={handleLogout} navbarHeight={height} width="300px" isOpen={isProfileMenuOpen} setOpen={setProfileMenuOpen}>
+
+      </DesktopProfileModal>
+    </Wrapper>
   );
 }
-
 
 const Wrapper = styled(BackgroundWrapper)`
   min-height: 68px;
@@ -31,7 +75,7 @@ const Wrapper = styled(BackgroundWrapper)`
   grid-auto-flow: column;
   gap: 9px;
   justify-content: space-between;
-  align-items: center;
+  align-items: baseline;
   margin: 9px 22px;
   padding: 4px 10px;
 `;
@@ -54,10 +98,8 @@ const NavLink = styled(Link)`
 `;
 
 const NavSearch = styled(SearchInput)`
-  padding-top: 4px;
-  padding-bottom: 4px;
-  padding-right: 24px;
   max-width: 190px;
+  /* transform: translateY(-50%); */
 `
 
 const NavButtonWrapper = styled.div`
@@ -67,12 +109,13 @@ const NavButtonWrapper = styled.div`
   gap: 9px;
 `;
 
-const NavButton = styled.div`
+const NavButton = styled.button`
   background-color: ${Colors.ACCENT};
   border-radius: 20px;
   color: ${Colors.BUTTON_TEXT};
   font-size: ${22 / 16}rem;
   padding: 4px 10px;
+  border-width: 0;
 `;
 
 const Logo = styled(NavLink)`

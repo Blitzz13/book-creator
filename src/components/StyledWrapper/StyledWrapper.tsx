@@ -1,11 +1,9 @@
 import styled from "styled-components";
 import { Colors } from "../../Colors";
 
-export default function StyledWrapper({ ...delegated }) {
+export default function StyledWrapper(data: any) {
   return (
-    <>
-      <Wrapper {...delegated}></Wrapper>
-    </>
+    <Wrapper {...data}></Wrapper>
   );
 }
 

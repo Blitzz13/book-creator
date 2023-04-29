@@ -5,12 +5,10 @@ import ProgressBar from "../ProgressBar";
 
 export default function BookWithPercentage(data: IBookWithProgress, key: any) {
   return (
-    <>
-      <Wrapper key={key}>
-        <AddedBook frontCover={data.frontCover} backCover={data.backCover}></AddedBook>
-        <ProgressBar percentage={data.percentage} width={data.width} height={data.height}></ProgressBar>
-      </Wrapper>
-    </>
+    <Wrapper key={key}>
+      <AddedBook frontCover={data.frontCover} backCover={data.backCover}></AddedBook>
+      <ProgressBar percentage={data.percentage} width={data.width} height={data.height}></ProgressBar>
+    </Wrapper>
   );
 }
 
