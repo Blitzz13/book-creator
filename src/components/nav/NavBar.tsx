@@ -31,8 +31,6 @@ export default function NavBar(data: { userService: IUserService }) {
   const [isRegisterOpen, setRegisterOpen] = React.useState(false);
   const [isLoginOpen, setLoginOpen] = React.useState(false);
   const [isProfileMenuOpen, setProfileMenuOpen] = React.useState(false);
-  const ref = React.useRef();
-
   const [height, setHeight] = React.useState(0);
 
   React.useEffect(() => {
@@ -43,7 +41,7 @@ export default function NavBar(data: { userService: IUserService }) {
   }, []);
 
   return (
-    <Wrapper id="nav-bar" ref={ref}>
+    <Wrapper id="nav-bar">
       <NavLinkWrapper>
         <Logo to="/">LOGO</Logo>
         <NavLink to="/">Browse</NavLink>

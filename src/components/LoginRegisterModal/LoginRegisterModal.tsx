@@ -10,34 +10,52 @@ import IRegisterModalData from "../../interfaces/IRegisterModalData";
 import IRegisterRequest from "../../interfaces/service/user/IRegisterRequest";
 import ILoginRequest from "../../interfaces/service/user/ILoginRequest";
 import { XCircle } from "react-feather";
-// import { useAuthContext } from "../../hooks/useAuthContext";
-// import { UserAction } from "../../enums/UserAction";
+import validator from "validator";
+import { StatusCodeError } from "../../error/StatusCodeError";
 
-export default function LoginRegisterModal(data: IRegisterModalData) {    
+export default function LoginRegisterModal(data: IRegisterModalData) {
     ReactModal.setAppElement("#root");
     const [email, setEmail] = React.useState("");
     const [displayName, setDisplayname] = React.useState("");
     const [password, setPassword] = React.useState("");
-    // const context = useAuthContext();
+    const [isValidEmail, setIsEmailValid] = React.useState(false);
+    const [isStrongPassword, setIsStrongPassword] = React.useState(false);
+    const [errorMessage, setErrorMessage] = React.useState("");
 
-    // //@ts-ignore
-    // const onFormSubmit = e => {
-    //     e.preventDefault();
-    //     // send state to server with e.g. `window.fetch`
-    // }
+    function validateEmail(value: string) {
+        setIsEmailValid(validator.isEmail(value));
+        setEmail(value);
+    }
+
+    function validatePassword(value: string) {
+        setIsStrongPassword(validator.isStrongPassword(value));
+        setPassword(value);
+    }
 
     function handleCloseModal() {
         data.setOpen(false);
     }
 
-    function handleRegisterClick() {
+    async function handleRegisterClick(event: any) {
+        event.preventDefault();
         const request: IRegisterRequest = {
             email: email,
             displayName: displayName,
             password: password,
         }
 
-        data.userService.register(request);
+        try {
+            await data.userService.register(request);
+            handleCloseModal();
+        } catch (error) {
+            if (error instanceof StatusCodeError) {
+                if (error.statusCode === 400) {
+                    setErrorMessage("Invalid credentials");
+                }
+            } else {
+                setErrorMessage("An error occured while trying to register, please try again");
+            }
+        }
     }
 
     async function handleLoginClick(event: any) {
@@ -47,8 +65,18 @@ export default function LoginRegisterModal(data: IRegisterModalData) {
             password: password,
         }
 
-        await data.userService.login(request);
-        data.setOpen(false);
+        try {
+            await data.userService.login(request);
+            data.setOpen(false);
+        } catch (error) {
+            if (error instanceof StatusCodeError) {
+                if (error.statusCode === 400) {
+                    setErrorMessage("Invalid credentials");
+                }
+            } else {
+                setErrorMessage("An error occured while trying to login, please try again");
+            }
+        }
     }
 
     return (
@@ -69,35 +97,37 @@ export default function LoginRegisterModal(data: IRegisterModalData) {
             </HeaderWrapper>
             <form onSubmit={data.isLogin ? handleLoginClick : handleRegisterClick}>
                 <BodyWrapper>
-                    {data.isLogin ?
-                        <React.Fragment>
-                            <Label htmlFor="email">Email</Label>
-                            <ModalInput onValueChange={setEmail} value={email} type="email" id="email" placeholder="name@abc.ad"></ModalInput>
-                            <Label htmlFor="password">Password</Label>
-                            <ModalInput onValueChange={setPassword} value={password} type="password" id="password" placeholder="***********"></ModalInput>
-                        </React.Fragment>
-                        : <React.Fragment>
-                            <Label htmlFor="email">Email</Label>
-                            <ModalInput onValueChange={setEmail} value={email} type="email" id="email" placeholder="name@abc.ad"></ModalInput>
-                            <Label htmlFor="username">Username</Label>
-                            <ModalInput onValueChange={setDisplayname} value={displayName} type="text" id="username" placeholder="Dragon Killer"></ModalInput>
-                            <Label htmlFor="password">Password</Label>
-                            <ModalInput onValueChange={setPassword} value={password} type="password" id="password" placeholder="***********"></ModalInput>
-                        </React.Fragment>
-                    }
+                    <Label htmlFor="email">Email</Label>
+                    <ModalInput onValueChange={(value: string) => validateEmail(value)} value={email} type="email" id="email" placeholder="name@abc.ad"></ModalInput>
+                    {(!isValidEmail && email) && <Error>This is not a valid email</Error>}
+                    <Label htmlFor="username">Username</Label>
+                    {!data.isLogin && <React.Fragment>
+                        <ModalInput onValueChange={setDisplayname} value={displayName} type="text" id="username" placeholder="Dragon Killer"></ModalInput>
+                        <Label htmlFor="password">Password</Label>
+                    </React.Fragment>}
+                    <ModalInput onValueChange={data.isLogin ? setPassword : validatePassword} value={password} type="password" id="password" placeholder="***********"></ModalInput>
+                    {!data.isLogin && !isStrongPassword && password && <Error>This password is too weak</Error>}
+                    {errorMessage && <Error>{errorMessage}</Error>}
                 </BodyWrapper>
                 <FooterWrapper>
-                    {/* find a way to exclude this */}
                     {data.isLogin ?
                         <Button data={{ color: Colors.ACCENT, height: 51, width: 195, radius: 20, textSize: 22, type: "submit", onClick: handleLoginClick }}>Login</Button> :
                         <Button data={{ color: Colors.ACCENT, height: 51, width: 195, radius: 20, textSize: 22, type: "submit", onClick: handleRegisterClick }}>Register</Button>}
 
                 </FooterWrapper>
             </form>
-            {/* <Button data={{ color: Colors.WARNING, height: 51, width: 195, radius: 20, textSize: 22, type: "button", onClick: handleCloseModal }}>Close</Button> */}
         </ReactModal>
     );
 }
+
+const Error = styled.span`
+    background-color: ${Colors.WARNING};
+    width: 70%;
+    text-align: center;
+    border-radius: 20px;
+    padding: 4px;
+    margin-bottom: 20px;
+`
 
 const CloseIcon = styled(XCircle)`
   color: ${Colors.WARNING};

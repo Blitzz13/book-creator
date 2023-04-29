@@ -4,6 +4,7 @@ import IRegisterRequest from "../interfaces/service/user/IRegisterRequest";
 import IUserService from "../interfaces/service/user/IUserService";
 import { useAuthContext } from "../hooks/useAuthContext";
 import { UserAction } from "../enums/UserAction";
+import { StatusCodeError } from "../error/StatusCodeError";
 
 export default class UserService implements IUserService {
   private _url = "/api/users";
@@ -25,9 +26,8 @@ export default class UserService implements IUserService {
         payload: json,
       });
     } else {
-      throw new Error(`Login failed with ${response.statusText}`);
+      throw new StatusCodeError(`Login failed with ${response.status}`, response.status);
     }
-
   }
 
   public async logout(): Promise<void> {
@@ -50,7 +50,8 @@ export default class UserService implements IUserService {
         type: UserAction.Login,
         payload: json,
       });
-      // return json;
+    } else {
+      throw new StatusCodeError(`Register failed with ${response.status}`, response.status);
     }
 
     // throw new Error(`Fetching books failed with ${response.statusText}`);
