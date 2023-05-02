@@ -6,7 +6,7 @@ import { LoginRegisterModalStyle } from "../../commonStyledStyles/LoginRegisterM
 import CustomInput from "../Input/Input";
 import { Colors } from "../../Colors";
 import Button from "../Button.ts/Button";
-import IRegisterModalData from "../../interfaces/IRegisterModalData";
+import IRegisterModalData from "../../interfaces/modal/IRegisterModalData";
 import IRegisterRequest from "../../interfaces/service/user/IRegisterRequest";
 import ILoginRequest from "../../interfaces/service/user/ILoginRequest";
 import { XCircle } from "react-feather";
@@ -100,11 +100,11 @@ export default function LoginRegisterModal(data: IRegisterModalData) {
                     <Label htmlFor="email">Email</Label>
                     <ModalInput onValueChange={(value: string) => validateEmail(value)} value={email} type="email" id="email" placeholder="name@abc.ad"></ModalInput>
                     {(!isValidEmail && email) && <Error>This is not a valid email</Error>}
-                    <Label htmlFor="username">Username</Label>
                     {!data.isLogin && <React.Fragment>
+                        <Label htmlFor="username">Username</Label>
                         <ModalInput onValueChange={setDisplayname} value={displayName} type="text" id="username" placeholder="Dragon Killer"></ModalInput>
-                        <Label htmlFor="password">Password</Label>
                     </React.Fragment>}
+                    <Label htmlFor="password">Password</Label>
                     <ModalInput onValueChange={data.isLogin ? setPassword : validatePassword} value={password} type="password" id="password" placeholder="***********"></ModalInput>
                     {!data.isLogin && !isStrongPassword && password && <Error>This password is too weak</Error>}
                     {errorMessage && <Error>{errorMessage}</Error>}

@@ -8,6 +8,8 @@ import LoginRegisterModal from '../LoginRegisterModal/LoginRegisterModal';
 import IUserService from '../../interfaces/service/user/IUserService';
 import { useAuthContext } from '../../hooks/useAuthContext';
 import DesktopProfileModal from '../DesktopProfileModal/DesktopProfileModal';
+import { Menu } from 'react-feather';
+import BurgerMenuModal from '../BurgerMenuModal/BurgerMenuModal';
 
 export default function NavBar(data: { userService: IUserService }) {
   function onRegisterClick(): void {
@@ -22,6 +24,10 @@ export default function NavBar(data: { userService: IUserService }) {
     setProfileMenuOpen(!isProfileMenuOpen);
   }
 
+  function onBurgerMenuClick(): void {
+    setBurgerMenuOpen(!isBurgerMenuOpen);
+  }
+
   function handleLogout(): void {
     data.userService.logout();
   }
@@ -31,6 +37,7 @@ export default function NavBar(data: { userService: IUserService }) {
   const [isRegisterOpen, setRegisterOpen] = React.useState(false);
   const [isLoginOpen, setLoginOpen] = React.useState(false);
   const [isProfileMenuOpen, setProfileMenuOpen] = React.useState(false);
+  const [isBurgerMenuOpen, setBurgerMenuOpen] = React.useState(false);
   const [height, setHeight] = React.useState(0);
 
   React.useEffect(() => {
@@ -58,13 +65,15 @@ export default function NavBar(data: { userService: IUserService }) {
           </React.Fragment>
         }
       </NavButtonWrapper>
+      <BurgerMenuIcon onClick={onBurgerMenuClick} />
       <LoginRegisterModal isLogin={false} userService={data.userService} width="50%" isOpen={isRegisterOpen} setOpen={setRegisterOpen}>
       </LoginRegisterModal>
       <LoginRegisterModal isLogin={true} userService={data.userService} width="50%" isOpen={isLoginOpen} setOpen={setLoginOpen}>
       </LoginRegisterModal>
       <DesktopProfileModal logout={handleLogout} navbarHeight={height} width="300px" isOpen={isProfileMenuOpen} setOpen={setProfileMenuOpen}>
-
       </DesktopProfileModal>
+      <BurgerMenuModal displayName={authContext.user?.displayName} width="80%" isOpen={isBurgerMenuOpen} onLoginClick={onLoginClick} onRegisterClick={onRegisterClick} onLogoutClick={handleLogout} setOpen={setBurgerMenuOpen}>
+      </BurgerMenuModal>
     </Wrapper>
   );
 }
@@ -78,12 +87,20 @@ const Wrapper = styled(BackgroundWrapper)`
   align-items: baseline;
   margin: 9px 22px;
   padding: 4px 10px;
+
+  @media only screen and (max-width: 976px) {
+    align-items: center;
+  }
 `;
 
 const NavLinkWrapper = styled.div`
   display: flex;
   align-items: baseline;
   gap: 52px;
+
+  @media only screen and (max-width: 976px) {
+    /* display: none; */
+  }
 `
 
 const NavLink = styled(Link)`
@@ -92,14 +109,21 @@ const NavLink = styled(Link)`
   font-size: ${32 / 16}rem;
   /* margin-left: 52px; */
   
-  &:first-of-type{
+  &:first-of-type {
     margin-left: 0;
+  }
+
+  @media only screen and (max-width: 976px) {
+    display: none;
   }
 `;
 
 const NavSearch = styled(SearchInput)`
   max-width: 190px;
-  /* transform: translateY(-50%); */
+  @media only screen and (max-width: 976px) {
+    max-width: revert;
+    width: 100%;
+  }
 `
 
 const NavButtonWrapper = styled.div`
@@ -107,6 +131,11 @@ const NavButtonWrapper = styled.div`
   justify-content: center;
   align-items: center;
   gap: 9px;
+
+  @media only screen and (max-width: 976px) {
+    display: inline;
+    width: 100%;
+  }
 `;
 
 const NavButton = styled.button`
@@ -116,8 +145,33 @@ const NavButton = styled.button`
   font-size: ${22 / 16}rem;
   padding: 4px 10px;
   border-width: 0;
+
+  @media only screen and (max-width: 976px) {
+    display: none;
+  }
 `;
 
 const Logo = styled(NavLink)`
   font-size: ${64 / 16}rem;
-`
+  
+  @media only screen and (max-width: 976px) {
+    display: inline;
+  }
+
+  @media only screen and (max-width: 630px  ) {
+    display: none;
+  }
+`;
+
+const BurgerMenuIcon = styled(Menu)`
+  /* color: ${Colors.WARNING}; */
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  display: none;
+  cursor: pointer;
+  @media only screen and (max-width: 976px) {
+    display: inline;
+    position: revert;
+  }
+`;

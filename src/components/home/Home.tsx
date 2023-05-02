@@ -49,7 +49,7 @@ export default function Home(data: { bookService: IBookService }) {
         <BiggerHeader>Freshly Written</BiggerHeader>
         <GridWrapper length={5}>
           {books && books.map((book: IServiceBook) => (
-            <BookCover key={book._id} data={{title: book.title, cover: book.coverImage, onBookClick: onBookClick}}></BookCover>
+            <BookCover key={book._id} data={{ title: book.title, cover: book.coverImage, onBookClick: onBookClick }}></BookCover>
           ))}
         </GridWrapper>
       </Wrapper>
@@ -78,30 +78,12 @@ const BookOverviewWrapper = styled.div`
   position: fixed;
   left: 50%;
   top: 50%;
-  animation: ${({ toggle }: { toggle: boolean, isShown: boolean }) =>
-    toggle
-      ? css`
-           ${MoveMiddle} 0.3s linear forwards 
-           `
-      : css`
-           ${MoveBack} 0.3s linear forwards
-        `};
-  width: ${({ isShown }: { toggle: boolean, isShown: boolean }) =>
-    isShown
-      ? css`
-          20vw;
-           `
-      : css`
-           0
-        `}; 
-  height:  ${({ isShown }: { toggle: boolean, isShown: boolean }) =>
-    isShown
-      ? css`
-          55vh;
-           `
-      : css`
-           0
-        `};
+  ${({ toggle, isShown }: { toggle: boolean, isShown: boolean }) =>
+    css`
+      width: ${isShown ? "20vw" : "0"};
+      height: ${isShown ? "55vh" : "0"};
+      animation: ${toggle ? MoveMiddle : MoveBack} 0.3s linear forwards
+    `};
 `
 
 const Overlay = styled.div`

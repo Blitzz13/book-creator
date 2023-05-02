@@ -2,7 +2,7 @@ import styled from "styled-components";
 import ReactModal from "react-modal";
 import { Colors } from "../../Colors";
 import { Link } from "react-router-dom";
-import IProfileModalData from "../../interfaces/IProfileModalData";
+import IProfileModalData from "../../interfaces/modal/IProfileModalData";
 import { XCircle } from "react-feather";
 import { ProfileModalStyle } from "../../commonStyledStyles/ProfileModalStyle";
 import { NoOverlayStyle } from "../../commonStyledStyles/NoOverlayStyle";
