@@ -14,7 +14,6 @@ export const OverlayStyle = styled.div`
   background: #212b3277;
   ${({ isExiting }: { isExiting?: boolean }) =>
     css`
-      /* animation: ${TurnOnOpacity} 0.3s linear forwards; */
       ${isExiting
         ? css`
             animation: ${TurnOffOpacity} 0.3s ease-out;
