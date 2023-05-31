@@ -31,7 +31,7 @@ export default function BookSettingsSection({ data, ...delegated }: IBookSetting
       <Paragraph>
         {data.title}
       </Paragraph>
-      <ArrowDown animate={playAnim} isOpen={isOpen} id={arrowId}></ArrowDown>
+      <ArrowDown animate={playAnim ? 1 : 0} isopen={isOpen ? 1 : 0} id={arrowId}></ArrowDown>
     </Wrapper>
   );
 }
@@ -54,15 +54,9 @@ const Paragraph = styled.p`
 
 const ArrowDown = styled(AiOutlineCaretDown)`
   margin-right: 10px;
-  ${({ isOpen, animate }: { animate: boolean, isOpen: boolean }) =>
+  ${({ animate, isopen }: { animate: number, isopen: number }) =>
     animate && css`
-      ${!isOpen
-        ? css`
-            animation: ${RotateAnimDown} 0.3s ease-out;
-          `
-        : css`
-            animation: ${RotateAnimUp} 0.3s ease-in;
-          `}
+      animation: ${isopen ? RotateAnimUp : RotateAnimDown} 0.3s ease-out;
       animation-fill-mode: forwards;
     `};
 `

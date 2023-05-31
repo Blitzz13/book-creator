@@ -121,12 +121,12 @@ export default function LoginRegisterModal(data: IRegisterModalData) {
 }
 
 const Error = styled.span`
-    background-color: ${Colors.WARNING};
-    width: 70%;
-    text-align: center;
-    border-radius: 20px;
-    padding: 4px;
-    margin-bottom: 20px;
+  background-color: ${Colors.WARNING};
+  width: 70%;
+  text-align: center;
+  border-radius: 20px;
+  padding: 4px;
+  margin-bottom: 20px;
 `
 
 const CloseIcon = styled(XCircle)`

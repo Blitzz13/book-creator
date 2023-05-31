@@ -5,9 +5,9 @@ export const LoginRegisterModalStyle = styled.div`
   @media only screen and (max-width: 650px) {
     width: 100%;
   }
-  width: ${({ width }: { width: string }) =>
+  ${({ width }: { width: string }) =>
     css`
-      ${width}
+      width: ${width}
     `};
   max-width: 700px;
   display: flex;
