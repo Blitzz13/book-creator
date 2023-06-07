@@ -10,17 +10,25 @@ import { useAuthContext } from '../../hooks/useAuthContext';
 import DesktopProfileModal from '../DesktopProfileModal/DesktopProfileModal';
 import { Menu } from 'react-feather';
 import BurgerMenuModal from '../BurgerMenuModal/BurgerMenuModal';
+import CreateBookModal from '../CreateBookModal/CreateBookModal';
+import { IBookService } from '../../interfaces/service/book/IBookService';
+import { OnClickEvent } from '../../types/OnClickEvent';
 
-export default function NavBar(data: { userService: IUserService }) {
+export default function NavBar(data: { userService: IUserService,bookService: IBookService }) {
   function onRegisterClick(): void {
     setRegisterOpen(!isRegisterOpen);
+  }
+
+  function onCreateBookClick(): void {
+    setCreateBookOpen(!isCreateBookOpen);
   }
 
   function onLoginClick(): void {
     setLoginOpen(!isLoginOpen);
   }
 
-  function onProfileClick(): void {
+  function onProfileClick(event: OnClickEvent): void {
+    event.preventDefault();
     setProfileMenuOpen(!isProfileMenuOpen);
   }
 
@@ -36,6 +44,7 @@ export default function NavBar(data: { userService: IUserService }) {
 
   const [isRegisterOpen, setRegisterOpen] = React.useState(false);
   const [isLoginOpen, setLoginOpen] = React.useState(false);
+  const [isCreateBookOpen, setCreateBookOpen] = React.useState(false);
   const [isProfileMenuOpen, setProfileMenuOpen] = React.useState(false);
   const [isBurgerMenuOpen, setBurgerMenuOpen] = React.useState(false);
   const [height, setHeight] = React.useState(0);
@@ -70,9 +79,11 @@ export default function NavBar(data: { userService: IUserService }) {
       </LoginRegisterModal>
       <LoginRegisterModal isLogin={true} userService={data.userService} width="50%" isOpen={isLoginOpen} setOpen={setLoginOpen}>
       </LoginRegisterModal>
-      <DesktopProfileModal logout={handleLogout} navbarHeight={height} width="300px" isOpen={isProfileMenuOpen} setOpen={setProfileMenuOpen}>
+      <CreateBookModal bookService={data.bookService} width="500px" isOpen={isCreateBookOpen} setOpen={setCreateBookOpen}>
+      </CreateBookModal>
+      <DesktopProfileModal createBook={onCreateBookClick} logout={handleLogout} navbarHeight={height} width="300px" isOpen={isProfileMenuOpen} setOpen={setProfileMenuOpen}>
       </DesktopProfileModal>
-      <BurgerMenuModal displayName={authContext.user?.displayName} width="80%" isOpen={isBurgerMenuOpen} onLoginClick={onLoginClick} onRegisterClick={onRegisterClick} onLogoutClick={handleLogout} setOpen={setBurgerMenuOpen}>
+      <BurgerMenuModal onCreateBookClick={onCreateBookClick} displayName={authContext.user?.displayName} width="80%" isOpen={isBurgerMenuOpen} onLoginClick={onLoginClick} onRegisterClick={onRegisterClick} onLogoutClick={handleLogout} setOpen={setBurgerMenuOpen}>
       </BurgerMenuModal>
     </Wrapper>
   );

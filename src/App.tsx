@@ -13,7 +13,7 @@ function App() {
   return (
     <div id="App" className="App">
       <GlobalStyle />
-      <NavBar userService={services.userService}/>
+      <NavBar bookService={services.bookService} userService={services.userService}/>
       <Routes>
         <Route path="/" element={<Home bookService={services.bookService} />} />
         <Route path="/about" element={<About />} />

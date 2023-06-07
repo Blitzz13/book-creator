@@ -1,0 +1,1 @@
+export type OnClickEvent = React.MouseEvent<HTMLAnchorElement, MouseEvent>;

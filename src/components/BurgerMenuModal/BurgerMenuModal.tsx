@@ -7,6 +7,7 @@ import IBurgerMenuModalData from "../../interfaces/modal/IBurgerMenuModalData";
 import { BurgerMenuModalStyle } from "../../commonStyledStyles/BurgerMenuModalStyle";
 import { X } from "react-feather";
 import React from "react";
+import { OnClickEvent } from "../../types/OnClickEvent";
 
 export default function BurgerMenuModal(data: IBurgerMenuModalData) {
     ReactModal.setAppElement("#root");
@@ -19,22 +20,31 @@ export default function BurgerMenuModal(data: IBurgerMenuModalData) {
         }
     }
 
-    function close(){
+    function close() {
         data.setOpen(false);
         setIsExiting(false);
     }
 
-    async function handleRegisterClick(event: any) {
+    async function handleRegisterClick(event: OnClickEvent) {
+        event.preventDefault();
         await data.onRegisterClick();
         data.setOpen(false);
     }
 
-    async function handleLoginClick(event: any) {
+    async function handleCreateBookClick(event: OnClickEvent) {
+        event.preventDefault();
+        data.onCreateBookClick();
+        data.setOpen(false);
+    }
+
+    async function handleLoginClick(event: OnClickEvent) {
+        event.preventDefault();
         await data.onLoginClick();
         data.setOpen(false);
     }
 
-    async function handleLogoutClick(event: any) {
+    async function handleLogoutClick(event: OnClickEvent) {
+        event.preventDefault();
         data.onLogoutClick();
         data.setOpen(false);
     }
@@ -70,6 +80,7 @@ export default function BurgerMenuModal(data: IBurgerMenuModalData) {
 
                 <NavLink to="">Browse</NavLink>
                 <NavLink to="">Genre</NavLink>
+                <NavLink onClick={handleCreateBookClick} to="">Start new book</NavLink>
                 {data.displayName && <NavLink onClick={handleLogoutClick} to="">Logout</NavLink>}
             </Wrapper>
         </ReactModal>

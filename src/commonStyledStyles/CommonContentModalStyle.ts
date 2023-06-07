@@ -1,7 +1,7 @@
 import styled, { css } from "styled-components";
 import { Colors } from "../Colors";
 
-export const LoginRegisterModalStyle = styled.div`
+export const CommonContentModalStyle = styled.div`
   @media only screen and (max-width: 650px) {
     width: 100%;
   }

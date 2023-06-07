@@ -5,7 +5,7 @@ import { Settings, BookOpen } from "react-feather";
 import BookSettingsSection from "../BookSettingsSection/BookSettingsSection";
 import $ from "jquery";
 import { generateId } from "../../helpers/helpFunctions";
-import React from "react";
+import React, { useEffect } from "react";
 import Button from "../Button.ts/Button";
 const bookSettingsAreaId = generateId(7);
 
@@ -21,7 +21,7 @@ function resizeSettings() {
 }
 
 
-export default function BookSettings(data: any) {
+export default function BookSidebar(data: any) {
   const bookSettingsId = generateId(7);
   const headerSettingsId = generateId(7);
   const chapterSettingsId = generateId(7);
@@ -39,6 +39,10 @@ export default function BookSettings(data: any) {
   window.addEventListener("load", () => {
     resizeSettings();
   })
+
+  useEffect(() => {
+    resizeSettings();
+  },[])
 
   return (
     <Wrapper {...data}>

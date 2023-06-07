@@ -2,7 +2,7 @@ import React from "react";
 import styled from "styled-components";
 import ReactModal from "react-modal";
 import { OverlayStyle } from "../../commonStyledStyles/OverlayStyle";
-import { LoginRegisterModalStyle } from "../../commonStyledStyles/LoginRegisterModalStyle";
+import { CommonContentModalStyle } from "../../commonStyledStyles/CommonContentModalStyle";
 import CustomInput from "../Input/Input";
 import { Colors } from "../../Colors";
 import Button from "../Button.ts/Button";
@@ -85,7 +85,7 @@ export default function LoginRegisterModal(data: IRegisterModalData) {
             overlayClassName="_"
             onRequestClose={handleCloseModal}
             contentElement={(props, children) => (
-                <LoginRegisterModalStyle width={data.width} {...props}>{children}</LoginRegisterModalStyle>
+                <CommonContentModalStyle width={data.width} {...props}>{children}</CommonContentModalStyle>
             )}
             overlayElement={(props, contentElement) => (
                 <OverlayStyle {...props}>{contentElement}</OverlayStyle>

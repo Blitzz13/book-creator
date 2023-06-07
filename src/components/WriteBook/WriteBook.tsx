@@ -1,11 +1,12 @@
 import styled from "styled-components";
 import { Colors } from "../../Colors";
-import BookSettings from "../BookSidebar/BookSidebar";
+import BookSidebar from "../BookSidebar/BookSidebar";
 import $ from "jquery";
 import Editor from "../Editor/Editor";
+import { useEffect } from "react";
 
 function resizeContentTextarea() {
-  const contentTextArea = $("#editor-container");
+  const contentTextArea = $("#writing-area");
   const settings = $("#book-settings");
   const quilToolbar = $(".ql-toolbar").outerHeight(true);
 
@@ -15,8 +16,10 @@ function resizeContentTextarea() {
     const contentOffset = 40;
     const sidebarOffset = 15;
     const contentHeight = window.innerHeight - (navHeight ? navHeight : 0) - (headerHeight ? headerHeight : 0) - contentOffset;
-    contentTextArea.outerHeight(contentHeight - quilToolbar);
+    contentTextArea.css("padding-bottom", `${quilToolbar}px`)
+    contentTextArea.outerHeight(contentHeight);
     settings.height(contentHeight + (headerHeight ? headerHeight : 0) + sidebarOffset);
+    console.log(settings.height());
   }
 }
 
@@ -29,12 +32,16 @@ export default function WriteBook(data: any) {
   window.addEventListener("load", () => {
     resizeContentTextarea();
   })
+
+  useEffect(() => {
+    resizeContentTextarea();
+  },[])
   return (
     <Wrapper onLoad={resizeContentTextarea}>
       <HeaderTextarea id="header-textarea" name="textarea" placeholder="Enter chapter name here"></HeaderTextarea>
-      <ContentTextarea></ContentTextarea>
+      <ContentTextarea data={{}} id="writing-area"></ContentTextarea>
       {/* <Editor /> */}
-      <Settings id="book-settings"></Settings>
+      <Settings id="book-settings" />
     </Wrapper>
   );
 }
@@ -54,10 +61,14 @@ const ContentTextarea = styled(Editor)`
   grid-area: c;
 `;
 
-const Settings = styled(BookSettings)`
+const Settings = styled(BookSidebar)`
   grid-area: b;
 
   @media only screen and (max-width: 690px) {
+    display: none;
+  }
+
+  @media only screen and (max-height: 500px) {
     display: none;
   }
 `;
@@ -74,6 +85,11 @@ const Wrapper = styled.div`
   "c b";
 
   @media only screen and (max-width: 690px) {
+    display: flex;
+    flex-direction: column;
+  }
+
+  @media only screen and (max-height: 500px) {
     display: flex;
     flex-direction: column;
   }
