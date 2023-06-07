@@ -1,0 +1,12 @@
+export const ORDERED_LIST = { 'list': 'ordered' };
+export const BULLET_LIST = { 'list': 'bullet' };
+export const SCRIPT_SUB = { 'script': 'sub' };
+export const SCRIPT_SUPER = { 'script': 'super' };
+export const INDENT =  { 'indent': '+1' };
+export const OUTDENT = { 'indent': '-1' };
+export const TEXT_RTL_DIR = { 'direction': 'rtl' };
+export const TEXT_COLOR = { 'color': [] };
+export const TEXT_COLOR_BACKGROUND = { 'background': [] };
+export const TEXT_FONT = { 'font': [] };
+export const TEXT_ALIGN = { 'align': [] };
+export const REMOVE_STYLES = ['clean'];

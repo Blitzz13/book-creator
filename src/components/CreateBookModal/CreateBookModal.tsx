@@ -12,11 +12,6 @@ import { CommonContentModalStyle } from "../../commonStyledStyles/CommonContentM
 import { useAuthContext } from "../../hooks/useAuthContext";
 import Editor from "../Editor/Editor";
 import $ from "jquery";
-import { BULLET_LIST, ORDERED_LIST } from "../../constants/ToolbarConstants";
-import { ToolbarTextSizes } from "../../enums/ToolbarTextSizes";
-import { ToolbarTextStyle } from "../../enums/ToolbarTextStyle";
-import { ToolbarQuoteStyle } from "../../enums/ToolbarQuoteStyle";
-import { ToolbarTextAlign } from "../../enums/ToolbarTextAlign";
 
 function resizeDescription() {
     const description = $("#description");

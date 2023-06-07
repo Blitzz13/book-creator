@@ -1,22 +1,43 @@
 
 import { useRef, useState } from 'react';
 import ReactQuill from 'react-quill';
-// import Quill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import IEditorData from '../../interfaces/IEditorData';
+import { DeltaStatic } from 'quill';
 
-export default function Editor(data: any) {
+export default function Editor({ data, ...delegated }: IEditorData) {
   const [value, setValue] = useState('');
-  let quillRef = useRef({});
-  // const asd: ReactQuill;
-  // function sda(): void {
-  //   setValue("awdhauwh auhd iauwd uhawudh auwhd uahwd uawd hauwhd auwdh iuahwd uahwdu awudh auwhd uawdh uahwd uawhud ads");
-  // };
+  let quillRef = useRef<ReactQuill>(null);
+  let test;
 
-  // function saveContent(): void {
-  //   const quill = (quillRef.current as Quill).getEditor();
-  //   const test = quill.getContents();
-  //   console.log(test);
-  // }
+  if (data.modules?.toolbar) {
+    test = Object.values(data.modules?.toolbar);
+  }
+
+  function saveContent(): void {
+    const quill = quillRef.current?.getEditor();
+    if (quill) {
+      const asd = [
+        {
+          "insert": "\n"
+        },
+        {
+          "insert": {
+            "video": "https://www.youtube.com/embed/ub12DkmRUnI?showinfo=0"
+          }
+        },
+        {
+          "insert": "\n"
+        }
+      ]
+
+      // const asdas = new Delta(asd);
+      quill.setContents(asd as unknown as DeltaStatic);
+
+      const test = quill.getContents();
+      console.log(test);
+    }
+  }
 
   // window.addEventListener("load", () => {
   //   const exists = $("#editor-container");
@@ -55,6 +76,8 @@ export default function Editor(data: any) {
   //   }
 
   return (
-    <ReactQuill ref={quillRef} theme="snow" id="editor-container" {...data} value={value} onChange={setValue} />
+    <ReactQuill modules={{
+      toolbar: test
+    }} ref={quillRef} theme="snow" {...delegated} value={value} onChange={setValue} />
   );
 }
