@@ -8,6 +8,7 @@ import IHtmlElement from "./IHtmlElement";
 export default interface IEditorData extends IHtmlElement {
   data: {
     onValueChange?: Function;
+    setData?: string;
     modules?: {
       toolbar?: {
         textStyles?: ToolbarTextStyle[];
@@ -18,9 +19,9 @@ export default interface IEditorData extends IHtmlElement {
         sizes?: [{ size: ToolbarTextSizes[] }];
         headerSizes?: [{ header: number[] }];
         embeded?: ToolbarEmbed[];
-        colorStyles?: {[key: string]: [] | [string]}[];
-        fonts?: [{font: [] | [string]}];
-        align?: [{align: [] | ToolbarTextAlign[]}];
+        colorStyles?: { [key: string]: [] | [string] }[];
+        fonts?: [{ font: [] | [string] }];
+        align?: [{ align: [] | ToolbarTextAlign[] }];
         removeStylesButton?: ["clean"];
       };
     };

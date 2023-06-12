@@ -28,16 +28,16 @@
   color: #61dafb;
 }
 
-/* .ce-block__content,
-    .ce-toolbar__content {
-        max-width: unset;
-    } */
-
 .ql-container {
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
   background-color: #FAFAFA;
+  overflow: hidden;
 }
 .ql-toolbar {
-  background-color: #FAFAFA;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  background-color: #77A97D;
 }
 
 @keyframes App-logo-spin {

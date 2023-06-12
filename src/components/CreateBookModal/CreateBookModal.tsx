@@ -12,17 +12,20 @@ import { CommonContentModalStyle } from "../../commonStyledStyles/CommonContentM
 import { useAuthContext } from "../../hooks/useAuthContext";
 import Editor from "../Editor/Editor";
 import $ from "jquery";
+import { useNavigate } from "react-router-dom";
 
 function resizeDescription() {
     const description = $("#description");
-    const quilToolbarHeight = description.find(".ql-toolbar").outerHeight(true);
+    const quilToolbar = description.find(".ql-toolbar");
 
-    if (quilToolbarHeight) {
-        description.css("padding-bottom", `${quilToolbarHeight}px`);
+    if (quilToolbar) {
+        description.css("padding-bottom", `${quilToolbar.outerHeight()}px`);
     }
 }
 
 export default function CreateBookModal(data: ICreateBookModalData) {
+    const navigate = useNavigate();
+
     window.addEventListener("resize", () => {
         resizeDescription();
     });
@@ -33,18 +36,21 @@ export default function CreateBookModal(data: ICreateBookModalData) {
     const [title, setTitle] = React.useState("");
     const [description, setDescription] = React.useState("");
     const [isValidTitle, setIsTitleValid] = React.useState(true);
+    const [isExiting, setIsExiting] = React.useState(false);
+
+    function startExitAnimation() {
+        if (!isExiting) {
+            setIsExiting(true);
+        }
+    }
 
     function validateBookName(value: string) {
         setIsTitleValid(!validator.isEmpty(value));
         setTitle(value);
     }
 
-    function desc(value: string) {
-        setDescription(value);
-        console.log(description);
-    }
-
     function handleCloseModal() {
+        setIsExiting(false);
         data.setOpen(false);
     }
 
@@ -52,7 +58,8 @@ export default function CreateBookModal(data: ICreateBookModalData) {
         event.preventDefault();
 
         if (isValidTitle && authContext.user) {
-            data.bookService.createBook({ authorId: authContext.user?.id });
+            const book = await data.bookService.createBook({ title, authorId: authContext.user?.id, description });
+            navigate(`/write/${book._id}`);
         }
     }
 
@@ -61,17 +68,21 @@ export default function CreateBookModal(data: ICreateBookModalData) {
             className="_"
             overlayClassName="_"
             onAfterOpen={resizeDescription}
-            onRequestClose={handleCloseModal}
+            onRequestClose={startExitAnimation}
             contentElement={(props, children) => (
                 <CommonContentModalStyle width={"500px"} {...props}>{children}</CommonContentModalStyle>
             )}
             overlayElement={(props, contentElement) => (
-                <OverlayStyle {...props}>{contentElement}</OverlayStyle>
+                <OverlayStyle onAnimationEnd={() => {
+                    if (isExiting) {
+                        handleCloseModal();
+                    }
+                }} isExiting={isExiting} {...props}>{contentElement}</OverlayStyle>
             )}
             isOpen={data.isOpen}>
             <HeaderWrapper>
                 <Header>Create Book</Header>
-                <CloseIcon onClick={handleCloseModal}></CloseIcon>
+                <CloseIcon onClick={startExitAnimation}></CloseIcon>
             </HeaderWrapper>
             <form onSubmit={handleBookCreateClick}>
                 <BodyWrapper>
@@ -79,10 +90,7 @@ export default function CreateBookModal(data: ICreateBookModalData) {
                     <ModalInput onValueChange={(value: string) => validateBookName(value)} value={title} type="text" id="text" placeholder="Lord of the books"></ModalInput>
                     {!isValidTitle && <Error>The title must contain characters</Error>}
                     <Label htmlFor="email">Description</Label>
-                    <Textarea data={{
-                        onValueChange: desc
-                    }} id="description"></Textarea>
-                    {!isValidTitle && <Error>The description must contain characters</Error>}
+                    <Textarea data={{ onValueChange: setDescription }} id="description"></Textarea>
                 </BodyWrapper>
                 <FooterWrapper>
                     <Button data={{ color: Colors.ACCENT, height: 51, width: 195, radius: 20, textSize: 22, type: "submit", onClick: handleBookCreateClick }}>Create</Button>
@@ -114,6 +122,7 @@ const Error = styled.span`
 
 const CloseIcon = styled(XCircle)`
   color: ${Colors.WARNING};
+  
   width: 36px;
   height: 36px;
   margin-right: 4px;

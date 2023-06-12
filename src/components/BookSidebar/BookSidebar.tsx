@@ -7,6 +7,8 @@ import $ from "jquery";
 import { generateId } from "../../helpers/helpFunctions";
 import React, { useEffect } from "react";
 import Button from "../Button.ts/Button";
+import IBookSidebarData from "../../interfaces/IBookSidebarData";
+import SidebarContent from "./SidebarContent";
 const bookSettingsAreaId = generateId(7);
 
 function resizeSettings() {
@@ -21,7 +23,7 @@ function resizeSettings() {
 }
 
 
-export default function BookSidebar(data: any) {
+export default function BookSidebar({ data, ...delegated }: IBookSidebarData) {
   const bookSettingsId = generateId(7);
   const headerSettingsId = generateId(7);
   const chapterSettingsId = generateId(7);
@@ -33,57 +35,28 @@ export default function BookSidebar(data: any) {
   // }
 
   window.addEventListener("resize", () => {
-    resizeSettings();
+    // resizeSettings();
   });
 
   window.addEventListener("load", () => {
-    resizeSettings();
+    // resizeSettings();
   })
 
   useEffect(() => {
-    resizeSettings();
-  },[])
+    // resizeSettings();
+  }, [])
 
   return (
-    <Wrapper {...data}>
-      <HeaderWrapper id="header-settings">
-        <SettingsIcon opacity={areSettingsOpen ? 0.5 : 1} onClick={() => setAreSettingsOpen(true)} />
-        <OpenBookIcon opacity={areSettingsOpen ? 1 : 0.5} onClick={() => setAreSettingsOpen(false)} />
-      </HeaderWrapper>
-      {areSettingsOpen ?
-        <SectionsWrapper id="sections-wrapper">
-          <SectionTitle data={{ title: "Book Settings", settingId: bookSettingsId }}></SectionTitle>
-          <SettingsWrapper id={bookSettingsId}>
-            <SettingsText>Book name: Test</SettingsText>
-            <SettingsText>Font family: Arial</SettingsText>
-            <SettingsText>Font size: 32px</SettingsText>
-          </SettingsWrapper>
-          <SectionTitle data={{ title: "Header Settings", settingId: headerSettingsId }}></SectionTitle>
-          <SettingsWrapper id={headerSettingsId}>
-            <SettingsText>Stylize first letter: true</SettingsText>
-          </SettingsWrapper>
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SettingsWrapper id={chapterSettingsId}>
-            <SettingsText>Chapter name: Test</SettingsText>
-            <SettingsText>Chapter state: Draft</SettingsText>
-          </SettingsWrapper>
-        </SectionsWrapper> :
-        <SectionsWrapper id="sections-wrapper">
-          <ChapterName>The boy who lived</ChapterName>
-          <ChapterName>The boy who didnt live</ChapterName>
-          <ChapterName>The boy who didnt did live to be or new game</ChapterName>
-          <ChapterName>Kpop</ChapterName>
-        </SectionsWrapper>
-      }
-      <ButtonArea id={bookSettingsAreaId}>
-        <SaveButton data={{ color: Colors.ACCENT, height: 51, width: 195, radius: 20, textSize: 22, type: "submit", onClick: () => { } }}>Save</SaveButton>
-      </ButtonArea>
+    <Wrapper {...delegated}>
+      <SidebarContent data={data}/>
     </Wrapper>
   );
 }
 
+const BookTitle = styled.h2`
+`
+
 const ButtonArea = styled.div`
-  
 `
 
 const SaveButton = styled(Button)`
@@ -108,13 +81,14 @@ const SettingsText = styled.p`
 `
 
 const SectionsWrapper = styled.div`
-  margin-top: 40px;
+  /* margin-top: 40px; */
   overflow-y: auto;
   text-align: left;
 `
 
 const SettingsIcon = styled(Settings)`
   margin-left: 14px;
+  /* margin-right: auto; */
   ${({ opacity }: { opacity: number }) => css`
     opacity: ${opacity};
   `}
@@ -136,18 +110,22 @@ const HeaderWrapper = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 209px;
-  position: absolute;
+  /* flex-grow: 1; */
+  /* width: 231px; */
+  width: 100;
+  /* position: absolute; */
   border-color: ${Colors.BACKGROUND};
   border-style: solid;
   border-width: 0 0 2px 0;
 `
 
 const Wrapper = styled(StyledWrapper)`
+  /* display: flex;
+  flex-direction: column; */
   /* margin-left: 22px; */
-  margin-right: 22px;
-  overflow-y: hidden;
-  isolation: isolate;
+  /* margin-right: 22px; */
+  /* overflow-y: hidden; */
+  /* isolation: isolate; */
   /* grid-area: b; */
 `;
 

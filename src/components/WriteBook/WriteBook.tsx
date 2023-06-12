@@ -3,7 +3,15 @@ import { Colors } from "../../Colors";
 import BookSidebar from "../BookSidebar/BookSidebar";
 import $ from "jquery";
 import Editor from "../Editor/Editor";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import IWriteBookData from "../../interfaces/IWriteBookData";
+import { IServiceBook } from "../../interfaces/service/book/IServiceBook";
+import { IoSettingsSharp } from "react-icons/io5";
+import Modal from "../Modal/Modal";
+import SidebarContent from "../BookSidebar/SidebarContent";
+import { BurgerMenuModalStyle } from "../../commonStyledStyles/BurgerMenuModalStyle";
+import IBurgerContentModalStyle from "../../interfaces/modal/IBurgerContentModalStyle";
 
 function resizeContentTextarea() {
   const contentTextArea = $("#writing-area");
@@ -23,7 +31,10 @@ function resizeContentTextarea() {
   }
 }
 
-export default function WriteBook(data: any) {
+export default function WriteBook(data: IWriteBookData) {
+  const params = useParams();
+  const [isExiting, setIsExiting] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   window.addEventListener("resize", () => {
     resizeContentTextarea();
@@ -33,18 +44,84 @@ export default function WriteBook(data: any) {
     resizeContentTextarea();
   })
 
+  const [title, setTitle] = useState("");
+  const navigate = useNavigate();
+
+  function onSettingsClick(): void {
+    setIsOpen(!isOpen);
+  }
   useEffect(() => {
     resizeContentTextarea();
-  },[])
+
+    const fetchData = async () => {
+      try {
+        if (params.bookId) {
+          const book: IServiceBook = await data.bookService.fetchBook(params.bookId);
+          setTitle(book.title);
+        }
+      } catch (error) {
+        navigate("*");
+      }
+    }
+
+    fetchData().catch();
+  });
+
   return (
     <Wrapper onLoad={resizeContentTextarea}>
-      <HeaderTextarea id="header-textarea" name="textarea" placeholder="Enter chapter name here"></HeaderTextarea>
+      <HeaderWrapper id="header-textarea">
+        <HeaderOverflowHide>
+          <HeaderTextarea name="header-textarea" placeholder="Enter chapter name here"></HeaderTextarea>
+        </HeaderOverflowHide>
+        <IconsWrapper>
+          <SettingsIcon onClick={onSettingsClick}></SettingsIcon>
+        </IconsWrapper>
+      </HeaderWrapper>
       <ContentTextarea data={{}} id="writing-area"></ContentTextarea>
-      {/* <Editor /> */}
-      <Settings id="book-settings" />
+      <Settings data={{ title: title, isFromModal: false }} id="book-settings" />
+      <SettingsModal data={{
+        isOpen: isOpen,
+        isExiting: isExiting,
+        ContentElement: BurgerMenuModalStyle,
+        contentData: {
+          width: "65%",
+          isExiting: isExiting,
+        },
+        setOpen: setIsOpen,
+        setExiting: setIsExiting,
+      }}>
+        <SidebarContent data={{ title: title, isFromModal: true }} />
+      </SettingsModal>
     </Wrapper>
   );
 }
+
+const SettingsModal = styled(Modal<IBurgerContentModalStyle>)`
+  /* overflow: auto; */
+`
+
+const IconsWrapper = styled.div`
+  display: flex;
+  margin-top: 8px;
+  justify-content: left;
+`
+
+const SettingsIcon = styled(IoSettingsSharp)`
+  display: none;
+  font-size: 150%;
+  @media only screen and (max-width: 690px) {
+    display: revert;
+  }
+`
+
+const HeaderWrapper = styled.div`
+  overflow: hidden;
+`;
+
+const HeaderOverflowHide = styled.div`
+  border-radius: 20px;
+  overflow: hidden;
+`;
 
 const HeaderTextarea = styled.textarea`
   background-color: ${Colors.FOREGROUND};
@@ -55,6 +132,7 @@ const HeaderTextarea = styled.textarea`
   resize: none;
   grid-area: a;
   font-size: ${32 / 16}rem;
+  border-radius: 20px;
 `;
 
 const ContentTextarea = styled(Editor)`
@@ -66,10 +144,11 @@ const Settings = styled(BookSidebar)`
 
   @media only screen and (max-width: 690px) {
     display: none;
+    /* position: absolute; */
   }
 
   @media only screen and (max-height: 500px) {
-    display: none;
+    /* display: none; */
   }
 `;
 

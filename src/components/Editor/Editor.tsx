@@ -1,83 +1,44 @@
 
-import { useRef, useState } from 'react';
+import { useRef, useEffect } from 'react';
 import ReactQuill from 'react-quill';
+import { DeltaStatic } from 'quill';
 import 'react-quill/dist/quill.snow.css';
 import IEditorData from '../../interfaces/IEditorData';
-import { DeltaStatic } from 'quill';
 
 export default function Editor({ data, ...delegated }: IEditorData) {
-  const [value, setValue] = useState('');
   let quillRef = useRef<ReactQuill>(null);
-  let test;
+  let toolbarSettings;
 
   if (data.modules?.toolbar) {
-    test = Object.values(data.modules?.toolbar);
+    toolbarSettings = Object.values(data.modules?.toolbar);
   }
 
-  function saveContent(): void {
+  function getContent(): void {
     const quill = quillRef.current?.getEditor();
     if (quill) {
-      const asd = [
-        {
-          "insert": "\n"
-        },
-        {
-          "insert": {
-            "video": "https://www.youtube.com/embed/ub12DkmRUnI?showinfo=0"
-          }
-        },
-        {
-          "insert": "\n"
-        }
-      ]
+      const content = quill.getContents();
+      if (data.onValueChange) {
+        data.onValueChange(JSON.stringify(content))
+      }
 
-      // const asdas = new Delta(asd);
-      quill.setContents(asd as unknown as DeltaStatic);
-
-      const test = quill.getContents();
-      console.log(test);
+      console.log(content);
     }
   }
 
-  // window.addEventListener("load", () => {
-  //   const exists = $("#editor-container");
-  //   if (!exists.children().length) {
-  //     quill = new Quill('#editor-container', {
-  //       modules: {
-  //         toolbar: [
-  //           ['bold', 'italic'],
-  //           ['link', 'blockquote', 'code-block', 'image'],
-  //           [{ list: 'ordered' }, { list: 'bullet' }]
-  //         ]
-  //       },
-  //       placeholder: 'Compose an epic...',
-  //       theme: 'snow',
-  //     });
-  //   }
-  // })
+  function setContent(): void {
+    const quill = quillRef.current?.getEditor();
+    if (quill && data.setData) {
+      quill.setContents(JSON.parse(data.setData) as unknown as DeltaStatic);
+    }
+  }
 
-
-  // asd()
-  // var quill = new Quill('#editor-container', {
-  //     modules: {
-  //       toolbar: [
-  //         ['bold', 'italic'],
-  //         ['link', 'blockquote', 'code-block', 'image'],
-  //         [{ list: 'ordered' }, { list: 'bullet' }]
-  //       ]
-  //     },
-  //     placeholder: 'Compose an epic...',
-  //     theme: 'snow',
-  //   });
-
-
-  //   function test(): DeltaStatic {
-  //     return quill.getContents()
-  //   }
+  useEffect(() => {
+    setContent();
+  });
 
   return (
     <ReactQuill modules={{
-      toolbar: test
-    }} ref={quillRef} theme="snow" {...delegated} value={value} onChange={setValue} />
+      toolbar: toolbarSettings
+    }} ref={quillRef} theme="snow" {...delegated} onChange={getContent} />
   );
 }

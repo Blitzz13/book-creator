@@ -1,5 +1,6 @@
 import styled, { css, keyframes } from "styled-components";
 import { Colors } from "../Colors";
+import IBurgerContentModalStyle from "../interfaces/modal/IBurgerContentModalStyle";
 
 export const BurgerMenuModalStyle = styled.div`
   position: absolute;
@@ -8,10 +9,14 @@ export const BurgerMenuModalStyle = styled.div`
   height: 100vh;
   max-width: 700px;
   background-color: ${Colors.BACKGROUND};
-  ${({ width, isExiting }: { width: string; isExiting: boolean }) =>
+  ${(data: IBurgerContentModalStyle) =>
     css`
-      width: ${width};
-      ${isExiting
+      width: ${data.width};
+      border-top-left-radius: ${data.border?.topLeft};
+      border-top-right-radius: ${data.border?.topRight};
+      border-bottom-right-radius: ${data.border?.bottomRight};
+      border-bottom-left-radius: ${data.border?.bottomLeft};
+      ${data.isExiting
         ? css`
             animation: ${MoveOut} 0.3s ease-out;
           `

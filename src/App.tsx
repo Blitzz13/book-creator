@@ -6,6 +6,7 @@ import GlobalStyle from './global';
 import NavBar from './components/Nav/NavBar';
 import { Services } from './Services';
 import WriteBook from './components/WriteBook/WriteBook';
+import PageNotFound from './components/PageNotFound/PageNotFound';
 
 function App() {
   const services = new Services();
@@ -17,7 +18,8 @@ function App() {
       <Routes>
         <Route path="/" element={<Home bookService={services.bookService} />} />
         <Route path="/about" element={<About />} />
-        <Route path="/write" element={<WriteBook />} />
+        <Route path="/write/:bookId" element={<WriteBook bookService={services.bookService} />} />
+        <Route path="*" element={<PageNotFound />} />
       </Routes>
     </div>
   );

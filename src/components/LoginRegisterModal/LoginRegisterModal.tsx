@@ -21,6 +21,13 @@ export default function LoginRegisterModal(data: IRegisterModalData) {
     const [isValidEmail, setIsEmailValid] = React.useState(false);
     const [isStrongPassword, setIsStrongPassword] = React.useState(false);
     const [errorMessage, setErrorMessage] = React.useState("");
+    const [isExiting, setIsExiting] = React.useState(false);
+
+    function startExitAnimation() {
+        if (!isExiting) {
+            setIsExiting(true);
+        }
+    }
 
     function validateEmail(value: string) {
         setIsEmailValid(validator.isEmail(value));
@@ -33,6 +40,7 @@ export default function LoginRegisterModal(data: IRegisterModalData) {
     }
 
     function handleCloseModal() {
+        setIsExiting(false);
         data.setOpen(false);
     }
 
@@ -83,17 +91,21 @@ export default function LoginRegisterModal(data: IRegisterModalData) {
         <ReactModal
             className="_"
             overlayClassName="_"
-            onRequestClose={handleCloseModal}
+            onRequestClose={startExitAnimation}
             contentElement={(props, children) => (
                 <CommonContentModalStyle width={data.width} {...props}>{children}</CommonContentModalStyle>
             )}
             overlayElement={(props, contentElement) => (
-                <OverlayStyle {...props}>{contentElement}</OverlayStyle>
+                <OverlayStyle onAnimationEnd={() => {
+                    if (isExiting) {
+                        handleCloseModal();
+                    }
+                }} isExiting={isExiting} {...props}>{contentElement}</OverlayStyle>
             )}
             isOpen={data.isOpen}>
             <HeaderWrapper>
                 {data.isLogin ? <Header>Login</Header> : <Header>Register</Header>}
-                <CloseIcon onClick={handleCloseModal}></CloseIcon>
+                <CloseIcon onClick={startExitAnimation}></CloseIcon>
             </HeaderWrapper>
             <form onSubmit={data.isLogin ? handleLoginClick : handleRegisterClick}>
                 <BodyWrapper>

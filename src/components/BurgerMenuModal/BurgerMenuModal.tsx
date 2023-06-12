@@ -80,8 +80,12 @@ export default function BurgerMenuModal(data: IBurgerMenuModalData) {
 
                 <NavLink to="">Browse</NavLink>
                 <NavLink to="">Genre</NavLink>
-                <NavLink onClick={handleCreateBookClick} to="">Start new book</NavLink>
-                {data.displayName && <NavLink onClick={handleLogoutClick} to="">Logout</NavLink>}
+                {data.displayName &&
+                    <React.Fragment>
+                        <NavLink onClick={handleCreateBookClick} to="">Start new book</NavLink>
+                        <NavLink onClick={handleLogoutClick} to="">Logout</NavLink>
+                    </React.Fragment>
+                }
             </Wrapper>
         </ReactModal>
     );
