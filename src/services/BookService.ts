@@ -1,5 +1,5 @@
 // import "reflect-metadata";
-import { IBookService } from "../interfaces/service/book/IBookService";
+import IBookService from "../interfaces/service/book/IBookService";
 import ICreateBookRequest from "../interfaces/service/book/ICreateBookRequest";
 import { IServiceBook } from "../interfaces/service/book/IServiceBook";
 import { IUpdateBookRequest } from "../interfaces/service/book/IUpdateBookRequest";

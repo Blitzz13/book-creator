@@ -18,7 +18,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home bookService={services.bookService} />} />
         <Route path="/about" element={<About />} />
-        <Route path="/write/:bookId" element={<WriteBook bookService={services.bookService} />} />
+        <Route path="/write/:bookId" element={<WriteBook chapterService={services.chapterService} bookService={services.bookService} />} />
         <Route path="*" element={<PageNotFound />} />
       </Routes>
     </div>

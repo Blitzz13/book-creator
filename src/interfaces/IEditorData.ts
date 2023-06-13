@@ -14,6 +14,7 @@ export default interface IEditorData extends IHtmlElement {
         textStyles?: ToolbarTextStyle[];
         quoteStyles?: ToolbarQuoteStyle[];
         liststyles?: { list: string }[];
+        indentStyle?: { indent: string }[];
         scriptStyles?: { script: string }[];
         direction?: { direction: string };
         sizes?: [{ size: ToolbarTextSizes[] }];

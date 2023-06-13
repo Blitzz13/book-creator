@@ -25,16 +25,15 @@ export default function Editor({ data, ...delegated }: IEditorData) {
     }
   }
 
-  function setContent(): void {
-    const quill = quillRef.current?.getEditor();
-    if (quill && data.setData) {
-      quill.setContents(JSON.parse(data.setData) as unknown as DeltaStatic);
-    }
-  }
-
   useEffect(() => {
+    function setContent(): void {
+      const quill = quillRef.current?.getEditor();
+      if (quill && data.setData) {
+        quill.setContents(JSON.parse(data.setData) as unknown as DeltaStatic);
+      }
+    }
     setContent();
-  });
+  },[data.setData]);
 
   return (
     <ReactQuill modules={{

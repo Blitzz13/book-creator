@@ -5,7 +5,7 @@ import BookCover from "../BookCover/BookCover";
 import BookWithPercentage from "../BookWithPercentage/BookWithPercentage";
 import StyledWrapper from "../StyledWrapper/StyledWrapper";
 import { IServiceBook } from "../../interfaces/service/book/IServiceBook";
-import { IBookService } from "../../interfaces/service/book/IBookService";
+import IBookService from "../../interfaces/service/book/IBookService";
 
 export default function Home(data: { bookService: IBookService }) {
   const bookService = data.bookService;

@@ -1,1 +1,1 @@
-export type OnClickEvent = React.MouseEvent<HTMLAnchorElement, MouseEvent>;
+export type OnClickEvent = React.MouseEvent<HTMLElement, MouseEvent>;

@@ -6,6 +6,8 @@ import { generateId } from "../../helpers/helpFunctions";
 import React from "react";
 import Button from "../Button.ts/Button";
 import IBookSidebarData from "../../interfaces/IBookSidebarData";
+import IBaseChapter from "../../interfaces/service/chapter/IBaseChapter";
+import { Link, useNavigate, useParams } from "react-router-dom";
 const bookSettingsAreaId = generateId(7);
 
 
@@ -13,17 +15,17 @@ export default function SidebarContent({ data, ...delegated }: IBookSidebarData)
   const bookSettingsId = generateId(7);
   const headerSettingsId = generateId(7);
   const chapterSettingsId = generateId(7);
-
-  const [areSettingsOpen, setAreSettingsOpen] = React.useState(true);
+  const params = useParams();
+  const navigate = useNavigate();
 
   return (
     <Wrapper isFromModal={data.isFromModal} {...delegated}>
       <HeaderWrapper isFromModal={data.isFromModal} id="header-settings">
-        <SettingsIcon opacity={areSettingsOpen ? 0.5 : 1} onClick={() => setAreSettingsOpen(true)} />
-        <OpenBookIcon opacity={areSettingsOpen ? 1 : 0.5} onClick={() => setAreSettingsOpen(false)} />
+        <SettingsIcon opacity={data.areSettingsOpen ? 0.5 : 1} onClick={() => data.setAreSettingsOpen(true)} />
+        <OpenBookIcon opacity={data.areSettingsOpen ? 1 : 0.5} onClick={() => data.setAreSettingsOpen(false)} />
       </HeaderWrapper>
       <BookTitle>{data.title}</BookTitle>
-      {areSettingsOpen ?
+      {data.areSettingsOpen ?
         <SectionsWrapper id="sections-wrapper">
           <SectionTitle data={{ title: "Book Settings", settingId: bookSettingsId }}></SectionTitle>
           <SettingsWrapper id={bookSettingsId}>
@@ -40,58 +42,25 @@ export default function SidebarContent({ data, ...delegated }: IBookSidebarData)
             <SettingsText>Chapter name: Test</SettingsText>
             <SettingsText>Chapter state: Draft</SettingsText>
           </SettingsWrapper>
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
-          <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle  >
         </SectionsWrapper> :
         <SectionsWrapper id="sections-wrapper">
-          <ChapterName>The boy who lived</ChapterName>
+          {data.chapterTitles.map((chapter: IBaseChapter) => (
+            <ChapterName to={`/write/${params.bookId}?chapterId=${chapter._id}`} key={chapter._id}>{chapter.header}</ChapterName>
+          ))}
+          {/* <ChapterName>The boy who lived</ChapterName>
           <ChapterName>The boy who didnt live</ChapterName>
           <ChapterName>The boy who didnt did live to be or new game</ChapterName>
-          <ChapterName>Kpop</ChapterName>
+          <ChapterName>Kpop</ChapterName> */}
         </SectionsWrapper>
       }
       <ButtonArea id={bookSettingsAreaId}>
-        <SaveButton data={{ color: Colors.ACCENT, height: 51, width: 195, radius: 20, textSize: 22, type: "submit", onClick: () => { } }}>Save</SaveButton>
+        <SaveButton data={{
+          color: Colors.ACCENT, height: 51, width: 195, radius: 20, textSize: 22, onClick: () => {
+            navigate(`/write/${params.bookId}`);
+            window.location.reload();
+          }
+        }}>New</SaveButton>
+        <SaveButton data={{ color: Colors.ACCENT, height: 51, width: 195, radius: 20, textSize: 22, onClick: () => { data.saveChapter() } }}>Save</SaveButton>
       </ButtonArea>
     </Wrapper>
   );
@@ -126,10 +95,12 @@ const SectionTitle = styled(BookSettingsSection)`
   border-width: 0 0 2px 0;
 `
 
-const ChapterName = styled.p`
+const ChapterName = styled(Link)`
+  text-decoration: none;
+  color: ${Colors.TEXT};
   margin: 4px 6px 12px 6px;
   font-size: ${18 / 16}rem;
-  cursor: pointer;
+  display: block;
 `
 
 const SettingsText = styled.p`

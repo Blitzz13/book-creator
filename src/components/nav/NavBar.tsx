@@ -11,10 +11,10 @@ import DesktopProfileModal from '../DesktopProfileModal/DesktopProfileModal';
 import { Menu } from 'react-feather';
 import BurgerMenuModal from '../BurgerMenuModal/BurgerMenuModal';
 import CreateBookModal from '../CreateBookModal/CreateBookModal';
-import { IBookService } from '../../interfaces/service/book/IBookService';
+import IBookService from '../../interfaces/service/book/IBookService';
 import { OnClickEvent } from '../../types/OnClickEvent';
 
-export default function NavBar(data: { userService: IUserService,bookService: IBookService }) {
+export default function NavBar(data: { userService: IUserService, bookService: IBookService }) {
   function onRegisterClick(): void {
     setRegisterOpen(!isRegisterOpen);
   }

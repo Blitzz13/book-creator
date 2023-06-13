@@ -4,21 +4,27 @@ import BookSidebar from "../BookSidebar/BookSidebar";
 import $ from "jquery";
 import Editor from "../Editor/Editor";
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import IWriteBookData from "../../interfaces/IWriteBookData";
 import { IServiceBook } from "../../interfaces/service/book/IServiceBook";
 import { IoSettingsSharp } from "react-icons/io5";
+import { BsFillBookFill } from "react-icons/bs";
+import { AiFillCheckCircle } from "react-icons/ai";
 import Modal from "../Modal/Modal";
 import SidebarContent from "../BookSidebar/SidebarContent";
 import { BurgerMenuModalStyle } from "../../commonStyledStyles/BurgerMenuModalStyle";
 import IBurgerContentModalStyle from "../../interfaces/modal/IBurgerContentModalStyle";
+import IBaseChapter from "../../interfaces/service/chapter/IBaseChapter";
+import IServiceChapter from "../../interfaces/service/chapter/IServiceChapter";
+import { ToolbarTextStyle } from "../../enums/ToolbarTextStyle";
+import { BULLET_LIST, INDENT, ORDERED_LIST, OUTDENT } from "../../constants/ToolbarConstants";
 
 function resizeContentTextarea() {
   const contentTextArea = $("#writing-area");
   const settings = $("#book-settings");
   const quilToolbar = $(".ql-toolbar").outerHeight(true);
 
-  if (contentTextArea && quilToolbar) {
+  if (contentTextArea && quilToolbar && window.innerHeight > 410) {
     const navHeight = $("#nav-bar").outerHeight(true);
     const headerHeight = $("#header-textarea").outerHeight(true);
     const contentOffset = 40;
@@ -27,14 +33,20 @@ function resizeContentTextarea() {
     contentTextArea.css("padding-bottom", `${quilToolbar}px`)
     contentTextArea.outerHeight(contentHeight);
     settings.height(contentHeight + (headerHeight ? headerHeight : 0) + sidebarOffset);
-    console.log(settings.height());
   }
 }
 
 export default function WriteBook(data: IWriteBookData) {
   const params = useParams();
+  const [searchParams, setSearchParams] = useSearchParams()
   const [isExiting, setIsExiting] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [areSettingsOpen, setAreSettingsOpen] = useState(false);
+  const [editorContent, setEditorContent] = useState("");
+  const [updatedChapterTitle, setUpdatedChapterTitle] = useState("");
+  const [chapterTitle, setChapterTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [chapterTitles, setChapterTitles] = useState<IBaseChapter[]>([]);
 
   window.addEventListener("resize", () => {
     resizeContentTextarea();
@@ -47,9 +59,34 @@ export default function WriteBook(data: IWriteBookData) {
   const [title, setTitle] = useState("");
   const navigate = useNavigate();
 
+  function onChapterTitleChange(event: any): void {
+    setUpdatedChapterTitle(event.target.value);
+  }
+
   function onSettingsClick(): void {
+    setAreSettingsOpen(true);
     setIsOpen(!isOpen);
   }
+
+  function onBookClick(): void {
+    setAreSettingsOpen(false);
+    setIsOpen(!isOpen);
+  }
+
+  async function onCreateChapterClick(): Promise<void> {
+    if (params.bookId) {
+      const chapterId = searchParams.get("chapterId");
+      if (chapterId) {
+        const chapter = await data.chapterService.updateChapter({ chapterId: chapterId, content: editorContent, header: updatedChapterTitle, orderId: "1" });
+        setChapterTitle(chapter.header);
+      } else {
+        const chapter = await data.chapterService.createChapter({ bookId: params.bookId, content: editorContent, header: updatedChapterTitle, orderId: "1" });
+        setSearchParams(`?chapterId=${chapter._id}`)
+      }
+    }
+  }
+
+
   useEffect(() => {
     resizeContentTextarea();
 
@@ -57,6 +94,17 @@ export default function WriteBook(data: IWriteBookData) {
       try {
         if (params.bookId) {
           const book: IServiceBook = await data.bookService.fetchBook(params.bookId);
+          const chapters: IBaseChapter[] = await data.chapterService.fetchAllChapterTitles(params.bookId);
+          setChapterTitles(chapters);
+
+          const chapterId = searchParams.get("chapterId");
+          if (chapterId) {
+            const chapter: IServiceChapter = await data.chapterService.fetchChapter(chapterId);
+
+            setUpdatedChapterTitle(chapter.header);
+            setContent(chapter.content);
+          }
+
           setTitle(book.title);
         }
       } catch (error) {
@@ -65,20 +113,48 @@ export default function WriteBook(data: IWriteBookData) {
     }
 
     fetchData().catch();
-  });
+  }, [data.bookService, data.chapterService, navigate, params.bookId, searchParams, chapterTitle]);
 
   return (
     <Wrapper onLoad={resizeContentTextarea}>
       <HeaderWrapper id="header-textarea">
         <HeaderOverflowHide>
-          <HeaderTextarea name="header-textarea" placeholder="Enter chapter name here"></HeaderTextarea>
+          <HeaderTextarea onChange={onChapterTitleChange} value={updatedChapterTitle} name="header-textarea" placeholder="Enter chapter name here" />
         </HeaderOverflowHide>
         <IconsWrapper>
-          <SettingsIcon onClick={onSettingsClick}></SettingsIcon>
+          <SettingsIcon onClick={onSettingsClick} />
+          <BookIcon onClick={onBookClick} />
+          <CheckIcon onClick={onCreateChapterClick} />
         </IconsWrapper>
       </HeaderWrapper>
-      <ContentTextarea data={{}} id="writing-area"></ContentTextarea>
-      <Settings data={{ title: title, isFromModal: false }} id="book-settings" />
+      <ContentTextarea data={{
+        onValueChange: setEditorContent, setData: content, modules: {
+          toolbar: {
+            sizes: [{ size: [] }],
+            headerSizes: [{ header: [1, 2, 3] }],
+            textStyles: [
+              ToolbarTextStyle.BOLD,
+              ToolbarTextStyle.ITALIC,
+              ToolbarTextStyle.UNDERLINE,
+              ToolbarTextStyle.STRIKE
+            ],
+            liststyles: [ORDERED_LIST, BULLET_LIST],
+            indentStyle: [INDENT, OUTDENT],
+            align: [{ align: [] }],
+            removeStylesButton: ["clean"],
+          }
+        }
+      }} id="writing-area"></ContentTextarea>
+      <Settings data={
+        {
+          title: title,
+          isFromModal: false,
+          areSettingsOpen: areSettingsOpen,
+          setAreSettingsOpen: setAreSettingsOpen,
+          saveChapter: onCreateChapterClick,
+          chapterTitles: chapterTitles
+        }
+      } id="book-settings" />
       <SettingsModal data={{
         isOpen: isOpen,
         isExiting: isExiting,
@@ -90,7 +166,16 @@ export default function WriteBook(data: IWriteBookData) {
         setOpen: setIsOpen,
         setExiting: setIsExiting,
       }}>
-        <SidebarContent data={{ title: title, isFromModal: true }} />
+        <SidebarContent data={
+          {
+            title: title,
+            isFromModal: true,
+            areSettingsOpen: areSettingsOpen,
+            setAreSettingsOpen: setAreSettingsOpen,
+            saveChapter: onCreateChapterClick,
+            chapterTitles: chapterTitles
+          }
+        } />
       </SettingsModal>
     </Wrapper>
   );
@@ -101,17 +186,37 @@ const SettingsModal = styled(Modal<IBurgerContentModalStyle>)`
 `
 
 const IconsWrapper = styled.div`
-  display: flex;
-  margin-top: 8px;
+  display: none;
+  margin-top: 14px;
+  margin-left : 8px;
+  margin-right : 8px;
   justify-content: left;
+  gap: 12px;
+
+  @media only screen and (max-width: 690px) {
+    display: flex;
+  }
+  
+  @media only screen and (max-height: 500px) {
+    display: flex;
+  }
 `
 
 const SettingsIcon = styled(IoSettingsSharp)`
-  display: none;
-  font-size: 150%;
-  @media only screen and (max-width: 690px) {
-    display: revert;
-  }
+  cursor: pointer;
+  font-size: 200%;
+`
+
+const BookIcon = styled(BsFillBookFill)`
+  cursor: pointer;
+  font-size: 200%;
+`
+
+const CheckIcon = styled(AiFillCheckCircle)`
+  cursor: pointer;
+  font-size: 200%;
+  margin-left: auto;
+  color: ${Colors.ACCENT};
 `
 
 const HeaderWrapper = styled.div`
@@ -137,6 +242,11 @@ const HeaderTextarea = styled.textarea`
 
 const ContentTextarea = styled(Editor)`
   grid-area: c;
+
+  @media only screen and (max-height: 410px) {
+    overflow-anchor: none;
+    height: 250px;
+  }
 `;
 
 const Settings = styled(BookSidebar)`
@@ -148,7 +258,7 @@ const Settings = styled(BookSidebar)`
   }
 
   @media only screen and (max-height: 500px) {
-    /* display: none; */
+    display: none;
   }
 `;
 
