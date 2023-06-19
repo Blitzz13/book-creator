@@ -1,5 +1,6 @@
 import IHtmlElement from "./IHtmlElement";
 import IBaseChapter from "./service/chapter/IBaseChapter";
+import IServiceChapter from "./service/chapter/IServiceChapter";
 
 export default interface IBookSidebarData extends IHtmlElement {
   data: {
@@ -8,6 +9,9 @@ export default interface IBookSidebarData extends IHtmlElement {
     areSettingsOpen: boolean;
     setAreSettingsOpen: Function;
     saveChapter: Function;
-    chapterTitles: IBaseChapter[];
+    baseChapters: IBaseChapter[];
+    currentChapter?: IServiceChapter;
+    updateCurrentChapter: Function;
+    setOrderId: Function;
   };
 }

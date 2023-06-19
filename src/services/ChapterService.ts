@@ -37,7 +37,7 @@ export default class ChapterService implements IChapterService {
   public async createChapter(data: {
     header: string;
     content: string;
-    orderId: string;
+    orderId?: number;
     bookId: string;
   }): Promise<IServiceChapter> {
     const response = await fetch(`${this._url}`, {
@@ -45,6 +45,10 @@ export default class ChapterService implements IChapterService {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
+
+    if (!data.orderId) {
+      data.orderId = 0;
+    }
 
     const json = await response.json();
 
@@ -58,6 +62,26 @@ export default class ChapterService implements IChapterService {
   public async updateChapter(data: IUpdateChapter): Promise<IServiceChapter> {
     const response = await fetch(`${this._url}/${data.chapterId}`, {
       method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    const json = await response.json();
+
+    if (response.ok) {
+      return json;
+    }
+
+    throw new Error(`Fetching books failed with ${response.statusText}`);
+  }
+
+  public async updateChaptersOrder(data:  {
+    bookId: string;
+    orderId: number;
+    chapterId: string;
+  }): Promise<IServiceChapter> {
+    const response = await fetch(`${this._url}/update-order`, {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });

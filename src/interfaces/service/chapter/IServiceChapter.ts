@@ -1,3 +1,4 @@
+import { ChapterState } from "../../../enums/ChapterState";
 import { IMongoDocument } from "../IMongoDocument";
 import IBaseChapter from "./IBaseChapter";
 
@@ -6,4 +7,5 @@ export default interface IServiceChapter extends IBaseChapter, IMongoDocument {
   content: string;
   orderId: number;
   bookId: string;
+  state: ChapterState;
 }

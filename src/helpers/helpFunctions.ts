@@ -9,3 +9,8 @@ export function generateId(length: number):string {
     }
     return result;
 }
+
+export function isiOS(): boolean {
+  const userAgent = navigator.userAgent;
+  return /iPhone|iPad|iPod/i.test(userAgent);
+}

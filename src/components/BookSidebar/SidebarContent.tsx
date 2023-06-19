@@ -3,13 +3,33 @@ import { Colors } from "../../Colors";
 import { Settings, BookOpen } from "react-feather";
 import BookSettingsSection from "../BookSettingsSection/BookSettingsSection";
 import { generateId } from "../../helpers/helpFunctions";
-import React from "react";
 import Button from "../Button.ts/Button";
 import IBookSidebarData from "../../interfaces/IBookSidebarData";
 import IBaseChapter from "../../interfaces/service/chapter/IBaseChapter";
 import { Link, useNavigate, useParams } from "react-router-dom";
-const bookSettingsAreaId = generateId(7);
+import Input from "../Input/Input";
+import { IoIosArrowUp } from "react-icons/io";
+const buttonAreaId = generateId(7);
+const titleId = generateId(7);
 
+// function resizeContentArea() {
+//   const contentArea = $("#sections-wrapper");
+//   const buttons = $(`#${buttonAreaId}`);
+//   const title = $(`#${titleId}`);
+
+//   // if (window.visualViewport) {
+//     const navHeight = $("#nav-bar").outerHeight(true);
+//     const headerHeight = $("#header-textarea").outerHeight(true);
+//     const contentOffset = 40;
+//     const sidebarOffset = 15;
+//     const contentHeight = window.innerHeight - (title.outerHeight() || 0) - (buttons.outerHeight() || 0) - 700;
+//     // contentArea.css("padding-bottom", `${quilToolbar}px`)
+//     contentArea.outerHeight(200);
+//     // contentArea.css("height", "100px");
+//     (window as any).test  = contentArea;
+//     // buttons.height(contentHeight + (headerHeight ? headerHeight : 0) + sidebarOffset);
+//   // }
+// }
 
 export default function SidebarContent({ data, ...delegated }: IBookSidebarData) {
   const bookSettingsId = generateId(7);
@@ -24,12 +44,11 @@ export default function SidebarContent({ data, ...delegated }: IBookSidebarData)
         <SettingsIcon opacity={data.areSettingsOpen ? 0.5 : 1} onClick={() => data.setAreSettingsOpen(true)} />
         <OpenBookIcon opacity={data.areSettingsOpen ? 1 : 0.5} onClick={() => data.setAreSettingsOpen(false)} />
       </HeaderWrapper>
-      <BookTitle>{data.title}</BookTitle>
+      <BookTitle id={titleId}>{data.title}</BookTitle>
       {data.areSettingsOpen ?
         <SectionsWrapper id="sections-wrapper">
           <SectionTitle data={{ title: "Book Settings", settingId: bookSettingsId }}></SectionTitle>
           <SettingsWrapper id={bookSettingsId}>
-            <SettingsText>Book name: Test</SettingsText>
             <SettingsText>Font family: Arial</SettingsText>
             <SettingsText>Font size: 32px</SettingsText>
           </SettingsWrapper>
@@ -40,20 +59,25 @@ export default function SidebarContent({ data, ...delegated }: IBookSidebarData)
           <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle>
           <SettingsWrapper id={chapterSettingsId}>
             <SettingsText>Chapter name: Test</SettingsText>
-            <SettingsText>Chapter state: Draft</SettingsText>
+            <SettingsText>Chapter state: {data.currentChapter?.state}</SettingsText>
+            <SettingsText>Order: <Order onValueChange={(order: number) => { data.updateCurrentChapter({ ...data.currentChapter, orderId: order }) }} placeholder="" type="number" value={data.currentChapter?.orderId}></Order></SettingsText>
           </SettingsWrapper>
         </SectionsWrapper> :
         <SectionsWrapper id="sections-wrapper">
-          {data.chapterTitles.map((chapter: IBaseChapter) => (
-            <ChapterName to={`/write/${params.bookId}?chapterId=${chapter._id}`} key={chapter._id}>{chapter.header}</ChapterName>
+          {data.baseChapters.map((chapter: IBaseChapter, index) => (
+              <ChapterNameWrapper to={`/write/${params.bookId}?chapterId=${chapter._id}`} isSelected={ data.currentChapter?._id === chapter._id ? true : false} key={`wrapper_${chapter._id}`}>
+                <ChapterName key={chapter._id}>
+                  {chapter.header}
+                </ChapterName>
+                <ArrowsWrapper>
+                  {index !== 0 && <ArrowUpIcon onClick={() => data.setOrderId(chapter.orderId - 1, chapter._id)}></ArrowUpIcon>}
+                  {index !== data.baseChapters.length - 1 && <ArrowDownIcon onClick={() => data.setOrderId(chapter.orderId + 1, chapter._id)}></ArrowDownIcon>}
+                </ArrowsWrapper>
+              </ChapterNameWrapper>
           ))}
-          {/* <ChapterName>The boy who lived</ChapterName>
-          <ChapterName>The boy who didnt live</ChapterName>
-          <ChapterName>The boy who didnt did live to be or new game</ChapterName>
-          <ChapterName>Kpop</ChapterName> */}
         </SectionsWrapper>
       }
-      <ButtonArea id={bookSettingsAreaId}>
+      <ButtonArea id={buttonAreaId}>
         <SaveButton data={{
           color: Colors.ACCENT, height: 51, width: 195, radius: 20, textSize: 22, onClick: () => {
             navigate(`/write/${params.bookId}`);
@@ -65,6 +89,33 @@ export default function SidebarContent({ data, ...delegated }: IBookSidebarData)
     </Wrapper>
   );
 }
+
+const ArrowsWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const ArrowUpIcon = styled(IoIosArrowUp)`
+  cursor: pointer;
+  @media only screen and (max-width: 650px) {
+    font-size: 150%;
+  }
+`;
+
+const ArrowDownIcon = styled(ArrowUpIcon)`
+  transform: rotate(180deg);
+`;
+
+const Order = styled(Input)`
+  width: 100%;
+  background-color: ${Colors.FOREGROUND};
+  font-size: ${18 / 16}rem;
+  text-align: left;
+  /* border: revert; */
+  border-radius: revert;
+  padding: 0;
+  padding-left: 4px;
+`
 
 const Wrapper = styled.div`
   display: flex;
@@ -95,22 +146,47 @@ const SectionTitle = styled(BookSettingsSection)`
   border-width: 0 0 2px 0;
 `
 
-const ChapterName = styled(Link)`
+const ChapterNameWrapper = styled(Link)`
+text-decoration: none;
+  color: ${Colors.TEXT};
+  display: flex;
+  justify-content: space-between;
+  margin-left: 5px;
+  margin-right: 6px;
+  /* margin-bottom: 6px; */
+  padding-top: 6px;
+  padding-bottom: 6px;
+  padding-left: 4px;
+  padding-right: 4px;
+  padding: 6px;
+  align-items: center;
+  ${({ isSelected: isselected }: { isSelected: boolean }) => css`
+    background-color: ${isselected ? Colors.ACCENT : ""};
+  `}
+`;
+
+const ChapterName = styled.p`
   text-decoration: none;
   color: ${Colors.TEXT};
-  margin: 4px 6px 12px 6px;
+  /* margin: 0px 6px 0px 6px; */
+  margin-right: 6px;
   font-size: ${18 / 16}rem;
   display: block;
+  text-align: justify;
 `
 
-const SettingsText = styled.p`
+const SettingsText = styled.label`
   font-size: ${18 / 16}rem;
   cursor: pointer;
+  display: flex;
+  align-items: center;
 `
 
 const SectionsWrapper = styled.div`
   overflow: auto;
+  -webkit-overflow-scrolling: touch;
   text-align: left;
+  /* height: 200px; */
   flex: 1 1 auto;
 `
 
@@ -156,6 +232,7 @@ const SettingsWrapper = styled.div`
   display: none;
   text-align: left;
   margin-left: 4px;
+  margin-right: 4px;
   margin-bottom: 4px;
   display: none;
   flex-direction: column;

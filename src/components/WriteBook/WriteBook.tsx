@@ -42,11 +42,10 @@ export default function WriteBook(data: IWriteBookData) {
   const [isExiting, setIsExiting] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [areSettingsOpen, setAreSettingsOpen] = useState(false);
-  const [editorContent, setEditorContent] = useState("");
-  const [updatedChapterTitle, setUpdatedChapterTitle] = useState("");
   const [chapterTitle, setChapterTitle] = useState("");
   const [content, setContent] = useState("");
-  const [chapterTitles, setChapterTitles] = useState<IBaseChapter[]>([]);
+  const [baseChapters, setChapterTitles] = useState<IBaseChapter[]>([]);
+  const [currentChapter, setCurrentChapter] = useState<IServiceChapter>();
 
   window.addEventListener("resize", () => {
     resizeContentTextarea();
@@ -59,8 +58,16 @@ export default function WriteBook(data: IWriteBookData) {
   const [title, setTitle] = useState("");
   const navigate = useNavigate();
 
-  function onChapterTitleChange(event: any): void {
-    setUpdatedChapterTitle(event.target.value);
+  function onChapterTitleChange(event: string | any): void {
+    if (currentChapter) {
+      setCurrentChapter({ ...currentChapter, header: event.target.value });
+    }
+  }
+
+  function onEditorContentChange(text: string): void {
+    if (currentChapter) {
+      setCurrentChapter({ ...currentChapter, content: text });
+    }
   }
 
   function onSettingsClick(): void {
@@ -77,19 +84,32 @@ export default function WriteBook(data: IWriteBookData) {
     if (params.bookId) {
       const chapterId = searchParams.get("chapterId");
       if (chapterId) {
-        const chapter = await data.chapterService.updateChapter({ chapterId: chapterId, content: editorContent, header: updatedChapterTitle, orderId: "1" });
+        const chapter = await data.chapterService.updateChapter({ chapterId: chapterId, content: currentChapter?.content, header: currentChapter?.header, orderId: currentChapter?.orderId.toString() });
         setChapterTitle(chapter.header);
       } else {
-        const chapter = await data.chapterService.createChapter({ bookId: params.bookId, content: editorContent, header: updatedChapterTitle, orderId: "1" });
-        setSearchParams(`?chapterId=${chapter._id}`)
+        const chapter = await data.chapterService.createChapter({ bookId: params.bookId, content: currentChapter?.content || "", header: currentChapter?.header || "", orderId: currentChapter?.orderId });
+        setSearchParams(`?chapterId=${chapter._id}`);
       }
     }
   }
 
+  async function setChapterOrder(id: string, chapterId: string) {
+    if (params.bookId) {
+      const currentChapterId = searchParams.get("chapterId");
+      if (currentChapterId) {
+        const chapter = await data.chapterService.updateChaptersOrder({ bookId: params.bookId, chapterId: chapterId, orderId: parseInt(id) });
+        const chapters: IBaseChapter[] = await data.chapterService.fetchAllChapterTitles(params.bookId);
+        setChapterTitles(chapters);
+
+        if (currentChapter && chapterId === currentChapterId) {
+          setCurrentChapter({ ...currentChapter, orderId: chapter.orderId });
+        }
+      }
+    }
+  }
 
   useEffect(() => {
     resizeContentTextarea();
-
     const fetchData = async () => {
       try {
         if (params.bookId) {
@@ -101,7 +121,7 @@ export default function WriteBook(data: IWriteBookData) {
           if (chapterId) {
             const chapter: IServiceChapter = await data.chapterService.fetchChapter(chapterId);
 
-            setUpdatedChapterTitle(chapter.header);
+            setCurrentChapter(chapter);
             setContent(chapter.content);
           }
 
@@ -113,13 +133,52 @@ export default function WriteBook(data: IWriteBookData) {
     }
 
     fetchData().catch();
-  }, [data.bookService, data.chapterService, navigate, params.bookId, searchParams, chapterTitle]);
+  }, [data.bookService, data.chapterService, navigate, params.bookId]);
+
+  useEffect(() => {
+    ;
+    const fetchData = async () => {
+      try {
+        if (params.bookId) {
+          const chapterId = searchParams.get("chapterId");
+          if (chapterId) {
+            const chapter: IServiceChapter = await data.chapterService.fetchChapter(chapterId);
+
+            setCurrentChapter(chapter);
+            // setUpdatedChapterTitle(chapter.header);
+            setContent(chapter.content);
+          }
+        }
+      } catch (error) {
+        navigate("*");
+      }
+    }
+
+    fetchData().catch();
+  }, [data.chapterService, navigate, params.bookId, searchParams]);
+
+  useEffect(() => {
+    resizeContentTextarea();
+
+    const fetchData = async () => {
+      try {
+        if (params.bookId) {
+          const chapters: IBaseChapter[] = (await data.chapterService.fetchAllChapterTitles(params.bookId)).sort(x => x.orderId);
+          setChapterTitles(chapters);
+        }
+      } catch (error) {
+        navigate("*");
+      }
+    }
+
+    fetchData().catch();
+  }, [chapterTitle, data.chapterService, navigate, params.bookId]);
 
   return (
     <Wrapper onLoad={resizeContentTextarea}>
       <HeaderWrapper id="header-textarea">
         <HeaderOverflowHide>
-          <HeaderTextarea onChange={onChapterTitleChange} value={updatedChapterTitle} name="header-textarea" placeholder="Enter chapter name here" />
+          <HeaderTextarea onChange={onChapterTitleChange} value={currentChapter?.header} name="header-textarea" placeholder="Enter chapter name here" />
         </HeaderOverflowHide>
         <IconsWrapper>
           <SettingsIcon onClick={onSettingsClick} />
@@ -128,7 +187,7 @@ export default function WriteBook(data: IWriteBookData) {
         </IconsWrapper>
       </HeaderWrapper>
       <ContentTextarea data={{
-        onValueChange: setEditorContent, setData: content, modules: {
+        onValueChange: onEditorContentChange, setData: content, modules: {
           toolbar: {
             sizes: [{ size: [] }],
             headerSizes: [{ header: [1, 2, 3] }],
@@ -152,7 +211,10 @@ export default function WriteBook(data: IWriteBookData) {
           areSettingsOpen: areSettingsOpen,
           setAreSettingsOpen: setAreSettingsOpen,
           saveChapter: onCreateChapterClick,
-          chapterTitles: chapterTitles
+          setOrderId: setChapterOrder,
+          updateCurrentChapter: setCurrentChapter,
+          baseChapters: baseChapters,
+          currentChapter: currentChapter,
         }
       } id="book-settings" />
       <SettingsModal data={{
@@ -173,7 +235,10 @@ export default function WriteBook(data: IWriteBookData) {
             areSettingsOpen: areSettingsOpen,
             setAreSettingsOpen: setAreSettingsOpen,
             saveChapter: onCreateChapterClick,
-            chapterTitles: chapterTitles
+            setOrderId: setChapterOrder,
+            updateCurrentChapter: setCurrentChapter,
+            baseChapters: baseChapters,
+            currentChapter: currentChapter,
           }
         } />
       </SettingsModal>
@@ -246,6 +311,7 @@ const ContentTextarea = styled(Editor)`
   @media only screen and (max-height: 410px) {
     overflow-anchor: none;
     height: 250px;
+    margin-bottom: 18px;
   }
 `;
 
@@ -254,7 +320,6 @@ const Settings = styled(BookSidebar)`
 
   @media only screen and (max-width: 690px) {
     display: none;
-    /* position: absolute; */
   }
 
   @media only screen and (max-height: 500px) {
