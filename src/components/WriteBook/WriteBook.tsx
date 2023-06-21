@@ -18,6 +18,12 @@ import IBaseChapter from "../../interfaces/service/chapter/IBaseChapter";
 import IServiceChapter from "../../interfaces/service/chapter/IServiceChapter";
 import { ToolbarTextStyle } from "../../enums/ToolbarTextStyle";
 import { BULLET_LIST, INDENT, ORDERED_LIST, OUTDENT } from "../../constants/ToolbarConstants";
+import { CommonContentModalStyle } from "../../commonStyledStyles/CommonContentModalStyle";
+import ConfirmationModal from "../ConfirmationModal/ConfirmationModal";
+import { IDisplayChapter } from "../../interfaces/IDisplayChapter";
+import { ChapterState } from "../../enums/ChapterState";
+import { ChapterToCreate as chapterToCreate, ChapterToUpdate as chapterToUpdate, ServiceToChapter } from "../../Converters/ConvertChapter";
+import validator from "validator";
 
 function resizeContentTextarea() {
   const contentTextArea = $("#writing-area");
@@ -40,12 +46,24 @@ export default function WriteBook(data: IWriteBookData) {
   const params = useParams();
   const [searchParams, setSearchParams] = useSearchParams()
   const [isExiting, setIsExiting] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
-  const [areSettingsOpen, setAreSettingsOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingModalOpen] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [isAlertExiting, setIsAlertExiting] = useState(false);
+  const [isConfirmExiting, setIsConfirmExiting] = useState(false);
+  const [areSettingsOpen, setAreSettingsOpen] = useState(true);
   const [chapterTitle, setChapterTitle] = useState("");
-  const [content, setContent] = useState("");
+  const [content, setEditorContent] = useState("");
   const [baseChapters, setChapterTitles] = useState<IBaseChapter[]>([]);
-  const [currentChapter, setCurrentChapter] = useState<IServiceChapter>();
+  const [currentChapter, setCurrentChapter] = useState<IDisplayChapter>({
+    bookId: params.bookId ?? "",
+    content: "",
+    header: "",
+    orderId: -1,
+    state: ChapterState.Draft
+  });
+  const [title, setTitle] = useState("");
+  const navigate = useNavigate();
 
   window.addEventListener("resize", () => {
     resizeContentTextarea();
@@ -55,13 +73,9 @@ export default function WriteBook(data: IWriteBookData) {
     resizeContentTextarea();
   })
 
-  const [title, setTitle] = useState("");
-  const navigate = useNavigate();
 
   function onChapterTitleChange(event: string | any): void {
-    if (currentChapter) {
-      setCurrentChapter({ ...currentChapter, header: event.target.value });
-    }
+    setCurrentChapter({ ...currentChapter, header: event.target.value });
   }
 
   function onEditorContentChange(text: string): void {
@@ -72,22 +86,51 @@ export default function WriteBook(data: IWriteBookData) {
 
   function onSettingsClick(): void {
     setAreSettingsOpen(true);
-    setIsOpen(!isOpen);
+    setIsSettingModalOpen(!isSettingsModalOpen);
   }
 
   function onBookClick(): void {
     setAreSettingsOpen(false);
-    setIsOpen(!isOpen);
+    setIsSettingModalOpen(!isSettingsModalOpen);
+  }
+
+  function showDeleteChapterPrompt(): void {
+    setIsConfirmOpen(!isConfirmOpen);
+  }
+
+  async function deleteChapter(): Promise<void> {
+    if (currentChapter && currentChapter.id) {
+      const nextChapter = await data.chapterService.deleteChapter({ id: currentChapter.id });
+
+      if (nextChapter && params.bookId) {
+        const newChapter = ServiceToChapter(nextChapter);
+        setCurrentChapter(newChapter);
+        setEditorContent(newChapter.content);
+        setSearchParams(`?chapterId=${newChapter.id}`);
+        await refreshChapterList();
+      } else {
+        navigate(`/write/${params.bookId}`);
+        window.location.reload();
+      }
+    }
+
+    setIsConfirmOpen(false);
   }
 
   async function onCreateChapterClick(): Promise<void> {
     if (params.bookId) {
       const chapterId = searchParams.get("chapterId");
       if (chapterId) {
-        const chapter = await data.chapterService.updateChapter({ chapterId: chapterId, content: currentChapter?.content, header: currentChapter?.header, orderId: currentChapter?.orderId.toString() });
+        const chapter = await data.chapterService.updateChapter(chapterToUpdate(currentChapter));
         setChapterTitle(chapter.header);
       } else {
-        const chapter = await data.chapterService.createChapter({ bookId: params.bookId, content: currentChapter?.content || "", header: currentChapter?.header || "", orderId: currentChapter?.orderId });
+        if (validator.isEmpty(currentChapter.content) || validator.isEmpty(currentChapter.header)) {
+          setIsAlertOpen(true);
+          return;
+        }
+
+        const chapter = await data.chapterService.createChapter(chapterToCreate(currentChapter));
+        await refreshChapterList();
         setSearchParams(`?chapterId=${chapter._id}`);
       }
     }
@@ -98,13 +141,19 @@ export default function WriteBook(data: IWriteBookData) {
       const currentChapterId = searchParams.get("chapterId");
       if (currentChapterId) {
         const chapter = await data.chapterService.updateChaptersOrder({ bookId: params.bookId, chapterId: chapterId, orderId: parseInt(id) });
-        const chapters: IBaseChapter[] = await data.chapterService.fetchAllChapterTitles(params.bookId);
-        setChapterTitles(chapters);
+        await refreshChapterList();
 
         if (currentChapter && chapterId === currentChapterId) {
           setCurrentChapter({ ...currentChapter, orderId: chapter.orderId });
         }
       }
+    }
+  }
+
+  async function refreshChapterList(): Promise<void> {
+    if (params.bookId) {
+      const chapters: IBaseChapter[] = await data.chapterService.fetchAllChapterTitles(params.bookId);
+      setChapterTitles(chapters);
     }
   }
 
@@ -114,15 +163,14 @@ export default function WriteBook(data: IWriteBookData) {
       try {
         if (params.bookId) {
           const book: IServiceBook = await data.bookService.fetchBook(params.bookId);
-          const chapters: IBaseChapter[] = await data.chapterService.fetchAllChapterTitles(params.bookId);
-          setChapterTitles(chapters);
+          await refreshChapterList();
 
           const chapterId = searchParams.get("chapterId");
           if (chapterId) {
             const chapter: IServiceChapter = await data.chapterService.fetchChapter(chapterId);
 
-            setCurrentChapter(chapter);
-            setContent(chapter.content);
+            setCurrentChapter(ServiceToChapter(chapter));
+            setEditorContent(chapter.content);
           }
 
           setTitle(book.title);
@@ -143,10 +191,10 @@ export default function WriteBook(data: IWriteBookData) {
           const chapterId = searchParams.get("chapterId");
           if (chapterId) {
             const chapter: IServiceChapter = await data.chapterService.fetchChapter(chapterId);
-
-            setCurrentChapter(chapter);
+            const newChapter = ServiceToChapter(chapter);
+            setCurrentChapter(newChapter);
             // setUpdatedChapterTitle(chapter.header);
-            setContent(chapter.content);
+            setEditorContent(chapter.content);
           }
         }
       } catch (error) {
@@ -213,19 +261,20 @@ export default function WriteBook(data: IWriteBookData) {
           saveChapter: onCreateChapterClick,
           setOrderId: setChapterOrder,
           updateCurrentChapter: setCurrentChapter,
+          deleteChapter: showDeleteChapterPrompt,
           baseChapters: baseChapters,
           currentChapter: currentChapter,
         }
       } id="book-settings" />
       <SettingsModal data={{
-        isOpen: isOpen,
+        isOpen: isSettingsModalOpen,
         isExiting: isExiting,
         ContentElement: BurgerMenuModalStyle,
         contentData: {
           width: "65%",
           isExiting: isExiting,
         },
-        setOpen: setIsOpen,
+        setOpen: setIsSettingModalOpen,
         setExiting: setIsExiting,
       }}>
         <SidebarContent data={
@@ -237,12 +286,45 @@ export default function WriteBook(data: IWriteBookData) {
             saveChapter: onCreateChapterClick,
             setOrderId: setChapterOrder,
             updateCurrentChapter: setCurrentChapter,
+            deleteChapter: showDeleteChapterPrompt,
             baseChapters: baseChapters,
             currentChapter: currentChapter,
           }
         } />
       </SettingsModal>
-    </Wrapper>
+      <ConfirmationModal data={{
+        isOpen: isConfirmOpen,
+        isExiting: isConfirmExiting,
+        ContentElement: CommonContentModalStyle,
+        contentData: {
+          width: "400px",
+        },
+        setOpen: setIsConfirmOpen,
+        setExiting: setIsConfirmExiting,
+      }}
+        confirmationData={{
+          text: `Are you sure you want to delete "${currentChapter?.header}"?`,
+          modalTitle: `Delete Chapter`,
+          funcToCall: deleteChapter
+        }}>
+      </ConfirmationModal>
+      <ConfirmationModal data={{
+        isOpen: isAlertOpen,
+        isExiting: isAlertExiting,
+        ContentElement: CommonContentModalStyle,
+        contentData: {
+          width: "400px",
+        },
+        setOpen: setIsAlertOpen,
+        setExiting: setIsAlertExiting,
+      }}
+        confirmationData={{
+          text: `Header and content fields are required.`,
+          modalTitle: `Alert`,
+          isAlert: true
+        }}>
+      </ConfirmationModal>
+    </Wrapper >
   );
 }
 

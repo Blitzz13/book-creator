@@ -3,15 +3,19 @@ import { Colors } from "../../Colors";
 import { Settings, BookOpen } from "react-feather";
 import BookSettingsSection from "../BookSettingsSection/BookSettingsSection";
 import { generateId } from "../../helpers/helpFunctions";
-import Button from "../Button.ts/Button";
+import Button from "../Button/Button";
 import IBookSidebarData from "../../interfaces/IBookSidebarData";
 import IBaseChapter from "../../interfaces/service/chapter/IBaseChapter";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Input from "../Input/Input";
 import { IoIosArrowUp } from "react-icons/io";
+import Dropdown from "../Dropdown/Dropdown";
+import { useState } from "react";
+import { ChapterState } from "../../enums/ChapterState";
 const buttonAreaId = generateId(7);
 const titleId = generateId(7);
 
+//To fix issue on ios
 // function resizeContentArea() {
 //   const contentArea = $("#sections-wrapper");
 //   const buttons = $(`#${buttonAreaId}`);
@@ -38,6 +42,12 @@ export default function SidebarContent({ data, ...delegated }: IBookSidebarData)
   const params = useParams();
   const navigate = useNavigate();
 
+  const [isChapterStateOpen, setIsChapterStateOpen] = useState(false);
+
+  function onSelectChapterState(state: ChapterState): void {
+    data.updateCurrentChapter({ ...data.currentChapter, state: state })
+  }
+
   return (
     <Wrapper isFromModal={data.isFromModal} {...delegated}>
       <HeaderWrapper isFromModal={data.isFromModal} id="header-settings">
@@ -49,8 +59,8 @@ export default function SidebarContent({ data, ...delegated }: IBookSidebarData)
         <SectionsWrapper id="sections-wrapper">
           <SectionTitle data={{ title: "Book Settings", settingId: bookSettingsId }}></SectionTitle>
           <SettingsWrapper id={bookSettingsId}>
-            <SettingsText>Font family: Arial</SettingsText>
-            <SettingsText>Font size: 32px</SettingsText>
+            <SettingsTextButton>Edit Description</SettingsTextButton>
+            <SettingsTextButton>Delete Book</SettingsTextButton>
           </SettingsWrapper>
           <SectionTitle data={{ title: "Header Settings", settingId: headerSettingsId }}></SectionTitle>
           <SettingsWrapper id={headerSettingsId}>
@@ -58,22 +68,30 @@ export default function SidebarContent({ data, ...delegated }: IBookSidebarData)
           </SettingsWrapper>
           <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle>
           <SettingsWrapper id={chapterSettingsId}>
-            <SettingsText>Chapter name: Test</SettingsText>
-            <SettingsText>Chapter state: {data.currentChapter?.state}</SettingsText>
-            <SettingsText>Order: <Order onValueChange={(order: number) => { data.updateCurrentChapter({ ...data.currentChapter, orderId: order }) }} placeholder="" type="number" value={data.currentChapter?.orderId}></Order></SettingsText>
+            <SettingsText>Chapter name: {data.currentChapter?.header}</SettingsText>
+            <SettingsText onClick={() => { setIsChapterStateOpen(!isChapterStateOpen) }}>
+              State: <StateDropDown data={{
+                items: Object.values(ChapterState),
+                isOpen: isChapterStateOpen,
+                selectedItem: data.currentChapter?.state ?? ChapterState.Draft,
+                onItemClick: onSelectChapterState
+              }} />
+            </SettingsText>
+            <SettingsText>Order: <Order onValueChange={(order: number) => { data.updateCurrentChapter({ ...data.currentChapter, orderId: order }) }} placeholder="" type="number" value={data.currentChapter?.orderId ?? 0}></Order></SettingsText>
+            <SettingsTextButton onClick={() => data.deleteChapter(data.currentChapter?.id)}>Delete Chapter</SettingsTextButton>
           </SettingsWrapper>
         </SectionsWrapper> :
         <SectionsWrapper id="sections-wrapper">
           {data.baseChapters.map((chapter: IBaseChapter, index) => (
-              <ChapterNameWrapper to={`/write/${params.bookId}?chapterId=${chapter._id}`} isSelected={ data.currentChapter?._id === chapter._id ? true : false} key={`wrapper_${chapter._id}`}>
-                <ChapterName key={chapter._id}>
-                  {chapter.header}
-                </ChapterName>
-                <ArrowsWrapper>
-                  {index !== 0 && <ArrowUpIcon onClick={() => data.setOrderId(chapter.orderId - 1, chapter._id)}></ArrowUpIcon>}
-                  {index !== data.baseChapters.length - 1 && <ArrowDownIcon onClick={() => data.setOrderId(chapter.orderId + 1, chapter._id)}></ArrowDownIcon>}
-                </ArrowsWrapper>
-              </ChapterNameWrapper>
+            <ChapterNameWrapper to={`/write/${params.bookId}?chapterId=${chapter._id}`} isSelected={data.currentChapter?.id === chapter._id ? true : false} key={`wrapper_${chapter._id}`}>
+              <ChapterName key={chapter._id}>
+                {chapter.header}
+              </ChapterName>
+              <ArrowsWrapper>
+                {index !== 0 && <ArrowUpIcon onClick={() => data.setOrderId(chapter.orderId - 1, chapter._id)}></ArrowUpIcon>}
+                {index !== data.baseChapters.length - 1 && <ArrowDownIcon onClick={() => data.setOrderId(chapter.orderId + 1, chapter._id)}></ArrowDownIcon>}
+              </ArrowsWrapper>
+            </ChapterNameWrapper>
           ))}
         </SectionsWrapper>
       }
@@ -89,6 +107,15 @@ export default function SidebarContent({ data, ...delegated }: IBookSidebarData)
     </Wrapper>
   );
 }
+
+interface ChapterWrapperProps {
+  isSelected: boolean;
+}
+
+const StateDropDown = styled(Dropdown)`
+  margin-left: 6px;
+  width: 100%;
+`
 
 const ArrowsWrapper = styled.div`
   display: flex;
@@ -108,11 +135,11 @@ const ArrowDownIcon = styled(ArrowUpIcon)`
 
 const Order = styled(Input)`
   width: 100%;
-  background-color: ${Colors.FOREGROUND};
+  background-color: ${Colors.ACCENT};
+  border-radius: 20px;
+  margin-left: 4px;
   font-size: ${18 / 16}rem;
   text-align: left;
-  /* border: revert; */
-  border-radius: revert;
   padding: 0;
   padding-left: 4px;
 `
@@ -146,29 +173,23 @@ const SectionTitle = styled(BookSettingsSection)`
   border-width: 0 0 2px 0;
 `
 
-const ChapterNameWrapper = styled(Link)`
-text-decoration: none;
+const ChapterNameWrapper = styled(({ isSelected, ...rest }: ChapterWrapperProps & React.ComponentProps<typeof Link>) => (
+  <Link {...rest} />
+)) <ChapterWrapperProps>`
+  text-decoration: none;
   color: ${Colors.TEXT};
   display: flex;
   justify-content: space-between;
   margin-left: 5px;
   margin-right: 6px;
-  /* margin-bottom: 6px; */
-  padding-top: 6px;
-  padding-bottom: 6px;
-  padding-left: 4px;
-  padding-right: 4px;
   padding: 6px;
   align-items: center;
-  ${({ isSelected: isselected }: { isSelected: boolean }) => css`
-    background-color: ${isselected ? Colors.ACCENT : ""};
-  `}
+  background-color: ${(props) => (props.isSelected ? Colors.ACCENT : "")};
 `;
 
 const ChapterName = styled.p`
   text-decoration: none;
   color: ${Colors.TEXT};
-  /* margin: 0px 6px 0px 6px; */
   margin-right: 6px;
   font-size: ${18 / 16}rem;
   display: block;
@@ -182,11 +203,14 @@ const SettingsText = styled.label`
   align-items: center;
 `
 
+const SettingsTextButton = styled(SettingsText)`
+  text-decoration: underline;
+`
+
 const SectionsWrapper = styled.div`
   overflow: auto;
   -webkit-overflow-scrolling: touch;
   text-align: left;
-  /* height: 200px; */
   flex: 1 1 auto;
 `
 
@@ -219,9 +243,6 @@ const HeaderWrapper = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  /* flex-grow: 1; */
-  /* width: 231px; */
-  /* position: absolute; */
   border-color: ${Colors.BACKGROUND};
   border-style: solid;
   border-width: 0 0 2px 0;

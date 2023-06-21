@@ -5,7 +5,7 @@ import { OverlayStyle } from "../../commonStyledStyles/OverlayStyle";
 import { CommonContentModalStyle } from "../../commonStyledStyles/CommonContentModalStyle";
 import CustomInput from "../Input/Input";
 import { Colors } from "../../Colors";
-import Button from "../Button.ts/Button";
+import Button from "../Button/Button";
 import IRegisterModalData from "../../interfaces/modal/IRegisterModalData";
 import IRegisterRequest from "../../interfaces/service/user/IRegisterRequest";
 import ILoginRequest from "../../interfaces/service/user/ILoginRequest";

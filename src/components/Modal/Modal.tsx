@@ -10,6 +10,10 @@ export default function Modal<ContentStyle>({ data, children, ...delegate }: ICo
         if (!data.isExiting) {
             data.setExiting(true);
         }
+
+        if (data.willPlayCloseAnimation === false) {
+            close();
+        }
     }
 
     function close() {
@@ -30,7 +34,15 @@ export default function Modal<ContentStyle>({ data, children, ...delegate }: ICo
                 }} {...data.contentData} {...props}>{children}</data.ContentElement>
             )}
             overlayElement={(props, contentElement) => (
-                <OverlayStyle isExiting={data.isExiting} {...props}>{contentElement}</OverlayStyle>
+                <OverlayStyle isExiting={data.isExiting}
+                    onAnimationEnd={() => {
+                        if (data.isExiting) {
+                            close();
+                        }
+                    }}
+                    {...props}>
+                    {contentElement}
+                </OverlayStyle>
             )}
             isOpen={data.isOpen}
             {...delegate}>

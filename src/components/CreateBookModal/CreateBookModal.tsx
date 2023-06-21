@@ -4,7 +4,7 @@ import ReactModal from "react-modal";
 import { OverlayStyle } from "../../commonStyledStyles/OverlayStyle";
 import CustomInput from "../Input/Input";
 import { Colors } from "../../Colors";
-import Button from "../Button.ts/Button";
+import Button from "../Button/Button";
 import { XCircle } from "react-feather";
 import validator from "validator";
 import ICreateBookModalData from "../../interfaces/modal/ICreateBookModalData";

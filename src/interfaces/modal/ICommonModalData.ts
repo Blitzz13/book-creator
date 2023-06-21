@@ -6,9 +6,10 @@ export default interface ICommonModalData<ContentStyle> {
         setExiting: (toggle: boolean) => void;
         isOpen: boolean;
         isExiting: boolean;
-        height?: number;
         ContentElement: StyledComponent<"div", any, any, never>;
         contentData: ContentStyle;
+        willPlayCloseAnimation?: boolean;
+        height?: number;
     };
     children: React.ReactNode;
 }
