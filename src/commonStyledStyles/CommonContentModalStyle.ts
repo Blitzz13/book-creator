@@ -6,11 +6,7 @@ export const CommonContentModalStyle = styled.div`
   @media only screen and (max-width: 650px) {
     width: 100%;
   }
-  ${(data: ICommonContentModalStyle) =>
-    css`
-      width: ${data.width};
-      height: ${data.height};
-    `};
+
   max-width: 700px;
   display: flex;
   flex-direction: column;
@@ -22,4 +18,16 @@ export const CommonContentModalStyle = styled.div`
   border-width: 0 0px 5px 3px;
   border-color: ${Colors.ACCENT};
   border-radius: 30px;
+
+  ${(data: ICommonContentModalStyle) =>
+    css`
+      width: ${data.width};
+      height: ${data.height};
+      overflow: ${data.overflow};
+      background-color: ${data.backgroundColor};
+
+      @media only screen and (max-height: ${data.maxScreenHeight}px) {
+        height: 100svh;
+      }
+    `};
 `;

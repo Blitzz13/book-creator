@@ -3,16 +3,19 @@ import 'react-quill/dist/quill.snow.css';
 import { CommonContentModalStyle } from '../../commonStyledStyles/CommonContentModalStyle';
 import Modal from '../Modal/Modal';
 import ICommonContentModalStyle from '../../interfaces/modal/ICommonContentModalStyle';
-import IConfirmationModalData from '../../interfaces/modal/IConfirmationModalData';
 import Button from '../Button/Button';
 import { Colors } from '../../Colors';
 import styled from 'styled-components';
 import { XCircle } from 'react-feather';
+import { ORDERED_LIST, BULLET_LIST } from '../../constants/ToolbarConstants';
+import { ToolbarTextStyle } from '../../enums/ToolbarTextStyle';
+import Editor from '../Editor/Editor';
+import IDescriptionModalData from '../../interfaces/modal/IDescriptionModalData';
 
-export default function ConfirmationModal({ data, confirmationData, ...delegated }: IConfirmationModalData<ICommonContentModalStyle>) {
+export default function EditDescriptionModal({ data, descriptionData, ...delegated }: IDescriptionModalData<ICommonContentModalStyle>) {
 
     return (
-        <Modal {...delegated} data={{
+        <EditDesc {...delegated} data={{
             isOpen: data.isOpen,
             isExiting: data.isExiting,
             ContentElement: CommonContentModalStyle,
@@ -20,17 +23,33 @@ export default function ConfirmationModal({ data, confirmationData, ...delegated
             height: data.height,
             contentData: {
                 width: data.contentData.width,
-                isExiting: data.isExiting,
+                maxScreenHeight: 580,
             },
             setOpen: data.setOpen,
             setExiting: data.setExiting,
         }}>
             <Wrapper>
                 <HeaderWrapper>
-                    <Header>{confirmationData.modalTitle}</Header>
+                    <Header>{descriptionData.modalTitle}</Header>
                     <CloseIcon onClick={() => { data.setExiting(true) }}></CloseIcon>
                 </HeaderWrapper>
-                <Prompt>{confirmationData.text}</Prompt>
+                <TextArea data={{
+                    onValueChange: descriptionData.onDescriptionChange,
+                    setData: descriptionData.initialDescription,
+                    modules: {
+                        toolbar: {
+                            sizes: [{ size: [] }],
+                            textStyles: [
+                                ToolbarTextStyle.BOLD,
+                                ToolbarTextStyle.ITALIC,
+                                ToolbarTextStyle.UNDERLINE,
+                            ],
+                            liststyles: [ORDERED_LIST, BULLET_LIST],
+                            align: [{ align: [] }],
+                            removeStylesButton: ["clean"],
+                        }
+                    }
+                }} id="writing-area"></TextArea>
                 <ButtonWrapper>
                     <Button data={{
                         color: Colors.ACCENT,
@@ -39,28 +58,35 @@ export default function ConfirmationModal({ data, confirmationData, ...delegated
                         radius: 20,
                         textSize: 22,
                         type: "submit",
-                        onClick: () => { data.setExiting(true) }
-                    }}>{confirmationData.isAlert ? "Ok" : "No"}</Button>
-                    {!confirmationData.isAlert && confirmationData.funcToCall && <Button data={{
+                        onClick: descriptionData.funcToCall
+                    }}>Save</Button>
+                    <Button data={{
                         color: Colors.WARNING,
                         height: 51,
                         width: 100,
                         radius: 20,
                         textSize: 22,
                         type: "submit",
-                        onClick: confirmationData.funcToCall
-                    }}>Yes</Button>}
+                        onClick: () => { data.setExiting(true) }
+                    }}>Close</Button>
                 </ButtonWrapper>
             </Wrapper>
-        </Modal >
+        </EditDesc>
     );
 }
 
+const EditDesc = styled(Modal<ICommonContentModalStyle>)`
+`
+
 const Wrapper = styled.div`
-    display: flex;
-    align-items: center;
-    flex-direction: column;
-    gap: 10px;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 10px;
+  height: 500px;
+  @media only screen and (max-height: 580px) {
+    height: 100%;
+  }
 `
 
 const HeaderWrapper = styled.div`
@@ -79,9 +105,12 @@ const HeaderWrapper = styled.div`
   }
 `
 
-const Prompt = styled.p`
-    margin-left: 10px;
-    margin-right: 10px;
+const TextArea = styled(Editor)`
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+  margin-left: 30px;
+  margin-right: 30px;
 `
 
 const Header = styled.h2`

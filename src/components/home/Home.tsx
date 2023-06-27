@@ -1,12 +1,13 @@
 import React, { useEffect } from "react";
-import styled, { css, keyframes } from "styled-components";
+import styled, { css } from "styled-components";
 import AnimatedBook from "../AnimatedBook/AnimatedBook";
 import BookCover from "../BookCover/BookCover";
 import BookWithPercentage from "../BookWithPercentage/BookWithPercentage";
 import StyledWrapper from "../StyledWrapper/StyledWrapper";
 import { IServiceBook } from "../../interfaces/service/book/IServiceBook";
 import IBookService from "../../interfaces/service/book/IBookService";
-
+import IDisplayBook from "../../interfaces/IDisplayBook";
+import { ServiceToBook } from "../../Converters/Book/ConvertBook";
 export default function Home(data: { bookService: IBookService }) {
   const bookService = data.bookService;
 
@@ -14,7 +15,9 @@ export default function Home(data: { bookService: IBookService }) {
 
   const [books, setBooks] = React.useState([] as IServiceBook[]);
   const [isBookPreveiewShown, setBookPreviewShown] = React.useState(false);
+  const [isBookPreveiewExiting, setIsBookPreveiewExiting] = React.useState(false);
   const [toggle, setToggle] = React.useState(false);
+  const [selectedBook, setSelectedBook] = React.useState<IDisplayBook>();
 
   for (let i = 0; i < 2; i++) {
     content.push(<BookWithPercentage backCover="https://pictures.abebooks.com/isbn/9780345427656-us.jpg"
@@ -31,10 +34,17 @@ export default function Home(data: { bookService: IBookService }) {
     });
   }, [bookService])
 
-  function onBookClick(): void {
+  async function onBookClick(id: string): Promise<void> {
+    const book = await data.bookService.fetchBook(id);
+    setSelectedBook(ServiceToBook(book));
     setBookPreviewShown(!isBookPreveiewShown);
-    //This is done in order to stop user from scrolling the background
-    document.body.style.overflow = isBookPreveiewShown ? "" : "hidden";
+  }
+
+  function setPreviewShown(isBookPreveiewShown: boolean): void {
+    if (!isBookPreveiewShown) {
+      setToggle(false);
+    }
+    setBookPreviewShown(isBookPreveiewShown);
   }
 
   return (
@@ -49,14 +59,21 @@ export default function Home(data: { bookService: IBookService }) {
         <BiggerHeader>Freshly Written</BiggerHeader>
         <GridWrapper length={5}>
           {books && books.map((book: IServiceBook) => (
-            <BookCover key={book._id} data={{ title: book.title, cover: book.coverImage, onBookClick: onBookClick }}></BookCover>
+            <BookCover key={book._id} data={{ title: book.title, cover: book.coverImage, onBookClick: () => { onBookClick(book._id) } }}></BookCover>
           ))}
         </GridWrapper>
       </Wrapper>
-      {isBookPreveiewShown ? <Overlay onClick={onBookClick}></Overlay> : null}
-      <BookOverviewWrapper isShown={isBookPreveiewShown} toggle={toggle}>
-        {isBookPreveiewShown ? <AnimatedBook setToggle={setToggle} backCover="https://pictures.abebooks.com/isbn/9780345427656-us.jpg" frontCover="https://pictures.abebooks.com/isbn/9780345427656-us.jpg"></AnimatedBook> : null}
-      </BookOverviewWrapper>
+      <AnimatedBook modalData={{
+        isOpen: isBookPreveiewShown,
+        setOpen: setPreviewShown,
+        width: "",
+        children: null,
+      }} setToggle={setToggle}
+        toggle={toggle}
+        backCover={selectedBook?.backCover}
+        isExiting={isBookPreveiewExiting}
+        setIsExiting={setIsBookPreveiewExiting}
+        frontCover={selectedBook?.frontConver}></AnimatedBook>
     </>
   );
 }
@@ -72,31 +89,6 @@ const GridWrapper = styled.div`
     css`repeat(${length}, fit-content)`
   };
   overflow: auto;
-`
-
-const BookOverviewWrapper = styled.div`
-  position: fixed;
-  left: 50%;
-  top: 50%;
-  ${({ toggle, isShown }: { toggle: boolean, isShown: boolean }) =>
-    css`
-      width: ${isShown ? "20vw" : "0"};
-      height: ${isShown ? "55vh" : "0"};
-      animation: ${toggle ? MoveMiddle : MoveBack} 0.3s linear forwards
-    `};
-`
-
-const Overlay = styled.div`
-  overflow:hidden;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  position: fixed;
-  background-color: black;
-  opacity: 0.4;
-  /* width: 100vw;
-  height: 100vh; */
 `
 
 const Wrapper = styled(StyledWrapper)`
@@ -119,21 +111,3 @@ const BiggerHeader = styled.h2`
   padding: 10px 20px;
   font-size: ${48 / 16}rem;
 `
-const MoveMiddle = keyframes`
- from{
-    transform: translate(-50%, -50%);
- }
- to
-  {
-    transform:  translate(0%, -50%);
-  }
-`;
-
-const MoveBack = keyframes`
-  from {
-    transform: translate(0%, -50%);
-  }
-  to {
-    transform: translate(-50%, -50%);
-  }
-`;

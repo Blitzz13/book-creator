@@ -7,4 +7,7 @@ export default interface ICommonContentModalStyle {
     bottomRight?: string;
   };
   height?: string | number;
+  maxScreenHeight?: number;
+  overflow?: string;
+  backgroundColor?: string;
 }

@@ -2,6 +2,7 @@ import React from "react";
 import styled from "styled-components";
 import { Colors } from "../../Colors";
 import { IBookCover } from "../../interfaces/IBookCover";
+import bookPlaceholderImage from "../../assets/placeholder-image-portrait.png";
 
 export default function BookCover({data, ...delegated}: IBookCover) {
     const [isLoaded, setLoaded] = React.useState(false);
@@ -11,7 +12,7 @@ export default function BookCover({data, ...delegated}: IBookCover) {
     }
     
     return (
-        <Image onLoad={onLoad} onClick={() => data.onBookClick()} {...delegated} src={data.cover} alt={data.title}></Image>
+        <Image onLoad={onLoad} onClick={() => data.onBookClick()} {...delegated} src={data.cover || bookPlaceholderImage} alt={data.title}></Image>
     );
 }
 
@@ -19,6 +20,7 @@ const Image = styled.img`
     width: fit-content;
     position: relative;
     height: 350px;
+    width: 233px;
     cursor: pointer;
     background-color: ${Colors.BACKGROUND};
 `

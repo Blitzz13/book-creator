@@ -6,6 +6,6 @@ export default interface IBookService {
   fetchBooks(): Promise<IServiceBook[]>;
   fetchBook(id: string): Promise<IServiceBook>;
   createBook(data: ICreateBookRequest): Promise<IServiceBook>;
-  updateBook(data: IUpdateBookRequest): Promise<IServiceBook>;
+  updateBook(id: string, data: IUpdateBookRequest): Promise<IServiceBook>;
   deleteBook(id: string): Promise<IServiceBook>;
 }

@@ -1,5 +1,6 @@
-import { ChapterState } from "../enums/ChapterState";
-import { ServiceChapterState } from "../enums/ServiceChapterState";
+import { ChapterState } from "../../enums/ChapterState";
+import { ServiceChapterState } from "../../enums/ServiceChapterState";
+
 
 export function ChapterStateToService(state: ChapterState): ServiceChapterState {
     switch (state) {

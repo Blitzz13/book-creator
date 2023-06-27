@@ -22,8 +22,18 @@ import { CommonContentModalStyle } from "../../commonStyledStyles/CommonContentM
 import ConfirmationModal from "../ConfirmationModal/ConfirmationModal";
 import { IDisplayChapter } from "../../interfaces/IDisplayChapter";
 import { ChapterState } from "../../enums/ChapterState";
-import { ChapterToCreate as chapterToCreate, ChapterToUpdate as chapterToUpdate, ServiceToChapter } from "../../Converters/ConvertChapter";
+import { ChapterToCreate as chapterToCreate, ChapterToUpdate as chapterToUpdate, ServiceToChapter } from "../../Converters/Chapter/ConvertChapter";
 import validator from "validator";
+import EditDescriptionModal from "../EditDescription/EditDescription";
+import IDisplayBook from "../../interfaces/IDisplayBook";
+import { BookToUpdate, ServiceToBook } from "../../Converters/Book/ConvertBook";
+import { BookState } from "../../enums/BookState";
+import IDeleteConfirmation from "../../interfaces/IDeleteConfirmation";
+import BookCover from "../BookCover/BookCover";
+import BookWithPercentage from "../BookWithPercentage/BookWithPercentage";
+import AnimatedBook from "../AnimatedBook/AnimatedBook";
+import ICommonContentModalStyle from "../../interfaces/modal/ICommonContentModalStyle";
+import Header from "../Header/Header";
 
 function resizeContentTextarea() {
   const contentTextArea = $("#writing-area");
@@ -52,9 +62,30 @@ export default function WriteBook(data: IWriteBookData) {
   const [isAlertExiting, setIsAlertExiting] = useState(false);
   const [isConfirmExiting, setIsConfirmExiting] = useState(false);
   const [areSettingsOpen, setAreSettingsOpen] = useState(true);
+  const [isEditDescriptionOpen, setisEditDescriptionOpen] = useState(false);
+  const [isEditDescriptionExiting, setIsEditDescriptionExiting] = useState(false);
+  const [isPreviewOpen, setisPreviewOpen] = useState(false);
+  const [isPreviewExiting, setIsPreviewExiting] = useState(false);
+  const [isAnimatedToggle, setAnimatedToggle] = useState(false);
+  const [isAnimatedOpen, setAnimatedOpen] = useState(false);
+  const [isAnimatedExiting, setAnimatedExiting] = useState(false);
   const [chapterTitle, setChapterTitle] = useState("");
   const [content, setEditorContent] = useState("");
+  const [delteConfirmationData, setDeleteConfirmationData] = useState<IDeleteConfirmation>({
+    text: "",
+    title: "",
+    func: () => { },
+  });
+  const [initialBookDescription, setInitialBookDescription] = useState("");
   const [baseChapters, setChapterTitles] = useState<IBaseChapter[]>([]);
+
+  const [book, setBook] = useState<IDisplayBook>({
+    description: "",
+    id: "",
+    state: BookState.Draft,
+    title: ""
+  });
+
   const [currentChapter, setCurrentChapter] = useState<IDisplayChapter>({
     bookId: params.bookId ?? "",
     content: "",
@@ -62,7 +93,6 @@ export default function WriteBook(data: IWriteBookData) {
     orderId: -1,
     state: ChapterState.Draft
   });
-  const [title, setTitle] = useState("");
   const navigate = useNavigate();
 
   window.addEventListener("resize", () => {
@@ -94,8 +124,39 @@ export default function WriteBook(data: IWriteBookData) {
     setIsSettingModalOpen(!isSettingsModalOpen);
   }
 
-  function showDeleteChapterPrompt(): void {
+  function onEditDescriptionClick(): void {
+    setisEditDescriptionOpen(true);
+    setIsSettingModalOpen(false);
+  }
+
+  function onExitBookDescription(isExiting: boolean): void {
+    setIsEditDescriptionExiting(isExiting);
+    setInitialBookDescription(book.description);
+  }
+
+  function showDeleteConfirmation(isDeletingChapter: boolean): void {
+    const title = `Delete ${isDeletingChapter ? "Chapter" : "Book"}`
+    let text = `Are you sure you want to delete "${currentChapter.header}"?`;
+    const deleteFunc = isDeletingChapter ? deleteChapter : deleteBook;
+    if (!isDeletingChapter) {
+      text = `Are you sure you want to delete the current book "${book.title}"?`
+    }
+
+    setDeleteConfirmationData({
+      text: text,
+      title: title,
+      func: deleteFunc,
+    });
     setIsConfirmOpen(!isConfirmOpen);
+  }
+
+  async function deleteBook(): Promise<void> {
+    await data.bookService.deleteBook(book.id);
+    setIsConfirmOpen(false);
+  }
+
+  async function updateBook(): Promise<void> {
+    await data.bookService.updateBook(book.id, BookToUpdate(book));
   }
 
   async function deleteChapter(): Promise<void> {
@@ -173,7 +234,9 @@ export default function WriteBook(data: IWriteBookData) {
             setEditorContent(chapter.content);
           }
 
-          setTitle(book.title);
+          const displayBook = ServiceToBook(book);
+          setInitialBookDescription(book.description);
+          setBook(displayBook);
         }
       } catch (error) {
         navigate("*");
@@ -193,7 +256,6 @@ export default function WriteBook(data: IWriteBookData) {
             const chapter: IServiceChapter = await data.chapterService.fetchChapter(chapterId);
             const newChapter = ServiceToChapter(chapter);
             setCurrentChapter(newChapter);
-            // setUpdatedChapterTitle(chapter.header);
             setEditorContent(chapter.content);
           }
         }
@@ -235,7 +297,8 @@ export default function WriteBook(data: IWriteBookData) {
         </IconsWrapper>
       </HeaderWrapper>
       <ContentTextarea data={{
-        onValueChange: onEditorContentChange, setData: content, modules: {
+        onValueChange: onEditorContentChange,
+        setData: content, modules: {
           toolbar: {
             sizes: [{ size: [] }],
             headerSizes: [{ header: [1, 2, 3] }],
@@ -254,16 +317,21 @@ export default function WriteBook(data: IWriteBookData) {
       }} id="writing-area"></ContentTextarea>
       <Settings data={
         {
-          title: title,
+          title: book.title,
           isFromModal: false,
           areSettingsOpen: areSettingsOpen,
           setAreSettingsOpen: setAreSettingsOpen,
           saveChapter: onCreateChapterClick,
           setOrderId: setChapterOrder,
           updateCurrentChapter: setCurrentChapter,
-          deleteChapter: showDeleteChapterPrompt,
+          deleteConfirmation: showDeleteConfirmation,
+          showEditDescription: onEditDescriptionClick,
+          updateBook: setBook,
+          setPreviewOpen: setisPreviewOpen,
+          saveBook: updateBook,
           baseChapters: baseChapters,
           currentChapter: currentChapter,
+          book: book,
         }
       } id="book-settings" />
       <SettingsModal data={{
@@ -279,16 +347,21 @@ export default function WriteBook(data: IWriteBookData) {
       }}>
         <SidebarContent data={
           {
-            title: title,
+            title: book.title,
             isFromModal: true,
             areSettingsOpen: areSettingsOpen,
             setAreSettingsOpen: setAreSettingsOpen,
             saveChapter: onCreateChapterClick,
             setOrderId: setChapterOrder,
             updateCurrentChapter: setCurrentChapter,
-            deleteChapter: showDeleteChapterPrompt,
+            deleteConfirmation: showDeleteConfirmation,
+            showEditDescription: onEditDescriptionClick,
+            setPreviewOpen: setisPreviewOpen,
+            updateBook: setBook,
+            saveBook: updateBook,
             baseChapters: baseChapters,
             currentChapter: currentChapter,
+            book: book,
           }
         } />
       </SettingsModal>
@@ -303,9 +376,9 @@ export default function WriteBook(data: IWriteBookData) {
         setExiting: setIsConfirmExiting,
       }}
         confirmationData={{
-          text: `Are you sure you want to delete "${currentChapter?.header}"?`,
-          modalTitle: `Delete Chapter`,
-          funcToCall: deleteChapter
+          text: delteConfirmationData.text,
+          modalTitle: delteConfirmationData.title,
+          funcToCall: delteConfirmationData.func,
         }}>
       </ConfirmationModal>
       <ConfirmationModal data={{
@@ -324,12 +397,91 @@ export default function WriteBook(data: IWriteBookData) {
           isAlert: true
         }}>
       </ConfirmationModal>
+      <EditDescriptionModal data={{
+        isOpen: isEditDescriptionOpen,
+        isExiting: isEditDescriptionExiting,
+        ContentElement: CommonContentModalStyle,
+        contentData: {
+          width: "400px",
+        },
+        setOpen: setisEditDescriptionOpen,
+        setExiting: onExitBookDescription,
+      }}
+        descriptionData={{
+          modalTitle: `Edit description`,
+          initialDescription: initialBookDescription,
+          onDescriptionChange: (text: string) => { setBook({ ...book, description: text }) },
+          funcToCall: () => {
+            data.bookService.updateBook(book.id, {
+              description: book.description,
+            })
+          },
+        }}>
+      </EditDescriptionModal>
+      <PreviewModal data={{
+        isOpen: isPreviewOpen,
+        isExiting: isPreviewExiting,
+        ContentElement: CommonContentModalStyle,
+        contentData: {
+          width: "400px",
+          maxScreenHeight: 615,
+          overflow: "hidden",
+          backgroundColor: Colors.FOREGROUND
+        },
+        setOpen: setisPreviewOpen,
+        setExiting: setIsPreviewExiting,
+      }}>
+        <Header data={{
+          title: "Preview",
+          crossFunc: () => { setIsPreviewExiting(true) }
+        }} />
+        <PreviewWrapper>
+          <Text>This is how the book will apear when searched or in the main page</Text>
+          <BookCover key={book.id} data={{ title: book.title, cover: book.frontConver, onBookClick: () => { setAnimatedOpen(!isAnimatedOpen) } }} />
+          <Text>This is how the book will apear when people are reading it</Text>
+          <BookWithPercentage
+            backCover={book.backCover}
+            frontCover={book.frontConver}
+            width={130}
+            height={8}
+            percentage={20} />
+        </PreviewWrapper>
+      </PreviewModal>
+      <AnimatedBook
+        modalData={{
+          isOpen: isAnimatedOpen,
+          setOpen: setAnimatedOpen,
+          width: "",
+          children: null
+        }}
+        isExiting={isAnimatedExiting}
+        setIsExiting={setAnimatedExiting}
+        toggle={isAnimatedToggle}
+        setToggle={setAnimatedToggle}
+        backCover={book.backCover}
+        frontCover={book.frontConver} />
     </Wrapper >
   );
 }
 
+const Text = styled.p`
+  margin-bottom: 10px;
+
+  &:not(:first-of-type){
+    margin-top: 10px;
+  }
+`
+
+const PreviewWrapper = styled.div`
+  /* margin: 16px 0px 0px 16px; */
+  padding: 16px;
+  overflow: auto;
+`
+
+const PreviewModal = styled(Modal<ICommonContentModalStyle>)`
+`
+
 const SettingsModal = styled(Modal<IBurgerContentModalStyle>)`
-  /* overflow: auto; */
 `
 
 const IconsWrapper = styled.div`

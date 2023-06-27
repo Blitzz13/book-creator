@@ -3,7 +3,7 @@ import { OverlayStyle } from "../../commonStyledStyles/OverlayStyle";
 import React from "react";
 import ICommonModalData from "../../interfaces/modal/ICommonModalData";
 
-export default function Modal<ContentStyle>({ data, children, ...delegate }: ICommonModalData<ContentStyle>) {
+export default function Modal<ContentStyle>({ data, children, id, ...delegate }: ICommonModalData<ContentStyle>) {
     ReactModal.setAppElement("#root");
 
     function startExitAnimation() {
@@ -23,9 +23,15 @@ export default function Modal<ContentStyle>({ data, children, ...delegate }: ICo
 
     return (
         <ReactModal
+            id={id}
             className="_"
             overlayClassName="_"
             onRequestClose={startExitAnimation}
+            onAfterOpen={() => { 
+                if (data.onAfterOpen) {
+                    data.onAfterOpen();
+                }
+            }}
             contentElement={(props, children) => (
                 <data.ContentElement onAnimationEnd={() => {
                     if (data.isExiting) {

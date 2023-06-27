@@ -1,3 +1,4 @@
+import IDisplayBook from "./IDisplayBook";
 import { IDisplayChapter } from "./IDisplayChapter";
 import IHtmlElement from "./IHtmlElement";
 import IBaseChapter from "./service/chapter/IBaseChapter";
@@ -7,12 +8,17 @@ export default interface IBookSidebarData extends IHtmlElement {
     title: string;
     isFromModal: boolean;
     areSettingsOpen: boolean;
-    setAreSettingsOpen: Function;
     saveChapter: Function;
     baseChapters: IBaseChapter[];
-    currentChapter?: IDisplayChapter;
+    book: IDisplayBook;
+    updateBook: (book: IDisplayBook) => void;
+    deleteConfirmation: (isDeletingChapter: boolean) => void;
+    setPreviewOpen: (isOpen: boolean) => void;
+    saveBook: Function;
+    setAreSettingsOpen: Function;
     updateCurrentChapter: Function;
     setOrderId: Function;
-    deleteChapter: Function;
+    showEditDescription: Function;
+    currentChapter?: IDisplayChapter;
   };
 }

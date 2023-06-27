@@ -1,11 +1,12 @@
+import { ServiceBookState } from "../../../enums/ServiceBookState";
 import { IMongoDocument } from "../IMongoDocument";
 
 export interface IServiceBook extends IMongoDocument {
-  coverImage: string;
+  coverImage?: string;
   title: string;
   genre: string[];
   description: string;
-  state: string;
+  state: ServiceBookState;
   author: string;
   rating: number;
   backCoverImage?: string;

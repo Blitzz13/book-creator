@@ -12,6 +12,7 @@ import { IoIosArrowUp } from "react-icons/io";
 import Dropdown from "../Dropdown/Dropdown";
 import { useState } from "react";
 import { ChapterState } from "../../enums/ChapterState";
+import { BookState } from "../../enums/BookState";
 const buttonAreaId = generateId(7);
 const titleId = generateId(7);
 
@@ -43,9 +44,14 @@ export default function SidebarContent({ data, ...delegated }: IBookSidebarData)
   const navigate = useNavigate();
 
   const [isChapterStateOpen, setIsChapterStateOpen] = useState(false);
+  const [isBookStateOpen, setIsBookStateOpen] = useState(false);
 
   function onSelectChapterState(state: ChapterState): void {
     data.updateCurrentChapter({ ...data.currentChapter, state: state })
+  }
+
+  function onSelectBookState(state: BookState): void {
+    data.updateBook({ ...data.book, state: state })
   }
 
   return (
@@ -59,8 +65,42 @@ export default function SidebarContent({ data, ...delegated }: IBookSidebarData)
         <SectionsWrapper id="sections-wrapper">
           <SectionTitle data={{ title: "Book Settings", settingId: bookSettingsId }}></SectionTitle>
           <SettingsWrapper id={bookSettingsId}>
-            <SettingsTextButton>Edit Description</SettingsTextButton>
-            <SettingsTextButton>Delete Book</SettingsTextButton>
+            <SettingsText>
+              <NoWrapText>
+                Title:
+              </NoWrapText>
+              <SettingsInput onValueChange={(text: string) => { data.updateBook({ ...data.book, title: text }) }} value={data.book.title} />
+            </SettingsText>
+            <SettingsText>
+              <NoWrapText>
+                Front Cover:
+              </NoWrapText>
+              <SettingsInput onValueChange={(text: string) => {
+                data.updateBook({ ...data.book, frontConver: text })
+              }} value={data.book.frontConver || "URL"} />
+            </SettingsText>
+            <SettingsText>
+              <NoWrapText>
+                Back Cover:
+              </NoWrapText>
+              <SettingsInput onValueChange={(text: string) => {
+                data.updateBook({ ...data.book, backCover: text })
+              }} value={data.book.backCover || "URL"} />
+            </SettingsText>
+            <SettingsText onClick={() => { setIsBookStateOpen(!isBookStateOpen) }}>
+              State: <StateDropDown data={{
+                items: Object.values(BookState),
+                isOpen: isBookStateOpen,
+                selectedItem: data.book.state,
+                onItemClick: onSelectBookState
+              }} />
+            </SettingsText>
+            <SettingsTextButton onClick={() => data.showEditDescription(true)}>Edit Description</SettingsTextButton>
+            <InlineWrapper>
+              <SettingsTextButton onClick={() => data.setPreviewOpen(true)}>Preview</SettingsTextButton>
+              <SettingsTextButton onClick={() => data.saveBook()}>Save</SettingsTextButton>
+              <SettingsTextButton onClick={() => data.deleteConfirmation(false)}>Delete</SettingsTextButton>
+            </InlineWrapper>
           </SettingsWrapper>
           <SectionTitle data={{ title: "Header Settings", settingId: headerSettingsId }}></SectionTitle>
           <SettingsWrapper id={headerSettingsId}>
@@ -77,8 +117,13 @@ export default function SidebarContent({ data, ...delegated }: IBookSidebarData)
                 onItemClick: onSelectChapterState
               }} />
             </SettingsText>
-            <SettingsText>Order: <Order onValueChange={(order: number) => { data.updateCurrentChapter({ ...data.currentChapter, orderId: order }) }} placeholder="" type="number" value={data.currentChapter?.orderId ?? 0}></Order></SettingsText>
-            <SettingsTextButton onClick={() => data.deleteChapter(data.currentChapter?.id)}>Delete Chapter</SettingsTextButton>
+            <SettingsText>Order:
+              <SettingsInput onValueChange={(order: number) => { data.updateCurrentChapter({ ...data.currentChapter, orderId: order }) }}
+                placeholder=""
+                type="number"
+                value={data.currentChapter?.orderId ?? 0} />
+            </SettingsText>
+            <SettingsTextButton onClick={() => data.deleteConfirmation(true)}>Delete Chapter</SettingsTextButton>
           </SettingsWrapper>
         </SectionsWrapper> :
         <SectionsWrapper id="sections-wrapper">
@@ -112,6 +157,15 @@ interface ChapterWrapperProps {
   isSelected: boolean;
 }
 
+const InlineWrapper = styled.div`
+  display: flex;
+  gap: 16px;
+`
+
+const NoWrapText = styled.p`
+  white-space: nowrap;
+`
+
 const StateDropDown = styled(Dropdown)`
   margin-left: 6px;
   width: 100%;
@@ -133,7 +187,8 @@ const ArrowDownIcon = styled(ArrowUpIcon)`
   transform: rotate(180deg);
 `;
 
-const Order = styled(Input)`
+const SettingsInput = styled(Input)`
+  flex: 1;
   width: 100%;
   background-color: ${Colors.ACCENT};
   border-radius: 20px;

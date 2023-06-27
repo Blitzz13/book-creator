@@ -1,7 +1,7 @@
 export interface IBookCover {
   data: {
     onBookClick: Function;
-    cover: string;
+    cover?: string;
     title: string;
   };
 }

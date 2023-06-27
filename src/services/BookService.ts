@@ -50,9 +50,13 @@ export default class BookService implements IBookService {
     throw new Error(`Creating book failed with ${response.statusText}`);
   }
 
-  public async updateBook(data: IUpdateBookRequest): Promise<IServiceBook> {
-    const response = await fetch(`${this._url}`, {
+  public async updateBook(
+    id: string,
+    data: IUpdateBookRequest
+  ): Promise<IServiceBook> {
+    const response = await fetch(`${this._url}/${id}`, {
       method: "PATCH",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
     const json = await response.json();

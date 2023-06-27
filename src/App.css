@@ -34,6 +34,12 @@
   background-color: #FAFAFA;
   overflow: hidden;
 }
+
+/* Override quill tools space between */
+.ql-formats {
+  margin-right: 4px !important;
+}
+
 .ql-toolbar {
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;

@@ -1,11 +1,9 @@
-import { IDisplayChapter } from "../interfaces/IDisplayChapter";
-import ICreateChapter from "../interfaces/service/chapter/ICreateChapter";
-import IServiceChapter from "../interfaces/service/chapter/IServiceChapter";
-import IUpdateChapter from "../interfaces/service/chapter/IUpdateChapter";
-import {
-  ChapterStateServiceToState,
-  ChapterStateToService,
-} from "./ConvertChapterState";
+import { IDisplayChapter } from "../../interfaces/IDisplayChapter";
+import ICreateChapter from "../../interfaces/service/chapter/ICreateChapter";
+import IServiceChapter from "../../interfaces/service/chapter/IServiceChapter";
+import IUpdateChapter from "../../interfaces/service/chapter/IUpdateChapter";
+import { ChapterStateServiceToState, ChapterStateToService } from "./ConvertChapterState";
+
 
 export function ServiceToChapter(chapter: IServiceChapter): IDisplayChapter {
   return {
