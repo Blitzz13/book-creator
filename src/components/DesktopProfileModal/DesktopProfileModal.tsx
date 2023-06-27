@@ -6,41 +6,48 @@ import IProfileModalData from "../../interfaces/modal/IProfileModalData";
 import { XCircle } from "react-feather";
 import { ProfileModalStyle } from "../../commonStyledStyles/ProfileModalStyle";
 import { NoOverlayStyle } from "../../commonStyledStyles/NoOverlayStyle";
+import { OnClickEvent } from "../../types/OnClickEvent";
 export default function DesktopProfileModal(data: IProfileModalData) {
-    ReactModal.setAppElement("#root");
+  ReactModal.setAppElement("#root");
 
-    function handleCloseModal() {
-        data.setOpen(false);
-    }
+  function handleCloseModal() {
+    data.setOpen(false);
+  }
 
-    function handleLogout() {
-        data.logout();
-        handleCloseModal();
-    }
+  function handleLogout() {
+    data.logout();
+    handleCloseModal();
+  }
 
-    return (
-        <ReactModal
-            className="_"
-            overlayClassName="_"
-            onRequestClose={handleCloseModal}
-            contentElement={(props, children) => (
-                <ProfileModalStyle height={data.navbarHeight} width={data.width} {...props}>{children}</ProfileModalStyle>
-            )}
-            overlayElement={(props, contentElement) => (
-                <NoOverlayStyle {...props}>{contentElement}</NoOverlayStyle>
-            )}
-            isOpen={data.isOpen}>
-            <HeaderWrapper>
-                <CloseIcon onClick={handleCloseModal}></CloseIcon>
-            </HeaderWrapper>
-            <BodyWrapper>
-                <MenuLink to="">My Profile</MenuLink>
-                <MenuLink to="">My Books</MenuLink>
-                <MenuLink to="">Start new book</MenuLink>
-                <MenuLink onClick={handleLogout} to="">Logout</MenuLink>
-            </BodyWrapper>
-        </ReactModal>
-    );
+  function handleCreateBook(event: OnClickEvent) {
+    event.preventDefault();
+    data.createBook();
+    handleCloseModal();
+  }
+
+  return (
+    <ReactModal
+      className="_"
+      overlayClassName="_"
+      onRequestClose={handleCloseModal}
+      contentElement={(props, children) => (
+        <ProfileModalStyle height={data.navbarHeight} width={data.width} {...props}>{children}</ProfileModalStyle>
+      )}
+      overlayElement={(props, contentElement) => (
+        <NoOverlayStyle {...props}>{contentElement}</NoOverlayStyle>
+      )}
+      isOpen={data.isOpen}>
+      <HeaderWrapper>
+        <CloseIcon onClick={handleCloseModal}></CloseIcon>
+      </HeaderWrapper>
+      <BodyWrapper>
+        <MenuLink to="">My Profile</MenuLink>
+        <MenuLink to="">My Books</MenuLink>
+        <MenuLink onClick={handleCreateBook} to="">Start new book</MenuLink>
+        <MenuLink onClick={handleLogout} to="">Logout</MenuLink>
+      </BodyWrapper>
+    </ReactModal>
+  );
 }
 
 const CloseIcon = styled(XCircle)`

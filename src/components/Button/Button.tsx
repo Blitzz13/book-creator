@@ -18,6 +18,7 @@ const CustomButton = styled.button`
     background-color: ${data.color};
     border-width: 0;
     font-size: ${data.textSize / 16}rem;
+    cursor: pointer;
   `};
 
   @media only screen and (max-width: 300px) {

@@ -2,10 +2,10 @@ import React from "react";
 import styled from "styled-components";
 import ReactModal from "react-modal";
 import { OverlayStyle } from "../../commonStyledStyles/OverlayStyle";
-import { LoginRegisterModalStyle } from "../../commonStyledStyles/LoginRegisterModalStyle";
+import { CommonContentModalStyle } from "../../commonStyledStyles/CommonContentModalStyle";
 import CustomInput from "../Input/Input";
 import { Colors } from "../../Colors";
-import Button from "../Button.ts/Button";
+import Button from "../Button/Button";
 import IRegisterModalData from "../../interfaces/modal/IRegisterModalData";
 import IRegisterRequest from "../../interfaces/service/user/IRegisterRequest";
 import ILoginRequest from "../../interfaces/service/user/ILoginRequest";
@@ -21,6 +21,13 @@ export default function LoginRegisterModal(data: IRegisterModalData) {
     const [isValidEmail, setIsEmailValid] = React.useState(false);
     const [isStrongPassword, setIsStrongPassword] = React.useState(false);
     const [errorMessage, setErrorMessage] = React.useState("");
+    const [isExiting, setIsExiting] = React.useState(false);
+
+    function startExitAnimation() {
+        if (!isExiting) {
+            setIsExiting(true);
+        }
+    }
 
     function validateEmail(value: string) {
         setIsEmailValid(validator.isEmail(value));
@@ -33,6 +40,7 @@ export default function LoginRegisterModal(data: IRegisterModalData) {
     }
 
     function handleCloseModal() {
+        setIsExiting(false);
         data.setOpen(false);
     }
 
@@ -83,17 +91,21 @@ export default function LoginRegisterModal(data: IRegisterModalData) {
         <ReactModal
             className="_"
             overlayClassName="_"
-            onRequestClose={handleCloseModal}
+            onRequestClose={startExitAnimation}
             contentElement={(props, children) => (
-                <LoginRegisterModalStyle width={data.width} {...props}>{children}</LoginRegisterModalStyle>
+                <CommonContentModalStyle width={data.width} {...props}>{children}</CommonContentModalStyle>
             )}
             overlayElement={(props, contentElement) => (
-                <OverlayStyle {...props}>{contentElement}</OverlayStyle>
+                <OverlayStyle onAnimationEnd={() => {
+                    if (isExiting) {
+                        handleCloseModal();
+                    }
+                }} isExiting={isExiting} {...props}>{contentElement}</OverlayStyle>
             )}
             isOpen={data.isOpen}>
             <HeaderWrapper>
                 {data.isLogin ? <Header>Login</Header> : <Header>Register</Header>}
-                <CloseIcon onClick={handleCloseModal}></CloseIcon>
+                <CloseIcon onClick={startExitAnimation}></CloseIcon>
             </HeaderWrapper>
             <form onSubmit={data.isLogin ? handleLoginClick : handleRegisterClick}>
                 <BodyWrapper>
@@ -121,12 +133,12 @@ export default function LoginRegisterModal(data: IRegisterModalData) {
 }
 
 const Error = styled.span`
-    background-color: ${Colors.WARNING};
-    width: 70%;
-    text-align: center;
-    border-radius: 20px;
-    padding: 4px;
-    margin-bottom: 20px;
+  background-color: ${Colors.WARNING};
+  width: 70%;
+  text-align: center;
+  border-radius: 20px;
+  padding: 4px;
+  margin-bottom: 20px;
 `
 
 const CloseIcon = styled(XCircle)`

@@ -8,15 +8,19 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "@types/jest": "^27.5.2",
+    "@types/jquery": "^3.5.16",
     "@types/node": "^16.18.14",
     "@types/react": "^18.0.28",
-    "@types/validator": "^13.7.15",
     "@types/react-dom": "^18.0.11",
     "@types/styled-components": "^5.1.26",
+    "@types/validator": "^13.7.15",
+    "jquery": "^3.7.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-feather": "^2.0.10",
+    "react-icons": "^4.8.0",
     "react-modal": "^3.16.1",
+    "react-quill": "^2.0.0",
     "react-router-dom": "^6.8.2",
     "react-scripts": "5.0.1",
     "styled-components": "^5.3.8",
@@ -50,6 +54,7 @@
     ]
   },
   "devDependencies": {
+    "@types/editorjs__header": "^2.6.0",
     "@types/react-modal": "^3.16.0"
   }
 }

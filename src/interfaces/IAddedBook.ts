@@ -1,4 +1,4 @@
 export interface IAddedBook {
-    frontCover: string;
-    backCover: string;
+    frontCover?: string;
+    backCover?: string;
 }

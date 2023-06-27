@@ -1,15 +1,16 @@
 import styled, { css } from "styled-components";
 import { Colors } from "../Colors";
+import ICommonContentModalStyle from "../interfaces/modal/ICommonContentModalStyle";
 
 export const ProfileModalStyle = styled.div`
   @media only screen and (max-width: 650px) {
     width: 100%;
     right: revert;
   }
-  ${({ width, height }: { width: string; height: number }) =>
+  ${(data: ICommonContentModalStyle) =>
     css`
-      width: ${width};
-      top: ${height + 9}px;
+      width: ${data.width};
+      top: ${data.height as number + 9}px;
     `};
   max-width: 700px;
   display: flex;

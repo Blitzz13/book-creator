@@ -1,47 +1,105 @@
-import React from "react";
 import styled, { css, keyframes } from "styled-components";
 import { IAnimatedBook } from "../../interfaces/IAnimatedBook";
+import Modal from "../Modal/Modal";
+import { NoBackgroundContentModalStyle } from "../../commonStyledStyles/NoBackgroundContentModalStyle";
+import { generateId } from "../../helpers/helpFunctions";
+import $ from "jquery";
+import bookPlaceholderImage from "../../assets/placeholder-image-portrait.png";
+const modalId = generateId(7);
+const bookAspectRatio = 1.48;
+
+function resizeContentTextarea() {
+  const book = $(`#${modalId}`);
+  //for later use to show description
+  // const page = $(`#test`);
+  // const text = $(`#text123`);
+  // text.offset({ top: page.offset()?.top, left: page.offset()?.left || 0 });
+  // text.css("max-width", `50px`)
+  // console.log(page.offset()?.top);
+  // console.log(page.offset()?.left);
+  let width = book.outerWidth();
+  if (width) {
+
+    if (window.innerHeight <= 600) {
+      book.css("height", "90%");
+      const height = book.outerHeight() || 1;
+      book.outerWidth(height / bookAspectRatio);
+      width = book.outerWidth() || 1;
+    } else {
+      book.outerHeight(width * bookAspectRatio);
+    }
+
+    MoveMiddle = keyframes`
+    from {
+      transform: translate(${width / 2}px);
+    }
+    to {
+      transform: translate(0);
+    }
+  `;
+    MoveBack = keyframes`
+    from {
+      transform: translate(0);
+    }
+    to {
+      transform: translate(${width / 2}px);
+    }
+  `;
+  }
+}
+
 
 export default function AnimatedBook(data: IAnimatedBook) {
+  window.addEventListener("resize", () => {
+    if (data.modalData.isOpen) {
+      resizeContentTextarea();
+    }
+  });
+
+  window.screen.orientation.addEventListener("change", () => {
+    if (data.modalData.isOpen) {
+      resizeContentTextarea();
+    }
+  });
+
   function onClick(): void {
-    setToggle(!toggle);
-    data.setToggle(!toggle);
+    data.setToggle(!data.toggle);
   }
 
-  const [toggle, setToggle] = React.useState(false);
+  // const [isModalOpen, setisModalOpen] = useState(true);
+  // const [isModalExiting, setIsPreviewExiting] = useState(false);
 
   return (
-      <Wrapper toggle={toggle}>
-        <Back src={data.backCover} onClick={onClick} toggle={toggle}></Back>
-        <Page1 onClick={onClick} toggle={toggle}></Page1>
-        <Page2 onClick={onClick} toggle={toggle}></Page2>
-        <Page3 onClick={onClick} toggle={toggle}></Page3>
-        <Page4 onClick={onClick} toggle={toggle}></Page4>
-        <Page5 onClick={onClick} toggle={toggle}></Page5>
-        <Page6 onClick={onClick} toggle={toggle}></Page6>
-        <Front src={data.frontCover} onClick={onClick} toggle={toggle}></Front>
+    <Modal id={modalId} data={{
+      isOpen: data.modalData.isOpen,
+      isExiting: data.isExiting,
+      ContentElement: NoBackgroundContentModalStyle,
+      contentData: {
+        width: "400px",
+        height: `${400 * bookAspectRatio}px`
+      },
+      setOpen: data.modalData.setOpen,
+      setExiting: data.setIsExiting,
+      onAfterOpen: resizeContentTextarea
+    }}>
+      {/* {data.toggle && <Text id="text123" onClick={onClick}>  dawod aowk, dokawd opakd kawopkddawod aowk, dokawd opakd kawopkddawod aowk, dokawd opakd kawopkddawod aowk, dokawd opakd kawopkddawod aowk, dokawd opakd kawopkddawod aowk, dokawd opakd kawopkddawod aowk, dokawd opakd kawopkddawod aowk, dokawd opakd kawopkddawod aowk, dokawd opakd kawopkddawod aowk, dokawd opakd kawopkddawod aowk, dokawd opakd kawopkddawod aowk, dokawd opakd kawopkddawod aowk, dokawd opakd kawopkddawod aowk, dokawd opakd kawopkddawod aowk, dokawd opakd kawopkddawod aowk, dokawd opakd kawopkddawod aowk, dokawd opakd kawopkddawod aowk, dokawd opakd kawopkddawod aowk, dokawd opakd kawopkddawod aowk, dokawd opakd kawopkddawod aowk, dokawd opakd kawopkddawod aowk, dokawd opakd kawopkddawod aowk, dokawd opakd kawopkddawod aowk, dokawd opakd kawopkddawod aowk, dokawd opakd kawopkddawod aowk, dokawd opakd kawopkddawod aowk, dokawd opakd kawopkd</Text>} */}
+      <Wrapper toggle={data.toggle}>
+        <Back src={data.backCover || data.frontCover || bookPlaceholderImage} onClick={onClick} toggle={data.toggle}></Back>
+        <Page1 onClick={onClick} toggle={data.toggle}></Page1>
+        <Page2 onClick={onClick} toggle={data.toggle}></Page2>
+        <Page3 onClick={onClick} toggle={data.toggle}></Page3>
+        <Page4 onClick={onClick} toggle={data.toggle}></Page4>
+        <Page5 onClick={onClick} toggle={data.toggle}></Page5>
+        <Page6 onClick={onClick} toggle={data.toggle}></Page6>
+        <Front src={data.frontCover || bookPlaceholderImage} onClick={onClick} toggle={data.toggle}></Front>
       </Wrapper>
+    </Modal>
   );
 }
 
-const MoveMiddle = keyframes`
- from{
-    transform: translate(600px);
- }
- to
-  {
-    transform: translate(600px);
-  }
-`;
+let MoveMiddle = keyframes``;
 
-const MoveBack = keyframes`
-  from {
-    transform: translate(600px);
-  }
-  to {
-    transform: translate(0px);
-  }
-`;
+let MoveBack = keyframes``;
 
 const Wrapper = styled.div`
   width: max(100%, 200px);
@@ -58,10 +116,10 @@ const Wrapper = styled.div`
   animation: ${({ toggle }: { toggle: boolean }) =>
     toggle
       ? css`
-          /* ${MoveBack} 0.7s linear forwards */
+          ${MoveBack} 0.4s linear forwards
         `
       : css`
-          /* ${MoveMiddle} 0.7s linear forwards */
+          ${MoveMiddle} 0.4s linear forwards
         `};
 `;
 
@@ -124,6 +182,16 @@ const Back = styled(BaseCover)`
         `
   };
 `
+
+// const Text = styled.p`
+//     isolation: isolate;
+//     z-index: 1;
+//     position: absolute;
+//     /* left: 70px;
+//     width: 251px;
+//     height: 300px; */
+//     overflow: auto;
+// `
 
 const Page1 = styled(BasePage)`
   background: #efefef;
