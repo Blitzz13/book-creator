@@ -9,6 +9,8 @@ export default interface IEditorData extends IHtmlElement {
   data: {
     onValueChange?: Function;
     setData?: string;
+    theme?: "snow" | "bubble" | undefined;
+    readonly?: boolean;
     modules?: {
       toolbar?: {
         textStyles?: ToolbarTextStyle[];

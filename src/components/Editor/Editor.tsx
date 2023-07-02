@@ -3,6 +3,7 @@ import { useRef, useEffect } from 'react';
 import ReactQuill from 'react-quill';
 import { DeltaStatic } from 'quill';
 import 'react-quill/dist/quill.snow.css';
+import 'react-quill/dist/quill.bubble.css';
 import IEditorData from '../../interfaces/IEditorData';
 
 export default function Editor({ data, ...delegated }: IEditorData) {
@@ -21,7 +22,8 @@ export default function Editor({ data, ...delegated }: IEditorData) {
         data.onValueChange(JSON.stringify(content))
       }
 
-      console.log(content);
+      // console.log(content);
+      console.log(quill.getText());
     }
   }
 
@@ -38,6 +40,6 @@ export default function Editor({ data, ...delegated }: IEditorData) {
   return (
     <ReactQuill modules={{
       toolbar: toolbarSettings
-    }} ref={quillRef} theme="snow" {...delegated} onChange={getContent} />
+    }} ref={quillRef} readOnly={data.readonly} theme={data.theme || "snow"} {...delegated} onChange={getContent} />
   );
 }
