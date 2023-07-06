@@ -23,7 +23,7 @@ export default function Editor({ data, ...delegated }: IEditorData) {
       }
 
       // console.log(content);
-      console.log(quill.getText());
+      // console.log(quill.getText());
     }
   }
 

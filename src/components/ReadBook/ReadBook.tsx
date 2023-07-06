@@ -1,21 +1,44 @@
 import styled from "styled-components";
 import bookPath from "../../assets/Book.svg"
+import pagePath from "../../assets/Page.svg"
 import { useEffect, useRef, useState } from "react";
 import $ from "jquery"
 import Editor from "../Editor/Editor";
+import IChapterService from "../../interfaces/service/chapter/IChapterService";
 
-const initialReadAreaPaddingLeft = 93;
-const initialReadAreaPaddingRight = 87;
-const initialReadAreaHeightOffset = 48;
+const initialReadAreaPaddingLeft = 92;
+const initialReadAreaPaddingRight = 88;
+const initialReadAreaHeightOffset = 30;
 const columnGap = 64;
 
-export default function ReadBook(data: any) {
+export default function ReadBook(data: { chapterService: IChapterService }) {
   const overlayRef = useRef<HTMLDivElement>(null);
 
   const [scrollPosX, setScrollPosX] = useState(0);
   const [imageScale, setScale] = useState(0);
+  const [text, setText] = useState("");
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [firstVisibileElement, setFirstVisibileElement] = useState<JQuery<HTMLElement>>();
 
   function handleResize(): void {
+    const quill = $(".ql-editor");
+    const lastQuillWidth = quill.outerWidth() || 0;
+    // console.log("last quill width", quill.outerWidth())
+    //make editor split the text into 2 pages
+    if (window.innerWidth <= 600) {
+      quill.css("column-count", "1");
+      // quill.css("padding-right", "0");
+    } else {
+      quill.css("column-count", "2");
+    }
+
+    quill.css("column-gap", `${columnGap}px`);
+    // var $newElement = $('<p style=height:600px> </p>');
+    // $(".ql-editor").append($newElement);
+    //remove background color from the reading area
+    quill.css("background-color", "transparent");
+    $(".ql-container").css("background-color", "transparent");
+
     const readArea = $("#read-area");
     const bookImage = $("#book-image");
     const textOverlay = $("#text-overlay");
@@ -24,28 +47,46 @@ export default function ReadBook(data: any) {
     const bookImageHeight = bookImage.outerHeight();
 
     if (bookImage && textOverlay && navBarHeight && readArea && bookImageWidth && bookImageHeight) {
-      const scale = bookImageWidth / 1200;
+      let scale = bookImageWidth / 1200;
+      if (window.innerWidth <= 600) {
+        scale = 1;
+        readArea.css("padding-left", `0`);
+        readArea.css("padding-right", `0`);
+      } else {
+        readArea.css("padding-left", `${initialReadAreaPaddingLeft * scale}px`);
+        readArea.css("padding-right", `${initialReadAreaPaddingRight * scale}px`);
+      }
+      scale = 1;
+
       setScale(scale);
+      // console.log(`scale ${scale}`);
       textOverlay.outerWidth(bookImageWidth);
       textOverlay.outerHeight(bookImageHeight - (initialReadAreaHeightOffset * scale));
-      $(".ql-editor").outerHeight(textOverlay.outerHeight() || 0);
-      readArea.css("padding-left", `${initialReadAreaPaddingLeft * scale}px`);
-      readArea.css("padding-right", `${initialReadAreaPaddingRight * scale}px`);
-      $(".ql-editor").css("column-gap", `${columnGap * scale}px`);
-      const textElements = $(".ql-editor").children('p, span, h1, h2, h3, h4, h5, h6, ul, ol, li, div'); // Adjust the selector based on the text elements you want to scale
 
-      textElements.each((index, element: HTMLElement) => {
-        const $jqueryElem: JQuery<HTMLElement> = $(element);
-        let originalFontSize: number | undefined = $jqueryElem.data('originalFontSize');
+      setCssIosPropsForPages(quill);
 
-        if (originalFontSize === undefined) {
-          originalFontSize = parseFloat($jqueryElem.css('font-size') || '0');
-          $jqueryElem.data('originalFontSize', originalFontSize); // Save the original font size as a data attribute
-        }
+      const currentWidth = quill.outerWidth() || 0;
+      // console.log("current quill width", currentWidth);
+      console.log("move quill left by", (quill.scrollLeft() || 0) + (currentWidth - lastQuillWidth) + 34);
+      // let pos = quilScrollLeft + quillWidth + ((68 / 2) * imageScale);
+      quill.outerHeight(textOverlay.outerHeight() || 0);
+      const columnCount = ((quill[0].scrollWidth + 32) / quill[0].clientWidth) * 2
+      console.log(columnCount);
+      quill.css("column-gap", `${columnGap * scale}px`);
+      // const textElements = quill.children('p, span, h1, h2, h3, h4, h5, h6, ul, ol, li, div'); // Adjust the selector based on the text elements you want to scale
 
-        const scaledFontSize: number = originalFontSize * scale;
-        $jqueryElem.css('font-size', scaledFontSize + 'px');
-      });
+      // textElements.each((index, element: HTMLElement) => {
+      //   const $jqueryElem: JQuery<HTMLElement> = $(element);
+      //   let originalFontSize: number | undefined = $jqueryElem.data('originalFontSize');
+
+      //   if (originalFontSize === undefined) {
+      //     originalFontSize = parseFloat($jqueryElem.css('font-size') || '0');
+      //     $jqueryElem.data('originalFontSize', originalFontSize); // Save the original font size as a data attribute
+      //   }
+
+      //   const scaledFontSize: number = originalFontSize * scale;
+      //   $jqueryElem.css('font-size', scaledFontSize + 'px');
+      // });
 
       // textElements.each((index, element: HTMLElement) => {
       //   const originalFontSize = parseFloat($(element).css('font-size'));
@@ -55,8 +96,63 @@ export default function ReadBook(data: any) {
 
       textOverlay.css("left", `${(bookImage.offset()?.left || 0) - 22.5}px`);
       textOverlay.css("top", `${(bookImage.offset()?.top || 0) - navBarHeight - 9}px`);
+      // quill.scrollLeft((quill.scrollLeft() || 0) - (currentWidth - lastQuillWidth));
+      // setScrollPosX((quill.scrollLeft() || 0) + (currentWidth - lastQuillWidth + 0.2));
+      // setScrollPosX(firstVisibileElement[0].scroll().off);
+
+      //TODO: Replace with use state
+      if ((window as any).recoverElement && (window as any).recoverElement[0] && ((window as any).recoverElement[0].offsetLeft + columnGap / 4) !== quill.scrollLeft()) {
+        console.log(firstVisibileElement || undefined);
+        // quill[0].sc`ro`llTo({ left: (firstVisibileElement.offset()?.left || 0) + (quill.outerWidth() || 0), behavior: "smooth" })
+        // quill[0].scrollTo({ left:  (window as any).recoverElement[0].offsetLeft, behavior: "smooth" })
+        // quill[0].scrollTo((window as any).recoverElement[0].offsetLeft - 32, 0)
+        quill[0].scrollTo((window as any).recoverElement[0].offsetLeft - (columnGap / 4), 0)
+      }
+
+      setWindowWidth(window.innerWidth)
+
     }
   };
+
+  function getColumnCount(containerSelector: string): number {
+    const $container: JQuery<HTMLElement> = $(containerSelector);
+    const $childElements: JQuery<HTMLElement> = $container.children();
+    const containerWidth: number = $container.width() || 0;
+
+    let totalColumnCount: number = 0;
+    let totalWidth: number = 0;
+
+    $childElements.each((index: number, element: HTMLElement) => {
+      const $childElement: JQuery<HTMLElement> = $(element);
+      const childWidth: number = $childElement.outerWidth(true) || 0;
+
+      if (totalWidth + childWidth > containerWidth) {
+        totalColumnCount++;
+        totalWidth = 0;
+      }
+
+      totalWidth += childWidth;
+    });
+
+    if (totalWidth > 0) {
+      totalColumnCount++;
+    }
+
+    return totalColumnCount;
+  }
+  function getFirstVisibleElement(container: JQuery<HTMLElement>): JQuery<HTMLElement> {
+    const containerOffset = container.scrollLeft() || 0;
+    // const containerWidth = container.width() || 0;
+
+    return container.children().filter((index, element) => {
+      const elementOffset: number = element.offsetLeft || 0;
+      // const elementWidth: number = element.clientWidth || 0;
+
+      // return (elementOffset >= containerOffset && (elementOffset + elementWidth) <= (containerOffset + containerWidth));
+      return (elementOffset >= containerOffset);
+    }).first();
+  }
+
 
   // function getVisibleElementWithText(containerSelector: string): HTMLElement | null {
   //   const $container = $(containerSelector);
@@ -116,55 +212,119 @@ export default function ReadBook(data: any) {
   //   return traverseTextNodes(container, container);
   // }
 
+  async function loadText(): Promise<void> {
+    const test = (await data.chapterService.fetchChapter("64889370e32e813b76a43650")).content;
+    setText(test);
+  }
+
   useEffect(() => {
-    $(".ql-editor").scrollLeft(scrollPosX * imageScale);
+    const quill = $(".ql-editor");
+    quill.scrollLeft(scrollPosX * imageScale);
+    const element = getFirstVisibleElement(quill);
+    console.log("scroll pos x", quill.scrollLeft());
+    firstVisibileElement?.css("background-color", "transparent")
+    setFirstVisibileElement(element);
+    element.css("background-color", "red");
+    //TODO: Replace with use state
+    (window as any).recoverElement = element;
   }, [scrollPosX, imageScale]);
 
   useEffect(() => {
-    //make editor split the text into 2 pages
-    $(".ql-editor").css("column-count", "2");
-    $(".ql-editor").css("column-gap", `${columnGap}px`);
-    // var $newElement = $('<p style=height:600px> </p>');
-    // $(".ql-editor").append($newElement);
     $(".ql-editor").css("overflow", "hidden");
-    //remove background color from the reading area
-    $(".ql-container").css("background-color", "transparent");
+  }, []);
 
+  window.addEventListener("orientationchange", () => {
+    const quill = $(".ql-editor");
+    // //make editor split the text into 2 pages
+    // if (window.innerWidth <= 600) {
+    //   quill.css("column-count", "1");
+    //   // quill.css("padding-right", "0");
+    // } else {
+    //   quill.css("column-count", "2");
+    // }
+
+    setCssIosPropsForPages(quill);
+    
+    //TODO: Replace with use state
+    if ((window as any).recoverElement && (window as any).recoverElement[0] && ((window as any).recoverElement[0].offsetLeft + columnGap / 4) !== quill.scrollLeft()) {
+      console.log(firstVisibileElement || undefined);
+      // quill[0].sc`ro`llTo({ left: (firstVisibileElement.offset()?.left || 0) + (quill.outerWidth() || 0), behavior: "smooth" })
+      // quill[0].scrollTo({ left:  (window as any).recoverElement[0].offsetLeft, behavior: "smooth" })
+      // quill[0].scrollTo((window as any).recoverElement[0].offsetLeft - 32, 0)
+      quill[0].scrollTo((window as any).recoverElement[0].offsetLeft - (columnGap / 4), 0)
+    }
+    // setWindowWidth(window.innerWidth);
+    // console.log(`Window width ${window.innerWidth}`)
+  })
+
+  useEffect(() => {
     handleResize(); // Initial calculation
+    loadText();
+
     $(window).on("resize", handleResize);
     return () => {
       $(window).off("resize", handleResize);
     };
   }, []);
 
-  function nextPage(): void {
+  function setCssIosPropsForPages(quill: JQuery<HTMLElement>) {
+    if (/iPad|iPhone|iPod/.test(navigator.platform) && window.innerWidth <= 600) {
+      quill.css("column-width", `${$("#book-image").outerWidth()}px`);
+    } else if (/iPad|iPhone|iPod/.test(navigator.platform)) {
+      quill.css("column-width", `revert`);
+      quill.css("column-count", "2");
+    }
+  }
+
+  function changePage(changeForwards: boolean): void {
     const quill = $(".ql-editor");
     const quilScrollLeft = quill.scrollLeft();
     const quillWidth = quill.outerWidth(true);
 
     if (quill && quilScrollLeft !== undefined && quillWidth) {
-      quill.scrollLeft(quilScrollLeft + quillWidth + (64 / 2));
-      setScrollPosX(quilScrollLeft + quillWidth + (64 / 2));
-      console.log(`Quill scrolled to ${quill.scrollLeft()}`);
+      let pos;
+      if (changeForwards) {
+        pos = quilScrollLeft + quillWidth + ((68 / 2) * imageScale);
+      } else {
+        pos = quilScrollLeft - quillWidth - ((68 / 2) * imageScale);
+      }
+
+      // quill.scrollLeft(pos);
+      setScrollPosX(pos);
+      // const element = getFirstVisibleElement(quill);
+      // setFirstVisibileElement(element);
+      // console.log(`Current element ${element.offset()?.left}`)
+      // console.log(element[0])
+      // console.log(`Quill scrolled to ${pos}`);
       // const text = getVisibleText(quill.get(0));
       // const element = getVisibleElementWithText(".ql-editor");
-      console.log();
+      // console.log();
     }
     // $(".ql-editor").scrollLeft($(".ql-editor").outerWidth() || 0);
   }
 
-  const text = `{"ops":[{"attributes":{"background":"#ffffff"},"insert":"Morbi tristique ut"},{"attributes":{"header":1},"insert":"\\n"},{"insert":"\\n\\t\\t"},{"attributes":{"underline":true},"insert":"List"},{"insert":"\\nApples"},{"attributes":{"list":"ordered"},"insert":"\\n"},{"insert":"Mushrooms"},{"attributes":{"list":"ordered"},"insert":"\\n"},{"insert":"Carrots"},{"attributes":{"list":"ordered"},"insert":"\\n"},{"insert":"\\n\\tLorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam elementum est a mi ornare, ut finibus ipsum euismod. Proin pharetra magna sit amet massa imperdiet tincidunt. Mauris quis lorem eros. Vestibulum lacinia condimentum augue vel imperdiet. Aliquam quis dapibus eros. Donec facilisis malesuada neque sit amet aliquam. Nam auctor ullamcorper eleifend. Quisque rhoncus augue et tincidunt dictum. Duis mattis bibendum nibh, at pretium tellus tempor at. Nam in semper orci, sed eleifend ipsum."},{"attributes":{"align":"justify"},"insert":"\\n\\n"},{"insert":"\\tEtiam nec mauris sit amet odio placerat condimentum vel eu libero. Integer vitae lectus vitae mi ornare consectetur. Pellentesque feugiat, lectus sit amet finibus rutrum, tortor turpis auctor tellus, et sodales ligula nibh nec quam. Nulla facilisis nisl ac dolor fermentum bibendum. In malesuada risus iaculis rhoncus varius. Suspendisse ac nisi lacinia, elementum orci nec, blandit sem. Mauris mauris magna, pharetra ut leo vitae, semper ultricies dolor. Curabitur felis mauris, vehicula eget mi id, iaculis porta mi. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. In elementum euismod ultricies. Morbi pretium dignissim orci id lacinia. Cras fringilla, justo id viverra consectetur, velit est eleifend velit, vel porta risus metus ac quam. Morbi orci velit, dapibus non lobortis vitae, pretium nec lacus."},{"attributes":{"align":"justify"},"insert":"\\n\\n"},{"insert":"\\t"},{"attributes":{"underline":true},"insert":"Donec sed massa sagittis, consectetur mauris eget, dignissim est. Duis laoreet ex id ante ornare, id vestibulum est maximus. Aliquam accumsan faucibus elit, a euismod arcu fringilla eget. Phasellus ac nulla risus. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Nullam nec congue lectus, fermentum ultricies diam. Vivamus ac purus mi. Ut cursus enim erat, gravida mollis urna mattis sit amet. Fusce malesuada erat ipsum, ut pretium ipsum vehicula euismod. Sed venenatis tellus nec enim placerat aliquet. Aliquam erat volutpat. Proin varius tortor quis elementum tincidunt."},{"attributes":{"align":"justify"},"insert":"\\n\\n"},{"insert":"\\tNulla facilisi. Interdum et malesuada fames ac ante ipsum primis in faucibus. Nullam cursus odio sed orci commodo placerat. Nullam volutpat quis diam consequat maximus. Maecenas sit amet sapien risus. Nam est est, imperdiet at pretium non, pulvinar cursus tortor. Suspendisse commodo mi ac odio pellentesque feugiat. Mauris felis nisl, vestibulum id quam non, semper tincidunt turpis. Nam vestibulum tellus erat. In mi ex, commodo ac pretium a, pretium egestas urna. Donec sit amet mattis eros, eu accumsan ipsum. Integer bibendum enim elit, non dignissim purus aliquet nec. Nullam in leo nec libero efficitur gravida. Proin blandit hendrerit dictum. Nunc et augue pellentesque, sodales leo ac, cursus lacus."},{"attributes":{"align":"justify"},"insert":"\\n"},{"insert":"Quisque arcu sapien, pulvinar vel facilisis volutpat, eleifend non odio. Maecenas tempus urna ut ante luctus, ut viverra metus euismod. Curabitur placerat gravida libero. Donec ornare nunc et mauris ornare vestibulum. Praesent non pretium magna, ac maximus nisl. Sed quis tortor ac est eleifend ullamcorper. Nunc sagittis varius sapien ac tristique. Suspendisse molestie, est in imperdiet maximus, ipsum mi suscipit sapien, ac finibus risus ipsum non magna. Duis lacus libero, sodales at iaculis sit amet, rhoncus eleifend tellus. Aliquam mattis ultrices odio eu bibendum."},{"attributes":{"align":"justify"},"insert":"\\n\\n"},{"insert":"Lorem ipsum dolor sit amet, consectetur adipiscing elit."},{"attributes":{"align":"justify","list":"bullet"},"insert":"\\n"},{"insert":"Nunc at nunc non massa porttitor dignissim."},{"attributes":{"align":"justify","list":"bullet"},"insert":"\\n"},{"insert":"Phasellus at ligula vel dolor ullamcorper scelerisque."},{"attributes":{"align":"justify","list":"bullet"},"insert":"\\n"},{"insert":"Ut semper ante non euismod fermentum."},{"attributes":{"align":"justify","list":"bullet"},"insert":"\\n"},{"attributes":{"align":"justify"},"insert":"\\n"},{"insert":"Ut commodo justo sit amet diam congue, in ornare justo suscipit."},{"attributes":{"align":"justify","list":"bullet"},"insert":"\\n"},{"attributes":{"strike":true},"insert":"Morbi cursus arcu eget magna tempor, ac ullamcorper metus vestibulum."},{"attributes":{"align":"justify","list":"bullet"},"insert":"\\n"},{"attributes":{"strike":true},"insert":"Quisque ut orci aliquam, ornare erat id, tempor ligula."},{"attributes":{"align":"justify","list":"bullet"},"insert":"\\n"},{"attributes":{"strike":true},"insert":"Nam egestas nunc a sem dignissim, nec venenatis sapien sagittis."},{"attributes":{"align":"justify","list":"bullet"},"insert":"\\n"},{"insert":"Donec et nulla id dolor tempor faucibus id efficitur elit."},{"attributes":{"align":"justify","list":"bullet"},"insert":"\\n"},{"attributes":{"align":"justify"},"insert":"\\n"},{"insert":"In porta odio a luctus sodales."},{"attributes":{"align":"justify","list":"bullet"},"insert":"\\n"},{"insert":"Donec convallis arcu in mi pellentesque, et euismod metus tempor."},{"attributes":{"align":"justify","list":"bullet"},"insert":"\\n"},{"insert":"Quisque non ex consectetur, mollis neque at, varius urna."},{"attributes":{"align":"justify","list":"bullet"},"insert":"\\n"},{"insert":"Quisque sit amet nunc nec neque euismod interdum id et est."},{"attributes":{"align":"justify","list":"bullet"},"insert":"\\n"},{"insert":"Cras euismod erat eu nulla consequat pulvinar."},{"attributes":{"align":"justify","list":"bullet"},"insert":"\\n"},{"attributes":{"align":"justify"},"insert":"\\n"},{"insert":"Vivamus sed turpis id risus pellentesque venenatis vitae in ligula."},{"attributes":{"align":"justify","list":"bullet"},"insert":"\\n"},{"insert":"Nullam et neque a nisi auctor consectetur vel a odio."},{"attributes":{"align":"justify","list":"bullet"},"insert":"\\n"},{"insert":"Pellentesque feugiat est at arcu ultricies, vitae pretium orci rhoncus."},{"attributes":{"align":"justify","list":"bullet"},"insert":"\\n\\n"},{"insert":"\\tPhasellus eget orci lectus. Sed finibus enim posuere eros pulvinar lobortis. Donec vehicula finibus est eget volutpat. Ut tempus purus ex, ac iaculis urna rutrum sed. Fusce venenatis ex non bibendum mattis. Suspendisse efficitur neque tellus, quis ultrices tellus fringilla ac. Cras enim felis, commodo vel dictum sed, elementum consectetur libero."},{"attributes":{"align":"justify"},"insert":"\\n"},{"insert":"Mauris finibus augue ut maximus feugiat. Pellentesque nisl magna, lacinia et quam eu, blandit pellentesque risus. Quisque ultricies consequat purus. Mauris auctor sed tellus finibus consequat. Donec vestibulum arcu nec lorem malesuada, vitae pharetra massa condimentum. Vestibulum cursus est in erat elementum rutrum. Nulla consequat sem enim, ut facilisis mauris bibendum in. Quisque tempor imperdiet vestibulum."},{"attributes":{"align":"justify"},"insert":"\\n\\n"},{"insert":"\\tIn dui nisi, euismod vitae pretium nec, porta non orci. Mauris vel ligula eleifend, suscipit elit et, varius ligula. Morbi sodales ex suscipit, porta est et, dictum nibh. Quisque imperdiet tempor elit nec ornare. Etiam lobortis in leo eu porttitor. Proin consequat lorem ut luctus lobortis. Nam dignissim nec nunc at scelerisque. Suspendisse malesuada, diam at elementum laoreet, mi nulla feugiat odio, dictum suscipit velit lectus pharetra lorem."},{"attributes":{"align":"justify"},"insert":"\\n\\n"},{"insert":"\\n"}]}`
   return (
     <Wrapper>
       <ImageWrapper>
-        <Image id="book-image" src={bookPath} alt="SVG Image" onLoad={handleResize} />
+        {(windowWidth > 600) && <Image id="book-image" src={bookPath} alt="SVG Image" onLoad={handleResize} />}
+        {(windowWidth <= 600) && <PageImage id="book-image" src={pagePath} alt="SVG Image" onLoad={handleResize} />}
+
+
         <TextOverlay id="text-overlay" ref={overlayRef}>
           <ReadArea id="read-area" data={{ setData: text, theme: "bubble", readonly: true }} />
         </TextOverlay>
       </ImageWrapper>
-      <SideBar onClick={nextPage}>
-        Next page
+      <SideBar>
+        Side bar goes here
       </SideBar>
+      <ControlsWrapper>
+        <ControlsText onClick={() => changePage(false)}>
+          Previous
+        </ControlsText>
+        <ControlsText onClick={() => changePage(true)}>
+          Next
+        </ControlsText>
+      </ControlsWrapper>
     </Wrapper>
   );
 }
@@ -177,7 +337,7 @@ const Wrapper = styled.div`
   /* grid-template-rows: 78px 1fr; */
   grid-template-areas:"a b";
 
-  @media only screen and (max-width: 690px) {
+  @media only screen and (max-width: 915px) {
     display: flex;
     flex-direction: column;
   }
@@ -187,10 +347,21 @@ const Wrapper = styled.div`
     flex-direction: column;
   }
 
-  @media only screen and (max-width: 977px) {
+  @media only screen and (max-width: 600px) {
     display: revert;
   }
 `;
+
+const ControlsWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 20px;
+`;
+
+const ControlsText = styled.span`
+  cursor: pointer;
+`
 
 const Text = styled.p`
   /* max-width: 470px; */
@@ -206,7 +377,7 @@ const SideBar = styled.div`
   display: flex;
   flex-flow: column;
 
-  @media only screen and (max-width: 977px) {
+  @media only screen and (max-width: 915px) {
     display: none;
   }
 `
@@ -216,11 +387,23 @@ const Image = styled.img`
   width: 100%;
   height: 100%;
   max-width: 1200px;
-  @media only screen and (max-width: 880px) {
-    /* display: revert; */
-    //update image with page image
+  @media only screen and (max-width: 600px) {
+    /* height: 100svh; */
   }
+`;
+
+const PageImage = styled(Image)`
+  height: 80svh;
+  object-fit: cover;
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
 `
+
+// const Page = styled.div`
+//   width: 100%;
+//   height: 100%;
+//   background: linear-gradient(270deg, #D6D4D4 0%, rgba(214, 212, 212, 0.87) 0.01%, #A09696 0.02%, #BFB9B9 14.58%, #FFF 43.75%);
+// `
 
 const ImageWrapper = styled.div`
   position: relative;
