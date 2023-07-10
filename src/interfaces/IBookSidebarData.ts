@@ -19,6 +19,7 @@ export default interface IBookSidebarData extends IHtmlElement {
     updateCurrentChapter: Function;
     setOrderId: Function;
     showEditDescription: Function;
+    onChapterClick?: Function;
     currentChapter?: IDisplayChapter;
   };
 }

@@ -5,14 +5,13 @@ import BookSettingsSection from "../BookSettingsSection/BookSettingsSection";
 import { generateId } from "../../helpers/helpFunctions";
 import Button from "../Button/Button";
 import IBookSidebarData from "../../interfaces/IBookSidebarData";
-import IBaseChapter from "../../interfaces/service/chapter/IBaseChapter";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Input from "../Input/Input";
-import { IoIosArrowUp } from "react-icons/io";
 import Dropdown from "../Dropdown/Dropdown";
 import { useState } from "react";
 import { ChapterState } from "../../enums/ChapterState";
 import { BookState } from "../../enums/BookState";
+import ChaptersContent from "./ChaptersContent";
 const buttonAreaId = generateId(7);
 const titleId = generateId(7);
 
@@ -127,17 +126,19 @@ export default function SidebarContent({ data, ...delegated }: IBookSidebarData)
           </SettingsWrapper>
         </SectionsWrapper> :
         <SectionsWrapper id="sections-wrapper">
-          {data.baseChapters.map((chapter: IBaseChapter, index) => (
-            <ChapterNameWrapper to={`/write/${params.bookId}?chapterId=${chapter._id}`} isSelected={data.currentChapter?.id === chapter._id ? true : false} key={`wrapper_${chapter._id}`}>
-              <ChapterName key={chapter._id}>
-                {chapter.header}
-              </ChapterName>
-              <ArrowsWrapper>
-                {index !== 0 && <ArrowUpIcon onClick={() => data.setOrderId(chapter.orderId - 1, chapter._id)}></ArrowUpIcon>}
-                {index !== data.baseChapters.length - 1 && <ArrowDownIcon onClick={() => data.setOrderId(chapter.orderId + 1, chapter._id)}></ArrowDownIcon>}
-              </ArrowsWrapper>
-            </ChapterNameWrapper>
-          ))}
+          <ChaptersContent data={
+            {
+              baseChapters: data.baseChapters,
+              setOrderId: data.setOrderId,
+              currentChapterId: data.currentChapter?.id,
+              isInWritingMode: true,
+              onChapterClick: () => {
+                if (data.onChapterClick) {
+                  data.onChapterClick();
+                }
+              },
+            }
+          } />
         </SectionsWrapper>
       }
       <ButtonArea id={buttonAreaId}>
@@ -153,10 +154,6 @@ export default function SidebarContent({ data, ...delegated }: IBookSidebarData)
   );
 }
 
-interface ChapterWrapperProps {
-  isSelected: boolean;
-}
-
 const InlineWrapper = styled.div`
   display: flex;
   gap: 16px;
@@ -170,22 +167,6 @@ const StateDropDown = styled(Dropdown)`
   margin-left: 6px;
   width: 100%;
 `
-
-const ArrowsWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
-
-const ArrowUpIcon = styled(IoIosArrowUp)`
-  cursor: pointer;
-  @media only screen and (max-width: 650px) {
-    font-size: 150%;
-  }
-`;
-
-const ArrowDownIcon = styled(ArrowUpIcon)`
-  transform: rotate(180deg);
-`;
 
 const SettingsInput = styled(Input)`
   flex: 1;
@@ -226,29 +207,6 @@ const SectionTitle = styled(BookSettingsSection)`
   border-color: ${Colors.BACKGROUND};
   border-style: solid;
   border-width: 0 0 2px 0;
-`
-
-const ChapterNameWrapper = styled(({ isSelected, ...rest }: ChapterWrapperProps & React.ComponentProps<typeof Link>) => (
-  <Link {...rest} />
-)) <ChapterWrapperProps>`
-  text-decoration: none;
-  color: ${Colors.TEXT};
-  display: flex;
-  justify-content: space-between;
-  margin-left: 5px;
-  margin-right: 6px;
-  padding: 6px;
-  align-items: center;
-  background-color: ${(props) => (props.isSelected ? Colors.ACCENT : "")};
-`;
-
-const ChapterName = styled.p`
-  text-decoration: none;
-  color: ${Colors.TEXT};
-  margin-right: 6px;
-  font-size: ${18 / 16}rem;
-  display: block;
-  text-align: justify;
 `
 
 const SettingsText = styled.label`

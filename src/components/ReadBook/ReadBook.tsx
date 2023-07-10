@@ -1,53 +1,82 @@
 import styled from "styled-components";
 import bookPath from "../../assets/Book.svg"
 import pagePath from "../../assets/Page.svg"
-import { useEffect, useRef, useState } from "react";
+import { MutableRefObject, useCallback, useEffect, useRef, useState } from "react";
 import $ from "jquery"
 import Editor from "../Editor/Editor";
 import IChapterService from "../../interfaces/service/chapter/IChapterService";
+import { Colors } from "../../Colors";
+import IBookService from "../../interfaces/service/book/IBookService";
+import StyledWrapper from "../StyledWrapper/StyledWrapper";
+import { useParams, useSearchParams } from "react-router-dom";
+import IBaseChapter from "../../interfaces/service/chapter/IBaseChapter";
+import IServiceChapter from "../../interfaces/service/chapter/IServiceChapter";
+import { BsFillArrowRightSquareFill, BsFillBookFill } from "react-icons/bs";
+import { GiNotebook } from "react-icons/gi";
+import { MdNoteAdd } from "react-icons/md";
+import Modal from "../Modal/Modal";
+import { BurgerMenuModalStyle } from "../../commonStyledStyles/BurgerMenuModalStyle";
+import ReadSideBarContent from "./ReadSideBarContent";
 
-const initialReadAreaPaddingLeft = 92;
-const initialReadAreaPaddingRight = 88;
+const initialReadAreaPaddingLeft = 98;
+const initialReadAreaPaddingRight = 82;
+const readAreaPaddingRightShortText = 10;
 const initialReadAreaHeightOffset = 30;
 const columnGap = 64;
+const wrapperGap = 18;
 
-export default function ReadBook(data: { chapterService: IChapterService }) {
-  const overlayRef = useRef<HTMLDivElement>(null);
-
+export default function ReadBook(data: { chapterService: IChapterService, bookService: IBookService }) {
   const [scrollPosX, setScrollPosX] = useState(0);
   const [imageScale, setScale] = useState(0);
+  const [areChaptersSelected, setAreChaptersSelected] = useState(false);
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [isModalExiting, setModalExiting] = useState(false);
   const [text, setText] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [chapters, setChapters] = useState<IBaseChapter[]>([]);
+  const [currentChapterId, setCurrentChapterId] = useState("");
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-  const [firstVisibileElement, setFirstVisibileElement] = useState<JQuery<HTMLElement>>();
+  const firstElementOfThePage = useRef<JQuery<HTMLElement>[]>();
+  const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const resizeTimeoutRef2 = useRef<NodeJS.Timeout | null>(null);
+  const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isAndroid = /Android/.test(navigator.userAgent);
+  const params = useParams();
 
-  function handleResize(): void {
+  const handleResize = useCallback(() => {
     const quill = $(".ql-editor");
     const lastQuillWidth = quill.outerWidth() || 0;
-    // console.log("last quill width", quill.outerWidth())
-    //make editor split the text into 2 pages
+
     if (window.innerWidth <= 600) {
       quill.css("column-count", "1");
-      // quill.css("padding-right", "0");
     } else {
       quill.css("column-count", "2");
     }
 
-    quill.css("column-gap", `${columnGap}px`);
-    // var $newElement = $('<p style=height:600px> </p>');
-    // $(".ql-editor").append($newElement);
-    //remove background color from the reading area
-    quill.css("background-color", "transparent");
-    $(".ql-container").css("background-color", "transparent");
-
     const readArea = $("#read-area");
+    const readIcons = $("#read-icons");
     const bookImage = $("#book-image");
     const textOverlay = $("#text-overlay");
+    const readIconsHeight = readIcons.is(":visible") ? (readIcons.outerHeight(true) || 0) : 0;
     const navBarHeight = $("#nav-bar").outerHeight();
     const bookImageWidth = bookImage.outerWidth();
     const bookImageHeight = bookImage.outerHeight();
 
     if (bookImage && textOverlay && navBarHeight && readArea && bookImageWidth && bookImageHeight) {
       let scale = bookImageWidth / 1200;
+
+      if (scale < 1 &&
+        !isAndroid &&
+        !isIos &&
+        firstElementOfThePage.current &&
+        resizeTimeoutRef &&
+        resizeTimeoutRef2) {
+        highlightElement(firstElementOfThePage.current[0], resizeTimeoutRef);
+        highlightElement(firstElementOfThePage.current[1], resizeTimeoutRef2);
+      }
+
+      const isTextUpdated = updateIfTextTooShort();
+
       if (window.innerWidth <= 600) {
         scale = 1;
         readArea.css("padding-left", `0`);
@@ -55,24 +84,23 @@ export default function ReadBook(data: { chapterService: IChapterService }) {
       } else {
         readArea.css("padding-left", `${initialReadAreaPaddingLeft * scale}px`);
         readArea.css("padding-right", `${initialReadAreaPaddingRight * scale}px`);
+        if (isTextUpdated) {
+          readArea.css("padding-right", `${readAreaPaddingRightShortText * scale}px`);
+        }
       }
       scale = 1;
 
       setScale(scale);
-      // console.log(`scale ${scale}`);
-      textOverlay.outerWidth(bookImageWidth);
+
+      if (isTextUpdated && window.innerWidth > 600) {
+        textOverlay.outerWidth(bookImageWidth / 2);
+      } else {
+        textOverlay.outerWidth(bookImageWidth);
+      }
+
       textOverlay.outerHeight(bookImageHeight - (initialReadAreaHeightOffset * scale));
 
       setCssIosPropsForPages(quill);
-
-      const currentWidth = quill.outerWidth() || 0;
-      // console.log("current quill width", currentWidth);
-      console.log("move quill left by", (quill.scrollLeft() || 0) + (currentWidth - lastQuillWidth) + 34);
-      // let pos = quilScrollLeft + quillWidth + ((68 / 2) * imageScale);
-      quill.outerHeight(textOverlay.outerHeight() || 0);
-      const columnCount = ((quill[0].scrollWidth + 32) / quill[0].clientWidth) * 2
-      console.log(columnCount);
-      quill.css("column-gap", `${columnGap * scale}px`);
       // const textElements = quill.children('p, span, h1, h2, h3, h4, h5, h6, ul, ol, li, div'); // Adjust the selector based on the text elements you want to scale
 
       // textElements.each((index, element: HTMLElement) => {
@@ -94,183 +122,210 @@ export default function ReadBook(data: { chapterService: IChapterService }) {
       //   $(element).css('font-size', scaledFontSize + 'px');
       // });
 
+      const currentWidth = quill.outerWidth() || 0;
+      console.log("move quill left by", (quill.scrollLeft() || 0) + (currentWidth - lastQuillWidth) + 34);
+      quill.outerHeight(textOverlay.outerHeight() || 0);
+      const columnCount = ((quill[0].scrollWidth + 32) / quill[0].clientWidth) * 2
+      console.log(columnCount);
+      quill.css("column-gap", `${columnGap * scale}px`);
+
       textOverlay.css("left", `${(bookImage.offset()?.left || 0) - 22.5}px`);
-      textOverlay.css("top", `${(bookImage.offset()?.top || 0) - navBarHeight - 9}px`);
-      // quill.scrollLeft((quill.scrollLeft() || 0) - (currentWidth - lastQuillWidth));
-      // setScrollPosX((quill.scrollLeft() || 0) + (currentWidth - lastQuillWidth + 0.2));
-      // setScrollPosX(firstVisibileElement[0].scroll().off);
+      textOverlay.css("top", `${(bookImage.offset()?.top || 0) - navBarHeight - (readIconsHeight || 0) - 9}px`);
 
       //TODO: Replace with use state
-      if ((window as any).recoverElement && (window as any).recoverElement[0] && ((window as any).recoverElement[0].offsetLeft + columnGap / 4) !== quill.scrollLeft()) {
-        console.log(firstVisibileElement || undefined);
-        // quill[0].sc`ro`llTo({ left: (firstVisibileElement.offset()?.left || 0) + (quill.outerWidth() || 0), behavior: "smooth" })
-        // quill[0].scrollTo({ left:  (window as any).recoverElement[0].offsetLeft, behavior: "smooth" })
-        // quill[0].scrollTo((window as any).recoverElement[0].offsetLeft - 32, 0)
-        quill[0].scrollTo((window as any).recoverElement[0].offsetLeft - (columnGap / 4), 0)
+      if (firstElementOfThePage.current && firstElementOfThePage.current[0] && (firstElementOfThePage.current[0][0].offsetLeft + columnGap / 4) !== quill.scrollLeft()) {
+        quill[0].scrollTo(firstElementOfThePage.current[0][0].offsetLeft - (columnGap / 4), 0);
       }
 
       setWindowWidth(window.innerWidth)
-
-    }
-  };
-
-  function getColumnCount(containerSelector: string): number {
-    const $container: JQuery<HTMLElement> = $(containerSelector);
-    const $childElements: JQuery<HTMLElement> = $container.children();
-    const containerWidth: number = $container.width() || 0;
-
-    let totalColumnCount: number = 0;
-    let totalWidth: number = 0;
-
-    $childElements.each((index: number, element: HTMLElement) => {
-      const $childElement: JQuery<HTMLElement> = $(element);
-      const childWidth: number = $childElement.outerWidth(true) || 0;
-
-      if (totalWidth + childWidth > containerWidth) {
-        totalColumnCount++;
-        totalWidth = 0;
-      }
-
-      totalWidth += childWidth;
-    });
-
-    if (totalWidth > 0) {
-      totalColumnCount++;
     }
 
-    return totalColumnCount;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // function getColumnCount(containerSelector: string): number {
+  //   const $container: JQuery<HTMLElement> = $(containerSelector);
+  //   const $childElements: JQuery<HTMLElement> = $container.children();
+  //   const containerWidth: number = $container.width() || 0;
+
+  //   let totalColumnCount: number = 0;
+  //   let totalWidth: number = 0;
+
+  //   $childElements.each((index: number, element: HTMLElement) => {
+  //     const $childElement: JQuery<HTMLElement> = $(element);
+  //     const childWidth: number = $childElement.outerWidth(true) || 0;
+
+  //     if (totalWidth + childWidth > containerWidth) {
+  //       totalColumnCount++;
+  //       totalWidth = 0;
+  //     }
+
+  //     totalWidth += childWidth;
+  //   });
+
+  //   if (totalWidth > 0) {
+  //     totalColumnCount++;
+  //   }
+
+  //   return totalColumnCount;
+  // }
+
+  function getChapterId(): string | null {
+    return searchParams.get("chapterId") ?? "";
   }
-  function getFirstVisibleElement(container: JQuery<HTMLElement>): JQuery<HTMLElement> {
+
+  function getFirstVisibleElement(container: JQuery<HTMLElement>): JQuery<HTMLElement>[] {
     const containerOffset = container.scrollLeft() || 0;
     // const containerWidth = container.width() || 0;
 
-    return container.children().filter((index, element) => {
+    const firstElement = container.children().filter((index, element) => {
       const elementOffset: number = element.offsetLeft || 0;
       // const elementWidth: number = element.clientWidth || 0;
 
       // return (elementOffset >= containerOffset && (elementOffset + elementWidth) <= (containerOffset + containerWidth));
       return (elementOffset >= containerOffset);
     }).first();
+
+    const previousPageElement = container.children().filter((index, element) => {
+      const elementOffset: number = element.offsetLeft || 0;
+      // const elementWidth: number = element.clientWidth || 0;
+
+      // return (elementOffset >= containerOffset && (elementOffset + elementWidth) <= (containerOffset + containerWidth));
+      return (elementOffset < containerOffset);
+    }).last();
+
+    return [firstElement, previousPageElement];
   }
 
+  async function load(): Promise<void> {
+    if (params.bookId) {
+      // const book = await data.bookService.fetchBook(params.bookId);
+      const chapters = await data.chapterService.fetchAllChapterTitles(params.bookId);
 
-  // function getVisibleElementWithText(containerSelector: string): HTMLElement | null {
-  //   const $container = $(containerSelector);
-  //   const $visibleElements = $container.find(':visible').filter(function() {
-  //     return $(this).text().trim() !== '';
-  //   });
+      let currentChapterId = searchParams.get("chapterId");
 
-  //   const firstVisibleElement = $visibleElements.first();
+      if (!currentChapterId) {
+        //TODO: check what happen to book without chapters
+        currentChapterId = chapters.find(x => x.orderId === 1)?._id || ""
+        setSearchParams(`?chapterId=${currentChapterId}`);
+      }
 
-  //   if (firstVisibleElement.length > 0) {
-  //    return firstVisibleElement;
-  //   } else {
-  //     // No visible elements found
-  //   }
+      await loadChapter(currentChapterId);
+      setCurrentChapterId(currentChapterId);
+      setChapters(chapters);
+    }
 
-  //   return null;
-  // }
-
-  // function isNodeVisible(node: HTMLElement, container: HTMLElement): boolean {
-  //   const nodeRect = node.getBoundingClientRect();
-  //   const containerRect = container.getBoundingClientRect();
-
-  //   return (
-  //     nodeRect.left >= containerRect.left &&
-  //     nodeRect.right <= containerRect.right &&
-  //     nodeRect.top >= containerRect.top &&
-  //     nodeRect.bottom <= containerRect.bottom
-  //   );
-  // }
-
-  // function traverseTextNodes(node: Node, container: HTMLElement): string {
-  //   let visibleText = "";
-
-  //   if (node.nodeType === Node.TEXT_NODE) {
-  //     const parentElement = node.parentElement as HTMLElement;
-  //     if (isNodeVisible(parentElement, container)) {
-  //       return node.textContent?.trim() || "";
-  //     }
-  //   }
-
-  //   for (let i = 0; i < node.childNodes.length; i++) {
-  //     const childText = traverseTextNodes(node.childNodes[i], container);
-
-  //     if (childText) {
-  //       visibleText += childText;
-  //     }
-  //   }
-
-  //   return visibleText;
-  // }
-
-  // function getVisibleText(container?: HTMLElement): string {
-  //   if (!container) {
-  //     return "";
-  //   }
-
-  //   return traverseTextNodes(container, container);
-  // }
-
-  async function loadText(): Promise<void> {
-    const test = (await data.chapterService.fetchChapter("64889370e32e813b76a43650")).content;
-    setText(test);
   }
+
+  async function loadChapter(chapterId: string): Promise<IServiceChapter> {
+    const chapter = await data.chapterService.fetchChapter(chapterId);
+    setText(chapter.content);
+
+    return chapter;
+  }
+
+  function updateIfTextTooShort(): boolean {
+    const quill = $(".ql-editor");
+    const textElements = quill.children('p, span, h1, h2, h3, h4, h5, h6, ul, ol, li, div');
+    let height = 0
+
+    textElements.each((index, element: HTMLElement) => {
+      const jqueryElem: JQuery<HTMLElement> = $(element);
+      height += jqueryElem.outerHeight() || 0;
+    });
+
+    if (height < (quill.outerHeight() || 0)) {
+      quill.css("column-count", "1");
+      return true;
+    }
+
+    return false;
+  }
+
+  function setElementBackground(element: JQuery<HTMLElement>, removeHighlight?: boolean): void {
+    // element.css("background-color", Colors.ACCENT);
+    // if (element.is(":animated")) {
+    //   return;
+    // }
+    element.css("background-color", `${removeHighlight ? "transparent" : Colors.ACCENT}`);
+    // element.animate({ opacity: 0 }, 500, "", () => {
+    //   element.css("background-color", Colors.ACCENT);
+    // }).animate({ opacity: 1 }, 500, "", () => highlightElement(element));
+
+    // setTimeout(() => {
+    //   element.animate({ opacity: 0 }, 500, "", () => {
+    //     element.css("background-color", "revert");
+    //   }).animate({ opacity: 1 }, 500);
+
+    //   element.stop();
+    // }, duration);
+  }
+
+  useEffect(() => {
+    const chapterId = getChapterId()
+
+    if (chapterId) {
+      loadChapter(chapterId);
+      setCurrentChapterId(chapterId);
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    // updateIfTextTooShort();
+    handleResize();
+  }, [handleResize, text])
 
   useEffect(() => {
     const quill = $(".ql-editor");
     quill.scrollLeft(scrollPosX * imageScale);
-    const element = getFirstVisibleElement(quill);
+    // const element = getFirstVisibleElement(quill);
     console.log("scroll pos x", quill.scrollLeft());
-    firstVisibileElement?.css("background-color", "transparent")
-    setFirstVisibileElement(element);
-    element.css("background-color", "red");
-    //TODO: Replace with use state
-    (window as any).recoverElement = element;
+    // firstElementOfThePage.current?.stop();
+    firstElementOfThePage.current = getFirstVisibleElement(quill);
+    // blinkElement(element);
+    // (window as any).recoverElement = element;
   }, [scrollPosX, imageScale]);
 
   useEffect(() => {
-    $(".ql-editor").css("overflow", "hidden");
+    const quill = $(".ql-editor");
+    quill.css("overflow", "hidden");
+    quill.css("column-gap", `${columnGap}px`);
+    $(".ql-container").css("background-color", "transparent");
+
   }, []);
 
   window.addEventListener("orientationchange", () => {
     const quill = $(".ql-editor");
-    // //make editor split the text into 2 pages
-    // if (window.innerWidth <= 600) {
-    //   quill.css("column-count", "1");
-    //   // quill.css("padding-right", "0");
-    // } else {
-    //   quill.css("column-count", "2");
-    // }
-
     setCssIosPropsForPages(quill);
-    
-    //TODO: Replace with use state
-    if ((window as any).recoverElement && (window as any).recoverElement[0] && ((window as any).recoverElement[0].offsetLeft + columnGap / 4) !== quill.scrollLeft()) {
-      console.log(firstVisibileElement || undefined);
-      // quill[0].sc`ro`llTo({ left: (firstVisibileElement.offset()?.left || 0) + (quill.outerWidth() || 0), behavior: "smooth" })
-      // quill[0].scrollTo({ left:  (window as any).recoverElement[0].offsetLeft, behavior: "smooth" })
-      // quill[0].scrollTo((window as any).recoverElement[0].offsetLeft - 32, 0)
-      quill[0].scrollTo((window as any).recoverElement[0].offsetLeft - (columnGap / 4), 0)
+
+    if (firstElementOfThePage.current && firstElementOfThePage.current[0] && (firstElementOfThePage.current[0][0].offsetLeft + columnGap / 4) !== quill.scrollLeft()) {
+      quill[0].scrollTo(firstElementOfThePage.current[0][0].offsetLeft - (columnGap / 4), 0)
+      if (resizeTimeoutRef && resizeTimeoutRef2) {
+        highlightElement(firstElementOfThePage.current[0], resizeTimeoutRef, 3000);
+        highlightElement(firstElementOfThePage.current[1], resizeTimeoutRef2, 3000);
+      }
+      // window.scrollTo(firstVisibleElementRef.current[0][0].offsetLeft, firstVisibleElementRef.current[0][0].offsetTop)
     }
-    // setWindowWidth(window.innerWidth);
-    // console.log(`Window width ${window.innerWidth}`)
   })
 
   useEffect(() => {
     handleResize(); // Initial calculation
-    loadText();
+    load();
 
     $(window).on("resize", handleResize);
     return () => {
       $(window).off("resize", handleResize);
     };
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function setCssIosPropsForPages(quill: JQuery<HTMLElement>) {
-    if (/iPad|iPhone|iPod/.test(navigator.platform) && window.innerWidth <= 600) {
+    if (/iPad|iPhone|iPod/.test(navigator.userAgent) && window.innerWidth <= 600) {
       quill.css("column-width", `${$("#book-image").outerWidth()}px`);
-    } else if (/iPad|iPhone|iPod/.test(navigator.platform)) {
+    } else if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
       quill.css("column-width", `revert`);
       quill.css("column-count", "2");
     }
@@ -289,57 +344,130 @@ export default function ReadBook(data: { chapterService: IChapterService }) {
         pos = quilScrollLeft - quillWidth - ((68 / 2) * imageScale);
       }
 
-      // quill.scrollLeft(pos);
       setScrollPosX(pos);
-      // const element = getFirstVisibleElement(quill);
-      // setFirstVisibileElement(element);
-      // console.log(`Current element ${element.offset()?.left}`)
-      // console.log(element[0])
-      // console.log(`Quill scrolled to ${pos}`);
-      // const text = getVisibleText(quill.get(0));
-      // const element = getVisibleElementWithText(".ql-editor");
-      // console.log();
     }
-    // $(".ql-editor").scrollLeft($(".ql-editor").outerWidth() || 0);
+  }
+
+  function highlightElement(element: JQuery<HTMLElement>, timeOut: MutableRefObject<NodeJS.Timeout | null>, duration = 1500) {
+    if (timeOut.current) {
+      clearTimeout(timeOut.current);
+    }
+
+    // Start a new timeout to indicate the end of the resize operation
+    const timeout = setTimeout(() => {
+      if (element) {
+        setElementBackground(element, true);
+      }
+
+      console.log("Resize operation ended");
+    }, duration);
+
+    timeOut.current = timeout;
+
+    //Only highlight the element if its not highlited
+    if (element && element.css("background-color") !== Colors.ACCENT) {
+      setElementBackground(element);
+    }
+  }
+
+  function showModal(openChapters: boolean): void {
+    setModalOpen(true);
+    setAreChaptersSelected(openChapters);
   }
 
   return (
     <Wrapper>
+      <IconsWrapepr id="read-icons">
+        <BookIcon onClick={() => showModal(true)} />
+        <NotesIcon onClick={() => showModal(false)} />
+        <AddNoteIcon />
+      </IconsWrapepr>
       <ImageWrapper>
         {(windowWidth > 600) && <Image id="book-image" src={bookPath} alt="SVG Image" onLoad={handleResize} />}
         {(windowWidth <= 600) && <PageImage id="book-image" src={pagePath} alt="SVG Image" onLoad={handleResize} />}
-
-
-        <TextOverlay id="text-overlay" ref={overlayRef}>
+        <TextOverlay id="text-overlay">
           <ReadArea id="read-area" data={{ setData: text, theme: "bubble", readonly: true }} />
         </TextOverlay>
       </ImageWrapper>
       <SideBar>
-        Side bar goes here
+        <ReadSideBarContent data={{
+          baseChapters: chapters,
+          currentChapterId: currentChapterId,
+          isInWritingMode: false,
+          isFromModal: false,
+          areChaptersSelected: areChaptersSelected,
+          setChaptersSelected: setAreChaptersSelected,
+        }} />
       </SideBar>
+      <Modal data={{
+        isOpen: isModalOpen,
+        isExiting: isModalExiting,
+        ContentElement: BurgerMenuModalStyle,
+        contentData: {
+          width: "65%",
+          isExiting: isModalExiting,
+        },
+        setOpen: setModalOpen,
+        setExiting: setModalExiting,
+      }}>
+        <ReadSideBarContent data={{
+          baseChapters: chapters,
+          currentChapterId: currentChapterId,
+          isInWritingMode: false,
+          isFromModal: true,
+          areChaptersSelected: areChaptersSelected,
+          onChapterClick: () => { setModalExiting(true) },
+          setChaptersSelected: setAreChaptersSelected,
+        }} />
+      </Modal>
       <ControlsWrapper>
-        <ControlsText onClick={() => changePage(false)}>
-          Previous
-        </ControlsText>
-        <ControlsText onClick={() => changePage(true)}>
-          Next
-        </ControlsText>
+        <ArrowLeftIcon onClick={() => changePage(false)} />
+        <ArrowRightIcon onClick={() => changePage(true)} />
       </ControlsWrapper>
     </Wrapper>
   );
 }
+
+const NotesIcon = styled(GiNotebook)`
+  font-size: 160%;
+  cursor: pointer;
+`;
+
+const AddNoteIcon = styled(MdNoteAdd)`
+  font-size: 178%;
+  color: ${Colors.ACCENT};
+  margin-left: auto;
+  cursor: pointer;
+`;
+
+const BookIcon = styled(BsFillBookFill)`
+  font-size: 170%;
+  cursor: pointer;
+`;
+
+const ArrowRightIcon = styled(BsFillArrowRightSquareFill)`
+  font-size: 160%;
+  cursor: pointer;
+`;
+
+const ArrowLeftIcon = styled(ArrowRightIcon)`
+  transform: rotate(180deg);
+`;
+
 const Wrapper = styled.div`
   margin-left: 22px;
   margin-right: 22px;
   display: grid;
-  gap: 18px;
+  gap: ${wrapperGap}px;
   grid-template-columns: 1fr 234px;
   /* grid-template-rows: 78px 1fr; */
+  /* grid-template-rows: 100%; */
   grid-template-areas:"a b";
 
   @media only screen and (max-width: 915px) {
     display: flex;
     flex-direction: column;
+    gap: 0;
   }
 
   @media only screen and (max-height: 500px) {
@@ -352,27 +480,29 @@ const Wrapper = styled.div`
   }
 `;
 
+const IconsWrapepr = styled.div`
+  display: none;
+  justify-content: left;
+  gap: 14px;
+  margin-bottom: 10px;
+
+  @media only screen and (max-width: 915px) {
+    display: flex;
+  }
+`
+
 const ControlsWrapper = styled.div`
   display: flex;
   justify-content: center;
   gap: 16px;
   margin-bottom: 20px;
+
+  @media only screen and (max-width: 915px) {
+    margin-top: 18px;
+  }
 `;
 
-const ControlsText = styled.span`
-  cursor: pointer;
-`
-
-const Text = styled.p`
-  /* max-width: 470px; */
-  /* margin-right: 122px;
-  margin-left: 86px; */
-  left: 30px;
-  column-gap: 50px;
-  column-count: 2;
-`
-
-const SideBar = styled.div`
+const SideBar = styled(StyledWrapper)`
   flex-grow: 1;
   display: flex;
   flex-flow: column;
@@ -387,9 +517,6 @@ const Image = styled.img`
   width: 100%;
   height: 100%;
   max-width: 1200px;
-  @media only screen and (max-width: 600px) {
-    /* height: 100svh; */
-  }
 `;
 
 const PageImage = styled(Image)`
@@ -398,12 +525,6 @@ const PageImage = styled(Image)`
   border-top-right-radius: 20px;
   border-bottom-right-radius: 20px;
 `
-
-// const Page = styled.div`
-//   width: 100%;
-//   height: 100%;
-//   background: linear-gradient(270deg, #D6D4D4 0%, rgba(214, 212, 212, 0.87) 0.01%, #A09696 0.02%, #BFB9B9 14.58%, #FFF 43.75%);
-// `
 
 const ImageWrapper = styled.div`
   position: relative;

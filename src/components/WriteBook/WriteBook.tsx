@@ -55,7 +55,7 @@ function resizeContentTextarea() {
 export default function WriteBook(data: IWriteBookData) {
   const params = useParams();
   const [searchParams, setSearchParams] = useSearchParams()
-  const [isExiting, setIsExiting] = useState(false);
+  const [isSettingsModalExiting, setIsSettingsModalExiting] = useState(false);
   const [isSettingsModalOpen, setIsSettingModalOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
@@ -64,7 +64,7 @@ export default function WriteBook(data: IWriteBookData) {
   const [areSettingsOpen, setAreSettingsOpen] = useState(true);
   const [isEditDescriptionOpen, setisEditDescriptionOpen] = useState(false);
   const [isEditDescriptionExiting, setIsEditDescriptionExiting] = useState(false);
-  const [isPreviewOpen, setisPreviewOpen] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isPreviewExiting, setIsPreviewExiting] = useState(false);
   const [isAnimatedToggle, setAnimatedToggle] = useState(false);
   const [isAnimatedOpen, setAnimatedOpen] = useState(false);
@@ -327,7 +327,7 @@ export default function WriteBook(data: IWriteBookData) {
           deleteConfirmation: showDeleteConfirmation,
           showEditDescription: onEditDescriptionClick,
           updateBook: setBook,
-          setPreviewOpen: setisPreviewOpen,
+          setPreviewOpen: setIsPreviewOpen,
           saveBook: updateBook,
           baseChapters: baseChapters,
           currentChapter: currentChapter,
@@ -336,14 +336,14 @@ export default function WriteBook(data: IWriteBookData) {
       } id="book-settings" />
       <SettingsModal data={{
         isOpen: isSettingsModalOpen,
-        isExiting: isExiting,
+        isExiting: isSettingsModalExiting,
         ContentElement: BurgerMenuModalStyle,
         contentData: {
           width: "65%",
-          isExiting: isExiting,
+          isExiting: isSettingsModalExiting,
         },
         setOpen: setIsSettingModalOpen,
-        setExiting: setIsExiting,
+        setExiting: setIsSettingsModalExiting,
       }}>
         <SidebarContent data={
           {
@@ -356,7 +356,8 @@ export default function WriteBook(data: IWriteBookData) {
             updateCurrentChapter: setCurrentChapter,
             deleteConfirmation: showDeleteConfirmation,
             showEditDescription: onEditDescriptionClick,
-            setPreviewOpen: setisPreviewOpen,
+            setPreviewOpen: setIsPreviewOpen,
+            onChapterClick: () => setIsSettingsModalExiting(true),
             updateBook: setBook,
             saveBook: updateBook,
             baseChapters: baseChapters,
@@ -428,7 +429,7 @@ export default function WriteBook(data: IWriteBookData) {
           overflow: "hidden",
           backgroundColor: Colors.FOREGROUND
         },
-        setOpen: setisPreviewOpen,
+        setOpen: setIsPreviewOpen,
         setExiting: setIsPreviewExiting,
       }}>
         <Header data={{
