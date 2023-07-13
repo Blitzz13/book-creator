@@ -17,6 +17,11 @@ import { MdNoteAdd } from "react-icons/md";
 import Modal from "../Modal/Modal";
 import { BurgerMenuModalStyle } from "../../commonStyledStyles/BurgerMenuModalStyle";
 import ReadSideBarContent from "./ReadSideBarContent";
+import INoteService from "../../interfaces/service/note/INoteService";
+import NoteCreationModal from "../NoteCreationModal/NoteCreationModal";
+import { generateId } from "../../helpers/helpFunctions";
+import INoteModalModel from "../../interfaces/modal/INoteModalModel";
+import { NoBackgroundContentModalStyle } from "../../commonStyledStyles/NoBackgroundContentModalStyle";
 
 const initialReadAreaPaddingLeft = 98;
 const initialReadAreaPaddingRight = 82;
@@ -24,17 +29,31 @@ const readAreaPaddingRightShortText = 10;
 const initialReadAreaHeightOffset = 30;
 const columnGap = 64;
 const wrapperGap = 18;
+const readAreaId = generateId(7);
 
-export default function ReadBook(data: { chapterService: IChapterService, bookService: IBookService }) {
+export default function ReadBook(data: { chapterService: IChapterService, bookService: IBookService, noteService: INoteService }) {
   const [scrollPosX, setScrollPosX] = useState(0);
   const [imageScale, setScale] = useState(0);
   const [areChaptersSelected, setAreChaptersSelected] = useState(false);
   const [isModalOpen, setModalOpen] = useState(false);
   const [isModalExiting, setModalExiting] = useState(false);
+  const [isNoteModalOpen, setNoteModalOpen] = useState(false);
+  const [isNoteModalExiting, setNoteModalExiting] = useState(false);
   const [text, setText] = useState("");
   const [searchParams, setSearchParams] = useSearchParams()
   const [chapters, setChapters] = useState<IBaseChapter[]>([]);
   const [currentChapterId, setCurrentChapterId] = useState("");
+  const [noteModalData, setNoteModalData] = useState<INoteModalModel>({
+    initialDescription: "",
+    modalTitle: "Create Note",
+    noteTitle: "",
+    currentDescription: "",
+    isOpen: false,
+    isExiting: false,
+    onDescriptionChange: () => { },
+    onNoteTitleChange: () => { },
+    onSaveClick: () => { },
+  });
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const firstElementOfThePage = useRef<JQuery<HTMLElement>[]>();
   const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -44,7 +63,7 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
   const params = useParams();
 
   const handleResize = useCallback(() => {
-    const quill = $(".ql-editor");
+    const quill = $(`#${readAreaId}`).find(".ql-editor");
     const lastQuillWidth = quill.outerWidth() || 0;
 
     if (window.innerWidth <= 600) {
@@ -53,7 +72,7 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
       quill.css("column-count", "2");
     }
 
-    const readArea = $("#read-area");
+    const readArea = $(`#${readAreaId}`);
     const readIcons = $("#read-icons");
     const bookImage = $("#book-image");
     const textOverlay = $("#text-overlay");
@@ -210,6 +229,7 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
         setSearchParams(`?chapterId=${currentChapterId}`);
       }
 
+      await data.noteService.getAllBaseNotes(params.bookId);
       await loadChapter(currentChapterId);
       setCurrentChapterId(currentChapterId);
       setChapters(chapters);
@@ -225,7 +245,7 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
   }
 
   function updateIfTextTooShort(): boolean {
-    const quill = $(".ql-editor");
+    const quill = $(`#${readAreaId}`).find(".ql-editor");
     const textElements = quill.children('p, span, h1, h2, h3, h4, h5, h6, ul, ol, li, div');
     let height = 0
 
@@ -269,8 +289,7 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
       setCurrentChapterId(chapterId);
     }
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [getChapterId, loadChapter])
 
   useEffect(() => {
     // updateIfTextTooShort();
@@ -278,7 +297,7 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
   }, [handleResize, text])
 
   useEffect(() => {
-    const quill = $(".ql-editor");
+    const quill = $(`#${readAreaId}`).find(".ql-editor");
     quill.scrollLeft(scrollPosX * imageScale);
     // const element = getFirstVisibleElement(quill);
     console.log("scroll pos x", quill.scrollLeft());
@@ -289,7 +308,7 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
   }, [scrollPosX, imageScale]);
 
   useEffect(() => {
-    const quill = $(".ql-editor");
+    const quill = $(`#${readAreaId}`).find(".ql-editor");
     quill.css("overflow", "hidden");
     quill.css("column-gap", `${columnGap}px`);
     $(".ql-container").css("background-color", "transparent");
@@ -297,7 +316,7 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
   }, []);
 
   window.addEventListener("orientationchange", () => {
-    const quill = $(".ql-editor");
+    const quill = $(`#${readAreaId}`).find(".ql-editor");
     setCssIosPropsForPages(quill);
 
     if (firstElementOfThePage.current && firstElementOfThePage.current[0] && (firstElementOfThePage.current[0][0].offsetLeft + columnGap / 4) !== quill.scrollLeft()) {
@@ -332,7 +351,7 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
   }
 
   function changePage(changeForwards: boolean): void {
-    const quill = $(".ql-editor");
+    const quill = $(`#${readAreaId}`).find(".ql-editor");
     const quilScrollLeft = quill.scrollLeft();
     const quillWidth = quill.outerWidth(true);
 
@@ -380,13 +399,13 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
       <IconsWrapepr id="read-icons">
         <BookIcon onClick={() => showModal(true)} />
         <NotesIcon onClick={() => showModal(false)} />
-        <AddNoteIcon />
+        <AddNoteIcon onClick={() => setNoteModalOpen(true)} />
       </IconsWrapepr>
       <ImageWrapper>
         {(windowWidth > 600) && <Image id="book-image" src={bookPath} alt="SVG Image" onLoad={handleResize} />}
         {(windowWidth <= 600) && <PageImage id="book-image" src={pagePath} alt="SVG Image" onLoad={handleResize} />}
         <TextOverlay id="text-overlay">
-          <ReadArea id="read-area" data={{ setData: text, theme: "bubble", readonly: true }} />
+          <ReadArea id={readAreaId} data={{ setData: text, theme: "bubble", readonly: true }} />
         </TextOverlay>
       </ImageWrapper>
       <SideBar>
@@ -395,6 +414,7 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
           currentChapterId: currentChapterId,
           isInWritingMode: false,
           isFromModal: false,
+          baseNotes: [],
           areChaptersSelected: areChaptersSelected,
           setChaptersSelected: setAreChaptersSelected,
         }} />
@@ -415,11 +435,33 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
           currentChapterId: currentChapterId,
           isInWritingMode: false,
           isFromModal: true,
+          baseNotes: [],
           areChaptersSelected: areChaptersSelected,
           onChapterClick: () => { setModalExiting(true) },
           setChaptersSelected: setAreChaptersSelected,
         }} />
       </Modal>
+      <NoteCreationModal data={{
+        isOpen: isNoteModalOpen,
+        isExiting: isNoteModalExiting,
+        ContentElement: NoBackgroundContentModalStyle,
+        contentData: {
+          width: "400px",
+          isExiting: isNoteModalExiting
+        },
+        setOpen: setNoteModalOpen,
+        setExiting: setNoteModalExiting,
+      }}
+        descriptionData={{
+          modalTitle: noteModalData.modalTitle,
+          initialDescription: noteModalData.initialDescription,
+          noteTitle: noteModalData.noteTitle,
+          currentDescription: noteModalData.currentDescription,
+          onNoteTitleChange: (text: string) => { setNoteModalData({ ...noteModalData, noteTitle: text }) },
+          onDescriptionChange: (text: string) => { setNoteModalData({ ...noteModalData, currentDescription: text }) },
+          onSaveClick: () => noteModalData.onSaveClick(),
+        }}>
+      </NoteCreationModal>
       <ControlsWrapper>
         <ArrowLeftIcon onClick={() => changePage(false)} />
         <ArrowRightIcon onClick={() => changePage(true)} />

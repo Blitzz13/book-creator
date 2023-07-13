@@ -1,4 +1,5 @@
 import styled, { css, keyframes } from "styled-components";
+import IOverlayStyleData from "../interfaces/modal/IOverlayStyleData";
 
 export const OverlayStyle = styled.div`
   position: fixed;
@@ -12,9 +13,9 @@ export const OverlayStyle = styled.div`
   z-index: 3500;
   height: 100vh;
   background: #212b3277;
-  ${({ isExiting }: { isExiting?: boolean }) =>
+  ${(data: IOverlayStyleData) =>
     css`
-      ${isExiting
+      ${data.isExiting
         ? css`
             animation: ${TurnOffOpacity} 0.3s ease-out;
           `
@@ -22,6 +23,8 @@ export const OverlayStyle = styled.div`
             animation: ${TurnOnOpacity} 0.3s ease-in;
           `}
       animation-fill-mode: forwards;
+      overflow-x: ${data.overflowX};
+      overflow-y: ${data.overflowY};
     `};
 `;
 

@@ -34,6 +34,7 @@ import BookWithPercentage from "../BookWithPercentage/BookWithPercentage";
 import AnimatedBook from "../AnimatedBook/AnimatedBook";
 import ICommonContentModalStyle from "../../interfaces/modal/ICommonContentModalStyle";
 import Header from "../Header/Header";
+import IOverlayStyleData from "../../interfaces/modal/IOverlayStyleData";
 
 function resizeContentTextarea() {
   const contentTextArea = $("#writing-area");
@@ -479,10 +480,10 @@ const PreviewWrapper = styled.div`
   overflow: auto;
 `
 
-const PreviewModal = styled(Modal<ICommonContentModalStyle>)`
+const PreviewModal = styled(Modal<ICommonContentModalStyle, IOverlayStyleData>)`
 `
 
-const SettingsModal = styled(Modal<IBurgerContentModalStyle>)`
+const SettingsModal = styled(Modal<IBurgerContentModalStyle, IOverlayStyleData>)`
 `
 
 const IconsWrapper = styled.div`

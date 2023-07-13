@@ -11,8 +11,9 @@ import { ORDERED_LIST, BULLET_LIST } from '../../constants/ToolbarConstants';
 import { ToolbarTextStyle } from '../../enums/ToolbarTextStyle';
 import Editor from '../Editor/Editor';
 import IDescriptionModalData from '../../interfaces/modal/IDescriptionModalData';
+import IOverlayStyleData from '../../interfaces/modal/IOverlayStyleData';
 
-export default function EditDescriptionModal({ data, descriptionData, ...delegated }: IDescriptionModalData<ICommonContentModalStyle>) {
+export default function EditDescriptionModal({ data, descriptionData, ...delegated }: IDescriptionModalData<ICommonContentModalStyle, IOverlayStyleData>) {
 
     return (
         <EditDesc {...delegated} data={{
@@ -75,7 +76,7 @@ export default function EditDescriptionModal({ data, descriptionData, ...delegat
     );
 }
 
-const EditDesc = styled(Modal<ICommonContentModalStyle>)`
+const EditDesc = styled(Modal<ICommonContentModalStyle, IOverlayStyleData>)`
 `
 
 const Wrapper = styled.div`

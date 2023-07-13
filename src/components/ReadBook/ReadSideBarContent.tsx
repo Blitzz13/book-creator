@@ -4,6 +4,7 @@ import { GiNotebook } from "react-icons/gi";
 import ChaptersContent from "../BookSidebar/ChaptersContent";
 import HeaderWrapper from "../StyledWrapper/HeaderWrapper";
 import IReadSidebarData from "../../interfaces/IReadSidebarData";
+import NotesContent from "./NotesContent";
 
 export default function ReadSideBarContent({ data, ...delegated }: IReadSidebarData) {
   return (
@@ -12,12 +13,16 @@ export default function ReadSideBarContent({ data, ...delegated }: IReadSidebarD
         <BookIcon onClick={() => data.setChaptersSelected(true)} opacity={data.areChaptersSelected ? 0.5 : 1} />
         <NotesIcon onClick={() => data.setChaptersSelected(false)} opacity={data.areChaptersSelected ? 1 : 0.5} />
       </Header>
-      <ChaptersContent data={{
-        baseChapters: data.baseChapters,
-        isInWritingMode: data.isInWritingMode,
-        currentChapterId: data.currentChapterId,
-        onChapterClick: data.onChapterClick
-      }} />
+      {data.areChaptersSelected ?
+        <ChaptersContent data={{
+          baseChapters: data.baseChapters,
+          isInWritingMode: data.isInWritingMode,
+          currentChapterId: data.currentChapterId,
+          onChapterClick: data.onChapterClick
+        }} />
+        :
+        <NotesContent data={{ notes: data.baseNotes }} />
+      }
     </Wrapper>
   );
 }

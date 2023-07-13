@@ -20,7 +20,7 @@ function App() {
         <Route path="/" element={<Home bookService={services.bookService} />} />
         <Route path="/about" element={<About />} />
         <Route path="/write/:bookId" element={<WriteBook chapterService={services.chapterService} bookService={services.bookService} />} />
-        <Route path="/read/:bookId" element={<ReadBook chapterService={services.chapterService} bookService={services.bookService} />} />
+        <Route path="/read/:bookId" element={<ReadBook chapterService={services.chapterService} bookService={services.bookService} noteService={services.noteService}/>} />
         <Route path="*" element={<PageNotFound />} />
       </Routes>
     </div>
