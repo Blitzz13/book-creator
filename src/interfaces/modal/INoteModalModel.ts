@@ -1,11 +1,11 @@
+import { NoteModalMode } from "../../enums/NoteModalMode";
+
 export default interface INoteModalModel{
   modalTitle: string;
-  noteTitle: string;
-  initialDescription: string;
-  currentDescription: string;
+  header: string;
+  content: string;
+  currentContent: string;
   isOpen: boolean;
   isExiting: boolean;
-  onSaveClick: Function;
-  onDescriptionChange: Function;
-  onNoteTitleChange: Function;
+  mode: NoteModalMode;
 }

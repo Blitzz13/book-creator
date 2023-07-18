@@ -8,9 +8,8 @@ import IChapterService from "../../interfaces/service/chapter/IChapterService";
 import { Colors } from "../../Colors";
 import IBookService from "../../interfaces/service/book/IBookService";
 import StyledWrapper from "../StyledWrapper/StyledWrapper";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useLocation, useParams, useSearchParams } from "react-router-dom";
 import IBaseChapter from "../../interfaces/service/chapter/IBaseChapter";
-import IServiceChapter from "../../interfaces/service/chapter/IServiceChapter";
 import { BsFillArrowRightSquareFill, BsFillBookFill } from "react-icons/bs";
 import { GiNotebook } from "react-icons/gi";
 import { MdNoteAdd } from "react-icons/md";
@@ -22,6 +21,11 @@ import NoteCreationModal from "../NoteCreationModal/NoteCreationModal";
 import { generateId } from "../../helpers/helpFunctions";
 import INoteModalModel from "../../interfaces/modal/INoteModalModel";
 import { NoBackgroundContentModalStyle } from "../../commonStyledStyles/NoBackgroundContentModalStyle";
+import { useAuthContext } from "../../hooks/useAuthContext";
+import { IBaseNote } from "../../interfaces/service/note/IBaseNote";
+import { NoteModalMode } from "../../enums/NoteModalMode";
+import ConfirmationModal from "../ConfirmationModal/ConfirmationModal";
+import { CommonContentModalStyle } from "../../commonStyledStyles/CommonContentModalStyle";
 
 const initialReadAreaPaddingLeft = 98;
 const initialReadAreaPaddingRight = 82;
@@ -34,26 +38,28 @@ const readAreaId = generateId(7);
 export default function ReadBook(data: { chapterService: IChapterService, bookService: IBookService, noteService: INoteService }) {
   const [scrollPosX, setScrollPosX] = useState(0);
   const [imageScale, setScale] = useState(0);
-  const [areChaptersSelected, setAreChaptersSelected] = useState(false);
+  const [areChaptersSelected, setAreChaptersSelected] = useState(true);
   const [isModalOpen, setModalOpen] = useState(false);
+  const [isConfirmModalOpen, setisConfirmModalOpen] = useState(false);
+  const [isConfirmModalExiting, setIsConfirmModalExiting] = useState(false);
   const [isModalExiting, setModalExiting] = useState(false);
   const [isNoteModalOpen, setNoteModalOpen] = useState(false);
   const [isNoteModalExiting, setNoteModalExiting] = useState(false);
   const [text, setText] = useState("");
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams();
   const [chapters, setChapters] = useState<IBaseChapter[]>([]);
+  const [notes, setNotes] = useState<IBaseNote[]>([]);
   const [currentChapterId, setCurrentChapterId] = useState("");
   const [noteModalData, setNoteModalData] = useState<INoteModalModel>({
-    initialDescription: "",
+    content: "",
     modalTitle: "Create Note",
-    noteTitle: "",
-    currentDescription: "",
+    header: "",
+    currentContent: "",
     isOpen: false,
     isExiting: false,
-    onDescriptionChange: () => { },
-    onNoteTitleChange: () => { },
-    onSaveClick: () => { },
+    mode: NoteModalMode.Creating,
   });
+  const authContext = useAuthContext();
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const firstElementOfThePage = useRef<JQuery<HTMLElement>[]>();
   const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -61,6 +67,22 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
   const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent);
   const isAndroid = /Android/.test(navigator.userAgent);
   const params = useParams();
+
+  const location = useLocation();
+
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const chapterId = queryParams.get('chapterId');
+    const noteId = queryParams.get('noteId');
+
+    if (chapterId) {
+      setCurrentChapterId(chapterId);
+    }
+
+    if (noteId) {
+      setCurrentNote(noteId);
+    }
+  }, [location.search]);
 
   const handleResize = useCallback(() => {
     const quill = $(`#${readAreaId}`).find(".ql-editor");
@@ -189,8 +211,102 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
   //   return totalColumnCount;
   // }
 
-  function getChapterId(): string | null {
-    return searchParams.get("chapterId") ?? "";
+  async function setCurrentNote(noteId: string): Promise<void> {
+    const note = await data.noteService.getSpecificNote(noteId);
+    setNoteModalData({ ...noteModalData, header: note.header, content: note.content });
+  }
+
+  async function saveNote(mode: NoteModalMode): Promise<void> {
+    switch (mode) {
+      case NoteModalMode.Creating:
+        await createNote();
+        break;
+      case NoteModalMode.Editing:
+        await editNote();
+        break;
+      default:
+        break;
+    }
+
+  }
+
+  async function createNote(): Promise<void> {
+    if (params.bookId) {
+      try {
+        await data.noteService.createNote({
+          bookId: params.bookId,
+          chapterId: currentChapterId,
+          content: noteModalData.currentContent,
+          header: noteModalData.header,
+          orderId: 1,
+          authorId: authContext.user?.id || ""
+        });
+
+        setNoteModalExiting(true);
+        await refreshNotes();
+
+        return;
+      } catch (error) {
+        return;
+      }
+
+    }
+
+    console.error("Book id is missing");
+  }
+
+  async function editNote(): Promise<void> {
+    if (params.bookId) {
+      try {
+        const queryParams = new URLSearchParams(location.search);
+        const noteId = queryParams.get('noteId');
+        if (noteId) {
+          await data.noteService.updateNote(noteId, {
+            content: noteModalData.content,
+            header: noteModalData.header,
+          });
+
+          setNoteModalExiting(true);
+          await refreshNotes();
+
+          return;
+        }
+
+        console.error("Note id is missing");
+
+        return;
+      } catch (error) {
+        return;
+      }
+
+    }
+
+    console.error("Book id is missing");
+  }
+
+  async function deleteNote(): Promise<void> {
+    const queryParams = new URLSearchParams(location.search);
+    const noteId = queryParams.get('noteId');
+    if (noteId) {
+      try {
+
+        await data.noteService.deleteNote(noteId);
+        setIsConfirmModalExiting(true);
+        await refreshNotes();
+        return;
+      } catch (error) {
+        console.error(error);
+        return;
+      }
+    }
+    console.error("Missing note id");
+  }
+
+  async function refreshNotes(): Promise<void> {
+    if (params.bookId) {
+      const notes = await data.noteService.getAllBaseNotes(params.bookId);
+      setNotes(notes);
+    }
   }
 
   function getFirstVisibleElement(container: JQuery<HTMLElement>): JQuery<HTMLElement>[] {
@@ -229,20 +345,21 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
         setSearchParams(`?chapterId=${currentChapterId}`);
       }
 
-      await data.noteService.getAllBaseNotes(params.bookId);
+      const notes = await data.noteService.getAllBaseNotes(params.bookId);
       await loadChapter(currentChapterId);
       setCurrentChapterId(currentChapterId);
       setChapters(chapters);
+      setNotes(notes);
     }
 
   }
 
-  async function loadChapter(chapterId: string): Promise<IServiceChapter> {
+  const loadChapter = useCallback(async (chapterId: string) => {
     const chapter = await data.chapterService.fetchChapter(chapterId);
     setText(chapter.content);
 
     return chapter;
-  }
+  }, [data.chapterService]);
 
   function updateIfTextTooShort(): boolean {
     const quill = $(`#${readAreaId}`).find(".ql-editor");
@@ -282,14 +399,10 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
   }
 
   useEffect(() => {
-    const chapterId = getChapterId()
-
-    if (chapterId) {
-      loadChapter(chapterId);
-      setCurrentChapterId(chapterId);
+    if (currentChapterId) {
+      loadChapter(currentChapterId);
     }
-
-  }, [getChapterId, loadChapter])
+  }, [currentChapterId, loadChapter])
 
   useEffect(() => {
     // updateIfTextTooShort();
@@ -408,15 +521,26 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
           <ReadArea id={readAreaId} data={{ setData: text, theme: "bubble", readonly: true }} />
         </TextOverlay>
       </ImageWrapper>
-      <SideBar>
+      <SideBar id="side-bar">
         <ReadSideBarContent data={{
           baseChapters: chapters,
           currentChapterId: currentChapterId,
           isInWritingMode: false,
           isFromModal: false,
-          baseNotes: [],
+          baseNotes: notes,
           areChaptersSelected: areChaptersSelected,
           setChaptersSelected: setAreChaptersSelected,
+          onNoteClick: () => {
+            setNoteModalOpen(true);
+            setNoteModalData({ ...noteModalData, mode: NoteModalMode.Reading });
+          },
+          onNoteEditClick: () => {
+            setNoteModalOpen(true);
+            setNoteModalData({ ...noteModalData, mode: NoteModalMode.Editing });
+          },
+          onNoteDeleteClick: () => {
+            setisConfirmModalOpen(true);
+          }
         }} />
       </SideBar>
       <Modal data={{
@@ -435,12 +559,42 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
           currentChapterId: currentChapterId,
           isInWritingMode: false,
           isFromModal: true,
-          baseNotes: [],
+          baseNotes: notes,
           areChaptersSelected: areChaptersSelected,
           onChapterClick: () => { setModalExiting(true) },
           setChaptersSelected: setAreChaptersSelected,
+          onNoteClick: () => {
+            setNoteModalData({ ...noteModalData, mode: NoteModalMode.Reading });
+            setModalExiting(true);
+            setNoteModalOpen(true);
+          },
+          onNoteEditClick: () => {
+            setNoteModalData({ ...noteModalData, mode: NoteModalMode.Editing });
+            setModalExiting(true);
+            setNoteModalOpen(true);
+          },
+          onNoteDeleteClick: () => {
+            setModalExiting(true);
+            setisConfirmModalOpen(true);
+          }
         }} />
       </Modal>
+      <ConfirmationModal data={{
+        isOpen: isConfirmModalOpen,
+        isExiting: isConfirmModalExiting,
+        ContentElement: CommonContentModalStyle,
+        contentData: {
+          width: "400px",
+        },
+        setOpen: setisConfirmModalOpen,
+        setExiting: setIsConfirmModalExiting,
+      }}
+        confirmationData={{
+          text: `Are you sure you want to delete "${noteModalData.header}"?`,
+          modalTitle: "Delete Note",
+          funcToCall: () => deleteNote(),
+        }}>
+      </ConfirmationModal>
       <NoteCreationModal data={{
         isOpen: isNoteModalOpen,
         isExiting: isNoteModalExiting,
@@ -452,14 +606,19 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
         setOpen: setNoteModalOpen,
         setExiting: setNoteModalExiting,
       }}
-        descriptionData={{
+        noteData={{
           modalTitle: noteModalData.modalTitle,
-          initialDescription: noteModalData.initialDescription,
-          noteTitle: noteModalData.noteTitle,
-          currentDescription: noteModalData.currentDescription,
-          onNoteTitleChange: (text: string) => { setNoteModalData({ ...noteModalData, noteTitle: text }) },
-          onDescriptionChange: (text: string) => { setNoteModalData({ ...noteModalData, currentDescription: text }) },
-          onSaveClick: () => noteModalData.onSaveClick(),
+          initialDescription: noteModalData.content,
+          noteTitle: noteModalData.header,
+          currentContent: noteModalData.currentContent,
+          mode: noteModalData.mode,
+          onNoteTitleChange: (text: string) => {
+            setNoteModalData({ ...noteModalData, header: text });
+          },
+          onDescriptionChange: (text: string) => {
+            setNoteModalData({ ...noteModalData, currentContent: text });
+          },
+          onSaveClick: (mode: NoteModalMode) => saveNote(mode),
         }}>
       </NoteCreationModal>
       <ControlsWrapper>
@@ -495,7 +654,6 @@ const ArrowRightIcon = styled(BsFillArrowRightSquareFill)`
 const ArrowLeftIcon = styled(ArrowRightIcon)`
   transform: rotate(180deg);
 `;
-
 const Wrapper = styled.div`
   margin-left: 22px;
   margin-right: 22px;

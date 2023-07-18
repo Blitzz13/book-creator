@@ -21,15 +21,36 @@ export default function ReadSideBarContent({ data, ...delegated }: IReadSidebarD
           onChapterClick: data.onChapterClick
         }} />
         :
-        <NotesContent data={{ notes: data.baseNotes }} />
+        <Notes data={{
+          notes: data.baseNotes,
+          onNoteClick: () => {
+            if (data.onNoteClick) {
+              data.onNoteClick();
+            }
+          },
+          onDeleteClick: () => {
+            if (data.onNoteDeleteClick) {
+              data.onNoteDeleteClick();
+            }
+          },
+          onEditClick: () => {
+            if (data.onNoteEditClick) {
+              data.onNoteEditClick();
+            }
+          }
+        }} />
       }
     </Wrapper>
   );
 }
 
+const Notes = styled(NotesContent)`
+ 
+`;
+
 const Header = styled(HeaderWrapper)`
   padding: 18px;
-`
+`;
 
 const NotesIcon = styled(GiNotebook)`
   font-size: 160%;
@@ -50,4 +71,7 @@ const BookIcon = styled(BsFillBookFill)`
 `;
 
 
-const Wrapper = styled.div``;
+const Wrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+`;

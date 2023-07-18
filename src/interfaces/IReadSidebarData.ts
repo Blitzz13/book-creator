@@ -12,5 +12,8 @@ export default interface IReadSidebarData extends IHtmlElement {
     areChaptersSelected: boolean;
     setChaptersSelected: (areSelected: boolean) => void;
     onChapterClick?: Function;
+    onNoteClick?: Function;
+    onNoteEditClick?: Function;
+    onNoteDeleteClick?: Function;
   };
 }

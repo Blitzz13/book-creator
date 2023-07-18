@@ -1,14 +1,16 @@
+import { NoteModalMode } from "../../enums/NoteModalMode";
 import ICommonModalData from "./ICommonModalData";
 
 export default interface INoteModalData<ContentStyle, OverlayStyle>
   extends ICommonModalData<ContentStyle, OverlayStyle> {
-  descriptionData: {
+  noteData: {
     modalTitle: string;
     noteTitle: string;
-    currentDescription: string;
+    currentContent: string;
     initialDescription: string;
-    onSaveClick: Function;
+    onSaveClick: (mode: NoteModalMode) => void;
     onDescriptionChange: Function;
     onNoteTitleChange: Function;
+    mode: NoteModalMode;
   };
 }

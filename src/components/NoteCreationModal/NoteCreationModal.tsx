@@ -14,11 +14,12 @@ import { generateId } from '../../helpers/helpFunctions';
 import IOverlayStyleData from '../../interfaces/modal/IOverlayStyleData';
 import { useEffect, useState } from 'react';
 import INoteModalData from '../../interfaces/modal/INoteModalData';
+import { NoteModalMode } from '../../enums/NoteModalMode';
 const modalId = generateId(7);
 const imageId = generateId(7);
 const wrapperId = generateId(7);
 
-export default function EditDescriptionModal({ data, descriptionData, ...delegated }: INoteModalData<INoBackgroundContentModalStyle, IOverlayStyleData>) {
+export default function EditDescriptionModal({ data, noteData, ...delegated }: INoteModalData<INoBackgroundContentModalStyle, IOverlayStyleData>) {
     const [overflowY, setOverflowY] = useState("");
 
     useEffect(() => {
@@ -48,32 +49,36 @@ export default function EditDescriptionModal({ data, descriptionData, ...delegat
     }
 
     return (
-        <EditDesc id={modalId} {...delegated} data={{
-            isOpen: data.isOpen,
-            isExiting: data.isExiting,
-            ContentElement: data.ContentElement,
-            willPlayCloseAnimation: data.willPlayCloseAnimation,
-            height: data.height,
-            contentData: {
-                width: "413px",
-                height: "70%",
-                maxHeight: "100svh",
-                disableMaxWidthHeightQuery: true,
-                isExiting: data.isExiting
-            },
-            overlayData: {
-                overflowX: "hidden",
-                overflowY: overflowY,
-            },
-            setOpen: data.setOpen,
-            setExiting: data.setExiting,
-        }}> 
+        <EditDesc id={modalId}
+            {...delegated}
+            data={{
+                isOpen: data.isOpen,
+                isExiting: data.isExiting,
+                ContentElement: data.ContentElement,
+                willPlayCloseAnimation: data.willPlayCloseAnimation,
+                height: data.height,
+                contentData: {
+                    width: "413px",
+                    height: "70%",
+                    maxHeight: "100svh",
+                    disableMaxWidthHeightQuery: true,
+                    isExiting: data.isExiting,
+                },
+                overlayData: {
+                    overflowX: "hidden",
+                    overflowY: overflowY,
+                },
+                setOpen: data.setOpen,
+                setExiting: data.setExiting,
+            }}>
             <Wrapper id={wrapperId}>
                 <Note onLoad={() => updateWrapperHeight()} src={NotePagePath} id={imageId} />
-                <HeaderTextarea />
+                <HeaderTextarea value={noteData.noteTitle} onChange={(event: string | any) => {
+                    noteData.onNoteTitleChange(event.target.value);
+                }} />
                 <TextArea data={{
-                    onValueChange: descriptionData.onDescriptionChange,
-                    setData: descriptionData.initialDescription,
+                    onValueChange: noteData.onDescriptionChange,
+                    setData: noteData.initialDescription,
                     modules: {
                         toolbar: {
                             sizes: [{ size: [] }],
@@ -89,26 +94,29 @@ export default function EditDescriptionModal({ data, descriptionData, ...delegat
                         }
                     }
                 }}></TextArea>
-                <ButtonWrapper>
-                    <Button data={{
-                        color: Colors.ACCENT,
-                        height: 51,
-                        width: 100,
-                        radius: 20,
-                        textSize: 22,
-                        type: "submit",
-                        onClick: descriptionData.onSaveClick
-                    }}>Save</Button>
-                    <Button data={{
-                        color: Colors.WARNING,
-                        height: 51,
-                        width: 100,
-                        radius: 20,
-                        textSize: 22,
-                        type: "submit",
-                        onClick: () => { data.setExiting(true) }
-                    }}>Close</Button>
-                </ButtonWrapper>
+                {noteData.mode !== NoteModalMode.Reading ?
+                    <ButtonWrapper>
+                        <Button data={{
+                            color: Colors.ACCENT,
+                            height: 51,
+                            width: 100,
+                            radius: 20,
+                            textSize: 22,
+                            type: "submit",
+                            onClick: () => noteData.onSaveClick(noteData.mode),
+                        }}>Save</Button>
+                        <Button data={{
+                            color: Colors.WARNING,
+                            height: 51,
+                            width: 100,
+                            radius: 20,
+                            textSize: 22,
+                            type: "submit",
+                            onClick: () => { data.setExiting(true) }
+                        }}>Close</Button>
+                    </ButtonWrapper> : null
+                }
+
             </Wrapper>
         </EditDesc>
     );
@@ -172,6 +180,7 @@ const HeaderTextarea = styled.textarea`
   z-index: 1;
   margin-right: auto;
   margin-left: 10px;
+  width: 337px;
   @media only screen and (max-width: 413px) {
     margin-right: 60px;
     width: 80svw;
