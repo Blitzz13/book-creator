@@ -3,7 +3,7 @@ import 'react-quill/dist/quill.snow.css';
 import Modal from '../Modal/Modal';
 import Button from '../Button/Button';
 import { Colors } from '../../Colors';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import { ORDERED_LIST, BULLET_LIST } from '../../constants/ToolbarConstants';
 import { ToolbarTextStyle } from '../../enums/ToolbarTextStyle';
 import Editor from '../Editor/Editor';
@@ -18,6 +18,7 @@ import { NoteModalMode } from '../../enums/NoteModalMode';
 const modalId = generateId(7);
 const imageId = generateId(7);
 const wrapperId = generateId(7);
+const textAreaId = generateId(7);
 
 export default function EditDescriptionModal({ data, noteData, ...delegated }: INoteModalData<INoBackgroundContentModalStyle, IOverlayStyleData>) {
     const [overflowY, setOverflowY] = useState("");
@@ -48,10 +49,21 @@ export default function EditDescriptionModal({ data, noteData, ...delegated }: I
         $(`#${wrapperId}`).outerHeight(imageHeight);
     }
 
+    function setTextAreaBackground(): void {
+        const textArea = $(`#${textAreaId}`);
+
+        if (noteData.mode === NoteModalMode.Reading) {
+            textArea.find(".ql-container").css("background-color", "transparent");
+        } else {
+            textArea.find(".ql-container").css("background-color", Colors.FOREGROUND);
+        }
+    }
+
     return (
         <EditDesc id={modalId}
             {...delegated}
             data={{
+
                 isOpen: data.isOpen,
                 isExiting: data.isExiting,
                 ContentElement: data.ContentElement,
@@ -70,15 +82,20 @@ export default function EditDescriptionModal({ data, noteData, ...delegated }: I
                 },
                 setOpen: data.setOpen,
                 setExiting: data.setExiting,
+                onAfterOpen: setTextAreaBackground
             }}>
             <Wrapper id={wrapperId}>
                 <Note onLoad={() => updateWrapperHeight()} src={NotePagePath} id={imageId} />
                 <HeaderTextarea value={noteData.noteTitle} onChange={(event: string | any) => {
                     noteData.onNoteTitleChange(event.target.value);
-                }} />
-                <TextArea data={{
+                }}
+                    readOnly={noteData.mode === NoteModalMode.Reading ? true : false}
+                    mode={noteData.mode} />
+                <TextArea id={textAreaId} data={{
                     onValueChange: noteData.onDescriptionChange,
                     setData: noteData.initialDescription,
+                    theme: noteData.mode !== NoteModalMode.Reading ? "snow" : "bubble",
+                    readonly: noteData.mode === NoteModalMode.Reading ? true : false,
                     modules: {
                         toolbar: {
                             sizes: [{ size: [] }],
@@ -93,7 +110,7 @@ export default function EditDescriptionModal({ data, noteData, ...delegated }: I
                             removeStylesButton: ["clean"],
                         }
                     }
-                }}></TextArea>
+                }} mode={noteData.mode}></TextArea>
                 {noteData.mode !== NoteModalMode.Reading ?
                     <ButtonWrapper>
                         <Button data={{
@@ -161,6 +178,12 @@ const TextArea = styled(Editor)`
   max-width: 337px;
   margin-right: auto;
   margin-left: 10px;
+
+  ${({ mode }: { mode: NoteModalMode }) => css`
+    margin-bottom: ${mode === NoteModalMode.Reading ? "20px" : ""};
+    background-color: ${mode === NoteModalMode.Reading ? "transparent" : ""};
+  `}
+
   @media only screen and (max-width: 413px) {
     margin-right: 60px;
     width: 80svw;
@@ -181,6 +204,13 @@ const HeaderTextarea = styled.textarea`
   margin-right: auto;
   margin-left: 10px;
   width: 337px;
+
+  ${({ mode }: { mode: NoteModalMode }) => css`
+    margin-bottom: ${mode === NoteModalMode.Reading ? "20px" : ""};
+    background-color: ${mode === NoteModalMode.Reading ? "transparent" : ""};
+    border: none;
+  `}
+
   @media only screen and (max-width: 413px) {
     margin-right: 60px;
     width: 80svw;

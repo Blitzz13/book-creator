@@ -96,6 +96,7 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
 
     const readArea = $(`#${readAreaId}`);
     const readIcons = $("#read-icons");
+    const sideBar = $("#side-bar");
     const bookImage = $("#book-image");
     const textOverlay = $("#text-overlay");
     const readIconsHeight = readIcons.is(":visible") ? (readIcons.outerHeight(true) || 0) : 0;
@@ -103,8 +104,9 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
     const bookImageWidth = bookImage.outerWidth();
     const bookImageHeight = bookImage.outerHeight();
 
-    if (bookImage && textOverlay && navBarHeight && readArea && bookImageWidth && bookImageHeight) {
+    if (bookImage && textOverlay && navBarHeight && readArea && bookImageWidth && bookImageHeight && sideBar) {
       let scale = bookImageWidth / 1200;
+      sideBar.outerHeight(bookImageHeight);
 
       if (scale < 1 &&
         !isAndroid &&
@@ -175,7 +177,9 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
 
       //TODO: Replace with use state
       if (firstElementOfThePage.current && firstElementOfThePage.current[0] && (firstElementOfThePage.current[0][0].offsetLeft + columnGap / 4) !== quill.scrollLeft()) {
-        quill[0].scrollTo(firstElementOfThePage.current[0][0].offsetLeft - (columnGap / 4), 0);
+        if (quill[0]) {
+          quill[0].scrollTo(firstElementOfThePage.current[0][0].offsetLeft - (columnGap / 4), 0);
+        }
       }
 
       setWindowWidth(window.innerWidth)
@@ -424,7 +428,7 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
     const quill = $(`#${readAreaId}`).find(".ql-editor");
     quill.css("overflow", "hidden");
     quill.css("column-gap", `${columnGap}px`);
-    $(".ql-container").css("background-color", "transparent");
+    $(`#${readAreaId}`).find(".ql-container").css("background-color", "transparent");
 
   }, []);
 
@@ -433,12 +437,14 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
     setCssIosPropsForPages(quill);
 
     if (firstElementOfThePage.current && firstElementOfThePage.current[0] && (firstElementOfThePage.current[0][0].offsetLeft + columnGap / 4) !== quill.scrollLeft()) {
-      quill[0].scrollTo(firstElementOfThePage.current[0][0].offsetLeft - (columnGap / 4), 0)
+      if (quill[0]) {
+        quill[0].scrollTo(firstElementOfThePage.current[0][0].offsetLeft - (columnGap / 4), 0);
+      }
+
       if (resizeTimeoutRef && resizeTimeoutRef2) {
         highlightElement(firstElementOfThePage.current[0], resizeTimeoutRef, 3000);
         highlightElement(firstElementOfThePage.current[1], resizeTimeoutRef2, 3000);
       }
-      // window.scrollTo(firstVisibleElementRef.current[0][0].offsetLeft, firstVisibleElementRef.current[0][0].offsetTop)
     }
   })
 
@@ -576,6 +582,11 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
           onNoteDeleteClick: () => {
             setModalExiting(true);
             setisConfirmModalOpen(true);
+          },
+          onNoteCreateClick: () => {
+            setNoteModalData({ ...noteModalData, mode: NoteModalMode.Creating });
+            setModalExiting(true);
+            setNoteModalOpen(true);
           }
         }} />
       </Modal>
@@ -654,14 +665,13 @@ const ArrowRightIcon = styled(BsFillArrowRightSquareFill)`
 const ArrowLeftIcon = styled(ArrowRightIcon)`
   transform: rotate(180deg);
 `;
+
 const Wrapper = styled.div`
   margin-left: 22px;
   margin-right: 22px;
   display: grid;
   gap: ${wrapperGap}px;
   grid-template-columns: 1fr 234px;
-  /* grid-template-rows: 78px 1fr; */
-  /* grid-template-rows: 100%; */
   grid-template-areas:"a b";
 
   @media only screen and (max-width: 915px) {
@@ -689,7 +699,7 @@ const IconsWrapepr = styled.div`
   @media only screen and (max-width: 915px) {
     display: flex;
   }
-`
+`;
 
 const ControlsWrapper = styled.div`
   display: flex;
@@ -706,16 +716,16 @@ const SideBar = styled(StyledWrapper)`
   flex-grow: 1;
   display: flex;
   flex-flow: column;
-
+  overflow: hidden;
   @media only screen and (max-width: 915px) {
     display: none;
   }
-`
+`;
 
 const Image = styled.img`
   flex-grow: 1;
   width: 100%;
-  height: 100%;
+  /* height: 100%; */
   max-width: 1200px;
 `;
 
@@ -724,11 +734,11 @@ const PageImage = styled(Image)`
   object-fit: cover;
   border-top-right-radius: 20px;
   border-bottom-right-radius: 20px;
-`
+`;
 
 const ImageWrapper = styled.div`
   position: relative;
-`
+`;
 
 const TextOverlay = styled.div`
   overflow: hidden;
@@ -739,4 +749,4 @@ const TextOverlay = styled.div`
 const ReadArea = styled(Editor)`
   padding-left: ${initialReadAreaPaddingLeft}px;
   padding-right: ${initialReadAreaPaddingRight}px;
-`
+`;
