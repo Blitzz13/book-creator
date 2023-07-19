@@ -8,8 +8,9 @@ import Button from '../Button/Button';
 import { Colors } from '../../Colors';
 import styled from 'styled-components';
 import { XCircle } from 'react-feather';
+import IOverlayStyleData from '../../interfaces/modal/IOverlayStyleData';
 
-export default function ConfirmationModal({ data, confirmationData, ...delegated }: IConfirmationModalData<ICommonContentModalStyle>) {
+export default function ConfirmationModal({ data, confirmationData, ...delegated }: IConfirmationModalData<ICommonContentModalStyle, IOverlayStyleData>) {
 
     return (
         <Modal {...delegated} data={{

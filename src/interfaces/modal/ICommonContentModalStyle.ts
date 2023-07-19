@@ -9,5 +9,6 @@ export default interface ICommonContentModalStyle {
   height?: string | number;
   maxScreenHeight?: number;
   overflow?: string;
+  overflowY?: string;
   backgroundColor?: string;
 }
