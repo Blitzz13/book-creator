@@ -54,6 +54,7 @@ export default function EditDescriptionModal({ data, noteData, ...delegated }: I
 
         if (noteData.mode === NoteModalMode.Reading) {
             textArea.find(".ql-container").css("background-color", "transparent");
+            textArea.css("width", "100%");
         } else {
             textArea.find(".ql-container").css("background-color", Colors.FOREGROUND);
         }

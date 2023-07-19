@@ -266,7 +266,7 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
         const noteId = queryParams.get('noteId');
         if (noteId) {
           await data.noteService.updateNote(noteId, {
-            content: noteModalData.content,
+            content: noteModalData.currentContent,
             header: noteModalData.header,
           });
 
@@ -546,6 +546,10 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
           },
           onNoteDeleteClick: () => {
             setisConfirmModalOpen(true);
+          },
+          onNoteCreateClick: () => {
+            setNoteModalOpen(true);
+            setNoteModalData({ ...noteModalData, mode: NoteModalMode.Creating });
           }
         }} />
       </SideBar>
