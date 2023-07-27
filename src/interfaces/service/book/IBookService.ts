@@ -1,9 +1,17 @@
 import { IServiceBook } from "../book/IServiceBook";
+import IAddToFavouritesRequest from "./IAddToFavouritesRequest";
+import IBookSearchRequest from "./IBookSearchRequest";
 import ICreateBookRequest from "./ICreateBookRequest";
+import IFavouriteBookResult from "./IFavouriteBookResult";
+import ISearchCountResult from "./ISearchCountResult";
 import { IUpdateBookRequest } from "./IUpdateBookRequest";
 
 export default interface IBookService {
   fetchBooks(): Promise<IServiceBook[]>;
+  addToFavourites(request: IAddToFavouritesRequest): Promise<void>;
+  getFavouriteBooks(userId: string): Promise<IFavouriteBookResult>;
+  searchBooks(request: IBookSearchRequest): Promise<IServiceBook[]>;
+  getSearchBooksCount(request: IBookSearchRequest): Promise<ISearchCountResult>;
   fetchBook(id: string): Promise<IServiceBook>;
   createBook(data: ICreateBookRequest): Promise<IServiceBook>;
   updateBook(id: string, data: IUpdateBookRequest): Promise<IServiceBook>;

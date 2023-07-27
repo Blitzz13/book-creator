@@ -78,7 +78,7 @@ export default function BurgerMenuModal(data: IBurgerMenuModalData) {
                         <NavLink onClick={handleRegisterClick} to="">Register</NavLink>
                     </React.Fragment>}
 
-                <NavLink to="">Browse</NavLink>
+                <NavLink to="/search">Browse</NavLink>
                 <NavLink to="">Genre</NavLink>
                 {data.displayName &&
                     <React.Fragment>

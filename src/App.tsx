@@ -4,10 +4,11 @@ import Home from './components/Home/Home';
 import About from './components/About/About';
 import GlobalStyle from './global';
 import NavBar from './components/Nav/NavBar';
-import { Services } from './Services';
+import Services from './Services';
 import WriteBook from './components/WriteBook/WriteBook';
 import PageNotFound from './components/PageNotFound/PageNotFound';
 import ReadBook from './components/ReadBook/ReadBook';
+import Search from './components/Search/Search';
 
 function App() {
   const services = new Services();
@@ -20,7 +21,8 @@ function App() {
         <Route path="/" element={<Home bookService={services.bookService} />} />
         <Route path="/about" element={<About />} />
         <Route path="/write/:bookId" element={<WriteBook chapterService={services.chapterService} bookService={services.bookService} />} />
-        <Route path="/read/:bookId" element={<ReadBook chapterService={services.chapterService} bookService={services.bookService} noteService={services.noteService}/>} />
+        <Route path="/read/:bookId" element={<ReadBook chapterService={services.chapterService} bookService={services.bookService} noteService={services.noteService} />} />
+        <Route path="/search" element={<Search bookService={services.bookService} />} />
         <Route path="*" element={<PageNotFound />} />
       </Routes>
     </div>

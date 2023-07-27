@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { Colors } from '../../Colors';
 import BackgroundWrapper from '../StyledWrapper/StyledWrapper';
@@ -13,6 +13,7 @@ import BurgerMenuModal from '../BurgerMenuModal/BurgerMenuModal';
 import CreateBookModal from '../CreateBookModal/CreateBookModal';
 import IBookService from '../../interfaces/service/book/IBookService';
 import { OnClickEvent } from '../../types/OnClickEvent';
+import { FormEvent } from 'react';
 
 export default function NavBar(data: { userService: IUserService, bookService: IBookService }) {
   function onRegisterClick(): void {
@@ -40,6 +41,11 @@ export default function NavBar(data: { userService: IUserService, bookService: I
     data.userService.logout();
   }
 
+  function onSearchSubmit(event: FormEvent): void {
+    event.preventDefault();
+    navigate(`/search?searchString=${searchString}`);
+  }
+
   const authContext = useAuthContext();
 
   const [isRegisterOpen, setRegisterOpen] = React.useState(false);
@@ -47,7 +53,9 @@ export default function NavBar(data: { userService: IUserService, bookService: I
   const [isCreateBookOpen, setCreateBookOpen] = React.useState(false);
   const [isProfileMenuOpen, setProfileMenuOpen] = React.useState(false);
   const [isBurgerMenuOpen, setBurgerMenuOpen] = React.useState(false);
-  const [height, setHeight] = React.useState(0);
+  const [searchString, setSearchString] = React.useState("");
+  const [height, setHeight] = React.useState(0);    
+  const navigate = useNavigate();
 
   React.useEffect(() => {
     let box = document.getElementById('nav-bar');
@@ -60,11 +68,16 @@ export default function NavBar(data: { userService: IUserService, bookService: I
     <Wrapper id="nav-bar">
       <NavLinkWrapper>
         <Logo to="/">LOGO</Logo>
-        <NavLink to="/">Browse</NavLink>
+        <NavLink to="/search">Browse</NavLink>
         <NavLink to="/about">Genres</NavLink>
       </NavLinkWrapper>
       <NavButtonWrapper>
-        <NavSearch />
+        <NavSearch data={{
+          onValueChange: (text: string) => {
+            setSearchString(text);
+          },
+          onSubmit: onSearchSubmit,
+        }} />
         {authContext.user ? <React.Fragment>
           <NavLink onClick={onProfileClick} to="">{authContext.user.displayName}</NavLink>
         </React.Fragment> :
@@ -133,7 +146,6 @@ const NavSearch = styled(SearchInput)`
   max-width: 190px;
   @media only screen and (max-width: 976px) {
     max-width: revert;
-    width: 100%;
   }
 `
 
@@ -145,7 +157,6 @@ const NavButtonWrapper = styled.div`
 
   @media only screen and (max-width: 976px) {
     display: inline;
-    width: 100%;
   }
 `;
 
