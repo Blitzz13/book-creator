@@ -1,33 +1,24 @@
 import { Search } from 'react-feather';
 import styled from 'styled-components/macro';
 import Input from '../Input/Input';
+import { ISearchInputData } from '../../interfaces/ISearchInputData';
+import { FormEvent } from 'react';
 
-const SearchInput = (data: any) => {
+const SearchInput = ({ data, ...delegated }: ISearchInputData) => {
   return (
     <Label>
-      <SearchIcon></SearchIcon>
-      <Input {...data} placeholder="Search Book" />
+      <form onSubmit={(event: FormEvent) => data.onSubmit(event)}>
+        <SearchIcon></SearchIcon>
+        <Input onValueChange={(text: string) => data.onValueChange(text)} {...delegated} placeholder="Search Book" />
+      </form>
     </Label>
   );
 };
 
 const Label = styled.label`
   position: relative;
+  display: flex;
 `;
-
-// const Input = styled.input`
-//   border: none;
-//   background: ${Colors.ACCENT};
-//   border-radius: 20px;
-//   padding-left: 34px;
-//   font-size: ${22 / 16}rem;
-//   color: ${Colors.TEXT};
-//   width: ${226 / 16}rem;
-
-//   &::placeholder {
-//     color: ${Colors.BUTTON_TEXT};
-//   }
-// `;
 
 const SearchIcon = styled(Search)`
   position: absolute;
@@ -41,3 +32,4 @@ const SearchIcon = styled(Search)`
 `;
 
 export default SearchInput;
+

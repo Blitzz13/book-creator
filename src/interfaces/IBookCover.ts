@@ -1,7 +1,12 @@
 export interface IBookCover {
   data: {
     onBookClick: Function;
-    cover?: string;
+    onReadClick: Function;
     title: string;
+    isFavourited: boolean;
+    addToFavourites: Function;
+    backgroundColor?: string;
+    cover?: string;
+    scaleBook?: boolean;
   };
 }

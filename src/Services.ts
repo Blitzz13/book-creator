@@ -7,7 +7,7 @@ import ChapterService from "./services/ChapterService";
 import NoteService from "./services/NoteService";
 import UserService from "./services/UserService";
 
-export class Services {
+export default class Services {
   private _bookService: IBookService;
   private _userService: IUserService;
   private _chapterService: IChapterService;

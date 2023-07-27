@@ -1,23 +1,26 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import styled, { css } from "styled-components";
 import AnimatedBook from "../AnimatedBook/AnimatedBook";
-import BookCover from "../BookCover/BookCover";
+import BookList from "../BookCover/BookList";
 import BookWithPercentage from "../BookWithPercentage/BookWithPercentage";
 import StyledWrapper from "../StyledWrapper/StyledWrapper";
 import { IServiceBook } from "../../interfaces/service/book/IServiceBook";
 import IBookService from "../../interfaces/service/book/IBookService";
 import IDisplayBook from "../../interfaces/IDisplayBook";
 import { ServiceToBook } from "../../Converters/Book/ConvertBook";
+import { useAuthContext } from "../../hooks/useAuthContext";
 export default function Home(data: { bookService: IBookService }) {
   const bookService = data.bookService;
 
   let content = [];
 
-  const [books, setBooks] = React.useState([] as IServiceBook[]);
-  const [isBookPreveiewShown, setBookPreviewShown] = React.useState(false);
-  const [isBookPreveiewExiting, setIsBookPreveiewExiting] = React.useState(false);
-  const [toggle, setToggle] = React.useState(false);
-  const [selectedBook, setSelectedBook] = React.useState<IDisplayBook>();
+  const authContext = useAuthContext();
+  const [favouriteBookIds, setfavouriteBookIds] = useState<string[]>([]);
+  const [books, setBooks] = useState([] as IServiceBook[]);
+  const [isBookPreveiewShown, setBookPreviewShown] = useState(false);
+  const [isBookPreveiewExiting, setIsBookPreveiewExiting] = useState(false);
+  const [toggle, setToggle] = useState(false);
+  const [selectedBook, setSelectedBook] = useState<IDisplayBook>();
 
   for (let i = 0; i < 2; i++) {
     content.push(<BookWithPercentage backCover="https://pictures.abebooks.com/isbn/9780345427656-us.jpg"
@@ -34,6 +37,11 @@ export default function Home(data: { bookService: IBookService }) {
     });
   }, [bookService])
 
+  useEffect(() => {
+    getFavouriteBooks();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authContext])
+
   async function onBookClick(id: string): Promise<void> {
     const book = await data.bookService.fetchBook(id);
     setSelectedBook(ServiceToBook(book));
@@ -47,6 +55,22 @@ export default function Home(data: { bookService: IBookService }) {
     setBookPreviewShown(isBookPreveiewShown);
   }
 
+  async function getFavouriteBooks(): Promise<void> {
+    if (authContext.user?.id) {
+      const ids = await data.bookService.getFavouriteBooks(authContext.user.id);
+      setfavouriteBookIds(ids.favouriteBookIds);
+    }
+  }
+
+  async function addToFavourites(bookId: string): Promise<void> {
+    await data.bookService.addToFavourites({
+      bookId: bookId,
+      userId: authContext.user?.id || "",
+    });
+
+    await getFavouriteBooks();
+  }
+
   return (
     <>
       <Wrapper>
@@ -58,9 +82,15 @@ export default function Home(data: { bookService: IBookService }) {
       <Wrapper>
         <BiggerHeader>Freshly Written</BiggerHeader>
         <GridWrapper length={5}>
-          {books && books.map((book: IServiceBook) => (
-            <BookCover key={book._id} data={{ title: book.title, cover: book.coverImage, onBookClick: () => { onBookClick(book._id) } }}></BookCover>
-          ))}
+          <BookList data={{
+            addToFavourites: (bookId: string) => {
+              addToFavourites(bookId);
+            },
+            favouriteBooksIds: favouriteBookIds,
+            books: books,
+            verticalScroll: true,
+            onClick: onBookClick
+          }} />
         </GridWrapper>
       </Wrapper>
       <AnimatedBook modalData={{

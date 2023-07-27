@@ -245,6 +245,7 @@ export default function WriteBook(data: IWriteBookData) {
     }
 
     fetchData().catch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data.bookService, data.chapterService, navigate, params.bookId]);
 
   useEffect(() => {
@@ -439,7 +440,15 @@ export default function WriteBook(data: IWriteBookData) {
         }} />
         <PreviewWrapper>
           <Text>This is how the book will apear when searched or in the main page</Text>
-          <BookCover key={book.id} data={{ title: book.title, cover: book.frontConver, onBookClick: () => { setAnimatedOpen(!isAnimatedOpen) } }} />
+          <BookCover key={book.id}
+            data={{
+              addToFavourites: () => { },
+              isFavourited: false,
+              title: book.title,
+              cover: book.frontConver,
+              onBookClick: () => { setAnimatedOpen(!isAnimatedOpen) },
+              onReadClick: () => { }
+            }} />
           <Text>This is how the book will apear when people are reading it</Text>
           <BookWithPercentage
             backCover={book.backCover}
