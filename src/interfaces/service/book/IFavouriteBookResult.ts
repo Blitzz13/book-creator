@@ -1,3 +1,5 @@
+import { IServiceBook } from "./IServiceBook";
+
 export default interface IFavouriteBookResult {
-  favouriteBookIds: string[];
+  favouriteBooks: IServiceBook[];
 }

@@ -5,8 +5,11 @@ export interface IBookCover {
     title: string;
     isFavourited: boolean;
     addToFavourites: Function;
+    isMyBook: boolean;
+    onDeleteClick?: Function;
     backgroundColor?: string;
     cover?: string;
     scaleBook?: boolean;
+    mediaMaxWidth?: number;
   };
 }

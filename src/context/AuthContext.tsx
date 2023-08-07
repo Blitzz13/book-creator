@@ -7,9 +7,11 @@ export const AuthContext = createContext<IAuthContext | null>(null);
 
 export function authReducer(state: any, action: IUserAction) {
   switch (action.type) {
-    case "LOGIN":
+    case UserAction.Login:
       return { user: action.payload };
-    case "LOGOUT":
+    case UserAction.Update:
+      return { user: action.payload };
+    case UserAction.Logout:
       return { user: null };
     default:
       return state;

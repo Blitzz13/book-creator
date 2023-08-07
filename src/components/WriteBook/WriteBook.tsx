@@ -442,6 +442,7 @@ export default function WriteBook(data: IWriteBookData) {
           <Text>This is how the book will apear when searched or in the main page</Text>
           <BookCover key={book.id}
             data={{
+              isMyBook: false,
               addToFavourites: () => { },
               isFavourited: false,
               title: book.title,

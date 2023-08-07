@@ -5,10 +5,14 @@ export default interface IBookListData extends IHtmlElement {
   data: {
     books: IServiceBook[];
     favouriteBooksIds: string[];
+    noBooksMessage?: string;
     onReadClick?: Function;
+    onDeleteClick?: Function;
     addToFavourites: (bookId: string) => void;
     onClick?: Function;
     verticalScroll?: boolean;
     scaleBook?: boolean;
+    mediaMaxWidth?: number;
+    align?: string;
   };
 }

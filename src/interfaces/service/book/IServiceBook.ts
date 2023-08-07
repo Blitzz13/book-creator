@@ -8,6 +8,7 @@ export interface IServiceBook extends IMongoDocument {
   description: string;
   state: ServiceBookState;
   author: string;
+  authorId: string;
   rating: number;
   backCoverImage?: string;
 }

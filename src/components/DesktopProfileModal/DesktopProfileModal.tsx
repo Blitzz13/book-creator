@@ -7,8 +7,10 @@ import { XCircle } from "react-feather";
 import { ProfileModalStyle } from "../../commonStyledStyles/ProfileModalStyle";
 import { NoOverlayStyle } from "../../commonStyledStyles/NoOverlayStyle";
 import { OnClickEvent } from "../../types/OnClickEvent";
+import { useAuthContext } from "../../hooks/useAuthContext";
 export default function DesktopProfileModal(data: IProfileModalData) {
   ReactModal.setAppElement("#root");
+  const authContext = useAuthContext();
 
   function handleCloseModal() {
     data.setOpen(false);
@@ -31,7 +33,9 @@ export default function DesktopProfileModal(data: IProfileModalData) {
       overlayClassName="_"
       onRequestClose={handleCloseModal}
       contentElement={(props, children) => (
-        <ProfileModalStyle height={data.navbarHeight} width={data.width} {...props}>{children}</ProfileModalStyle>
+        <ProfileModalStyle height={data.navbarHeight}
+          width={data.width}
+          {...props}>{children}</ProfileModalStyle>
       )}
       overlayElement={(props, contentElement) => (
         <NoOverlayStyle {...props}>{contentElement}</NoOverlayStyle>
@@ -41,8 +45,8 @@ export default function DesktopProfileModal(data: IProfileModalData) {
         <CloseIcon onClick={handleCloseModal}></CloseIcon>
       </HeaderWrapper>
       <BodyWrapper>
-        <MenuLink to="">My Profile</MenuLink>
-        <MenuLink to="">My Books</MenuLink>
+        <MenuLink onClick={handleCloseModal} to={"/profile/" + authContext.user?.id}>My Profile</MenuLink>
+        <MenuLink onClick={handleCloseModal} to="">My Books</MenuLink>
         <MenuLink onClick={handleCreateBook} to="">Start new book</MenuLink>
         <MenuLink onClick={handleLogout} to="">Logout</MenuLink>
       </BodyWrapper>

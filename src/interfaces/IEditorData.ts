@@ -6,6 +6,7 @@ import { ToolbarTextStyle } from "../enums/ToolbarTextStyle";
 import IHtmlElement from "./IHtmlElement";
 
 export default interface IEditorData extends IHtmlElement {
+  onLoad?: Function;
   data: {
     onValueChange?: Function;
     setData?: string;
