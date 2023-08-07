@@ -6,4 +6,5 @@ export default interface IBurgerMenuModalData extends IModalData {
   onRegisterClick: Function;
   onCreateBookClick: Function;
   displayName?: string;
+  userId?: string;
 }

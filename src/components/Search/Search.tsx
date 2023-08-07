@@ -82,7 +82,7 @@ export default function Search(data: ISearchData) {
 
   async function getFavouriteBooks(): Promise<void> {
     if (authContext.user?.id) {
-      const ids = await data.bookService.getFavouriteBooks(authContext.user.id);
+      const ids = await data.bookService.getFavouriteBooksIds(authContext.user.id);
       setfavouriteBookIds(ids.favouriteBookIds);
     }
   }

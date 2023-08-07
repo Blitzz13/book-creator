@@ -3,6 +3,7 @@ import IAddToFavouritesRequest from "../interfaces/service/book/IAddToFavourites
 import IBookSearchRequest from "../interfaces/service/book/IBookSearchRequest";
 import IBookService from "../interfaces/service/book/IBookService";
 import ICreateBookRequest from "../interfaces/service/book/ICreateBookRequest";
+import IFavouriteBookIdsResult from "../interfaces/service/book/IFavouriteBookIdsResult";
 import IFavouriteBookResult from "../interfaces/service/book/IFavouriteBookResult";
 import ISearchCountResult from "../interfaces/service/book/ISearchCountResult";
 import { IServiceBook } from "../interfaces/service/book/IServiceBook";
@@ -49,7 +50,23 @@ export default class BookService implements IBookService {
     );
   }
 
-  public async getFavouriteBooks(userId: string): Promise<IFavouriteBookResult> {
+  public async getFavouriteBooksIds(userId: string): Promise<IFavouriteBookIdsResult> {
+    const response = await fetch(`${this._url}/favourites-ids/${userId}`, {
+      method: "GET",
+    });
+
+    const json = await response.json();
+
+    if (response.ok) {
+      return json;
+    }
+
+    throw new Error(
+      `Retrieving favourite books failed with ${response.statusText}`
+    );
+  }
+
+  public async getFavouriteBooks(userId: string): Promise<IServiceBook[]> {
     const response = await fetch(`${this._url}/favourites/${userId}`, {
       method: "GET",
     });

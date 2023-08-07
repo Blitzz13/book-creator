@@ -54,7 +54,8 @@ export default function NavBar(data: { userService: IUserService, bookService: I
   const [isProfileMenuOpen, setProfileMenuOpen] = React.useState(false);
   const [isBurgerMenuOpen, setBurgerMenuOpen] = React.useState(false);
   const [searchString, setSearchString] = React.useState("");
-  const [height, setHeight] = React.useState(0);    
+  const [userName, setUserName] = React.useState(authContext.user?.displayName);
+  const [height, setHeight] = React.useState(0);
   const navigate = useNavigate();
 
   React.useEffect(() => {
@@ -63,6 +64,10 @@ export default function NavBar(data: { userService: IUserService, bookService: I
       setHeight(box.offsetHeight);
     }
   }, []);
+
+  React.useEffect(() => {
+    setUserName(authContext.user?.displayName)
+  }, [authContext.user]);
 
   return (
     <Wrapper id="nav-bar">
@@ -79,7 +84,7 @@ export default function NavBar(data: { userService: IUserService, bookService: I
           onSubmit: onSearchSubmit,
         }} />
         {authContext.user ? <React.Fragment>
-          <NavLink onClick={onProfileClick} to="">{authContext.user.displayName}</NavLink>
+          <NavUserName onClick={onProfileClick} to="">{userName}</NavUserName>
         </React.Fragment> :
           <React.Fragment>
             <NavButton onClick={onRegisterClick}>Register</NavButton>
@@ -96,7 +101,14 @@ export default function NavBar(data: { userService: IUserService, bookService: I
       </CreateBookModal>
       <DesktopProfileModal createBook={onCreateBookClick} logout={handleLogout} navbarHeight={height} width="300px" isOpen={isProfileMenuOpen} setOpen={setProfileMenuOpen}>
       </DesktopProfileModal>
-      <BurgerMenuModal onCreateBookClick={onCreateBookClick} displayName={authContext.user?.displayName} width="80%" isOpen={isBurgerMenuOpen} onLoginClick={onLoginClick} onRegisterClick={onRegisterClick} onLogoutClick={handleLogout} setOpen={setBurgerMenuOpen}>
+      <BurgerMenuModal onCreateBookClick={onCreateBookClick}
+        displayName={authContext.user?.displayName}
+        userId={authContext.user?.id}
+        width="80%" isOpen={isBurgerMenuOpen}
+        onLoginClick={onLoginClick}
+        onRegisterClick={onRegisterClick}
+        onLogoutClick={handleLogout}
+        setOpen={setBurgerMenuOpen}>
       </BurgerMenuModal>
     </Wrapper>
   );
@@ -139,6 +151,15 @@ const NavLink = styled(Link)`
 
   @media only screen and (max-width: 976px) {
     display: none;
+  }
+`;
+
+const NavUserName = styled(NavLink)`
+  @media only screen and (max-width: 1115px) {
+    max-width: 215px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 `;
 

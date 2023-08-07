@@ -6,7 +6,7 @@ import 'react-quill/dist/quill.snow.css';
 import 'react-quill/dist/quill.bubble.css';
 import IEditorData from '../../interfaces/IEditorData';
 
-export default function Editor({ data, ...delegated }: IEditorData) {
+export default function Editor({ data, onLoad, ...delegated }: IEditorData) {
   let quillRef = useRef<ReactQuill>(null);
   let toolbarSettings;
 
@@ -28,6 +28,12 @@ export default function Editor({ data, ...delegated }: IEditorData) {
   }
 
   useEffect(() => {
+    if (onLoad) {
+      onLoad();
+    }
+  }, [onLoad]);
+
+  useEffect(() => {
     function setContent(): void {
       const quill = quillRef.current?.getEditor();
       if (quill && data.setData) {
@@ -35,11 +41,11 @@ export default function Editor({ data, ...delegated }: IEditorData) {
       }
     }
     setContent();
-  },[data.setData]);
+  }, [data.setData]);
 
   return (
     <ReactQuill modules={{
       toolbar: toolbarSettings
-    }} ref={quillRef} readOnly={data.readonly} theme={data.theme || "snow"} {...delegated} onChange={getContent} />
+    }} ref={quillRef} readOnly={data.readonly} theme={data.theme || undefined} {...delegated} onChange={getContent} />
   );
 }

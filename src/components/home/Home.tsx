@@ -57,7 +57,7 @@ export default function Home(data: { bookService: IBookService }) {
 
   async function getFavouriteBooks(): Promise<void> {
     if (authContext.user?.id) {
-      const ids = await data.bookService.getFavouriteBooks(authContext.user.id);
+      const ids = await data.bookService.getFavouriteBooksIds(authContext.user.id);
       setfavouriteBookIds(ids.favouriteBookIds);
     }
   }

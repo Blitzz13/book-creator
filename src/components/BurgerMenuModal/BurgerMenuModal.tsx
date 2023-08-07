@@ -66,20 +66,20 @@ export default function BurgerMenuModal(data: IBurgerMenuModalData) {
             )}
             isOpen={data.isOpen}>
             <Header>
-                <Logo to="/">LOGO</Logo>
+                <Logo onClick={startExitAnimation} to="/">LOGO</Logo>
                 <CloseIcon onClick={startExitAnimation} />
             </Header>
             <Wrapper>
                 {data.displayName ?
-                    <NavLink to="">{data.displayName}</NavLink>
+                    <NavLink onClick={startExitAnimation} to={"/profile/" + data.userId}>{data.displayName}</NavLink>
                     :
                     <React.Fragment>
                         <NavLink onClick={handleLoginClick} to="">Login</NavLink>
                         <NavLink onClick={handleRegisterClick} to="">Register</NavLink>
                     </React.Fragment>}
 
-                <NavLink to="/search">Browse</NavLink>
-                <NavLink to="">Genre</NavLink>
+                <NavLink onClick={startExitAnimation} to="/search">Browse</NavLink>
+                <NavLink onClick={startExitAnimation} to="">Genre</NavLink>
                 {data.displayName &&
                     <React.Fragment>
                         <NavLink onClick={handleCreateBookClick} to="">Start new book</NavLink>
