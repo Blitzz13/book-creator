@@ -4,10 +4,12 @@ import AddedBook from "../AddedBook/AddedBook";
 import ProgressBar from "../ProgressBar";
 import bookPlaceholderImage from "../../assets/placeholder-image-portrait.png";
 
-export default function BookWithPercentage(data: IBookWithProgress, key: any) {
+export default function BookWithPercentage(data: IBookWithProgress) {
   return (
-    <Wrapper key={key}>
-      <AddedBook frontCover={data.frontCover || bookPlaceholderImage}
+    <Wrapper>
+      <AddedBook
+        onClick={() => data.onClick()}
+        frontCover={data.frontCover || bookPlaceholderImage}
         backCover={
           data.backCover ||
           data.frontCover ||

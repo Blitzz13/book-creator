@@ -20,6 +20,9 @@ import Checkbox from "../Checkbox/Checkbox";
 import ConfirmationModal from "../ConfirmationModal/ConfirmationModal";
 import profilePlaceholder from "../../assets/placeholder-image-portrait.png"
 import { CommonContentModalStyle } from "../../commonStyledStyles/CommonContentModalStyle";
+import { ProfileBookTabs } from "../../enums/ProfileBookTabs";
+import BookWithPercentageList from "../BookWithPercentage/BookWithPercentageList";
+import IStartedBookProgressResponse from "../../interfaces/service/user/IStartedBookProgressResponse";
 
 const textAreaId = generateId(7);
 
@@ -36,6 +39,9 @@ export default function Profile(data: { bookService: IBookService, userService: 
   const [isConfirmationExiting, setIsConfirmationExiting] = useState(false);
   const [confirmationText, setConfirmationText] = useState("");
   const [confirmationTitle, setConfirmationTitle] = useState("");
+  const [currentTab, setCurrentTab] = useState<ProfileBookTabs>(ProfileBookTabs.FavouriteBooks);
+  const [startedBooks, setStartedBooks] = useState<IStartedBookProgressResponse[]>([]);
+  const [progressBooks, setProgressBooks] = useState<IStartedBookProgressResponse[]>([]);
   const [callDeleteBook, setCallDeleteBook] = useState<boolean>();
   const [bookDeleteId, setBookDeleteId] = useState("");
   const [noBooksMessage, setNoBooksMessage] = useState<string>();
@@ -50,20 +56,45 @@ export default function Profile(data: { bookService: IBookService, userService: 
 
   useEffect(() => {
     loadFavouriteBooks();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileModel.settings]);
 
   useEffect(() => {
     loadDetails();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authContext.user]);
+
+  useEffect(() => {
+    async function loadStartedBooks() {
+      if (authContext.user) {
+        const startedBooks = (await userService.startedBooksProgress(authContext.user.id));
+
+        setStartedBooks(startedBooks);
+      }
+    }
+
+    loadStartedBooks();
+  }, [authContext.user, userService])
 
   useEffect(() => {
     if (profileModel.id !== "") {
       load();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    switch (currentTab) {
+      case ProfileBookTabs.CurrentlyReading:
+        setProgressBooks(startedBooks.filter(x => x.currentChapterOrderId !== x.allChaptersCount && x.chapterPercentage < 0.99));
+        break;
+      case ProfileBookTabs.FinishedReading:
+        setProgressBooks(startedBooks.filter(x => x.currentChapterOrderId === x.allChaptersCount && x.chapterPercentage >= 0.99));
+        break;
+      default:
+        break;
+    }
+  }, [currentTab, startedBooks]);
 
   async function load(): Promise<void> {
     await getAuthoredBooks();
@@ -270,28 +301,43 @@ export default function Profile(data: { bookService: IBookService, userService: 
       </DetailsWrapper>
       <BooksWrapper>
         <TabsWrapper>
-          <TabTitle onClick={() => setIsFavouriteOpen(true)} isSelected={isFavourteOpen}>Favourite books</TabTitle>
-          <TabTitle onClick={() => setIsFavouriteOpen(false)} isSelected={!isFavourteOpen}>Authored books</TabTitle>
+          <TabTitle onClick={() => {
+            setCurrentTab(ProfileBookTabs.FavouriteBooks);
+            setIsFavouriteOpen(true);
+          }
+          } isSelected={currentTab === ProfileBookTabs.FavouriteBooks}>Favourite books</TabTitle>
+          <TabTitle onClick={() => {
+            setCurrentTab(ProfileBookTabs.AuthoredBooks);
+            setIsFavouriteOpen(false);
+          }
+          } isSelected={currentTab === ProfileBookTabs.AuthoredBooks}>Authored books</TabTitle>
+          <TabTitle onClick={() => setCurrentTab(ProfileBookTabs.CurrentlyReading)} isSelected={currentTab === ProfileBookTabs.CurrentlyReading}>Reading</TabTitle>
+          <TabTitle onClick={() => setCurrentTab(ProfileBookTabs.FinishedReading)} isSelected={currentTab === ProfileBookTabs.FinishedReading}>Finished</TabTitle>
         </TabsWrapper>
-        <Books data={{
-          addToFavourites: (bookId: string) => {
-            addToFavourites(bookId)
-          },
-          favouriteBooksIds: profileModel.favouriteBookIds,
-          books: isFavourteOpen ? favouriteBooks : authoredBooks,
-          noBooksMessage: noBooksMessage,
-          onClick: () => { },
-          onDeleteClick: (bookId: string) => {
-            const bookTitle = authoredBooks.find(x => x._id === bookId)?.title;
-            setConfirmationText(`Are sure you want to delete "${bookTitle}"`);
-            setConfirmationTitle(`Delete Book`);
-            setIsConfirmationOpen(true);
-            setBookDeleteId(bookId);
-            setCallDeleteBook(true);
-          },
-          scaleBook: true,
-          mediaMaxWidth: 945
-        }} />
+        {(currentTab === ProfileBookTabs.FavouriteBooks || currentTab === ProfileBookTabs.AuthoredBooks) &&
+          <Books data={{
+            addToFavourites: (bookId: string) => {
+              addToFavourites(bookId)
+            },
+            favouriteBooksIds: profileModel.favouriteBookIds,
+            books: isFavourteOpen ? favouriteBooks : authoredBooks,
+            noBooksMessage: noBooksMessage,
+            onClick: () => { },
+            onDeleteClick: (bookId: string) => {
+              const bookTitle = authoredBooks.find(x => x._id === bookId)?.title;
+              setConfirmationText(`Are sure you want to delete "${bookTitle}"`);
+              setConfirmationTitle(`Delete Book`);
+              setIsConfirmationOpen(true);
+              setBookDeleteId(bookId);
+              setCallDeleteBook(true);
+            },
+            scaleBook: true,
+            mediaMaxWidth: 945
+          }} />}
+        {(currentTab === ProfileBookTabs.CurrentlyReading || currentTab === ProfileBookTabs.FinishedReading) &&
+          <BookWithPercentageList data={{
+            books: progressBooks
+          }} />}
       </BooksWrapper>
       <ConfirmationModal data={{
         isOpen: isConfirmationOpen,

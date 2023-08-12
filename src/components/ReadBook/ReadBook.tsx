@@ -26,6 +26,9 @@ import { IBaseNote } from "../../interfaces/service/note/IBaseNote";
 import { NoteModalMode } from "../../enums/NoteModalMode";
 import ConfirmationModal from "../ConfirmationModal/ConfirmationModal";
 import { CommonContentModalStyle } from "../../commonStyledStyles/CommonContentModalStyle";
+import IUserService from "../../interfaces/service/user/IUserService";
+import ISaveBookProgressRequest from "../../interfaces/service/user/ISaveBookProgressRequest";
+import ISavedBookProgressResponse from "../../interfaces/service/user/ISavedBookProgressResponse";
 
 const initialReadAreaPaddingLeft = 98;
 const initialReadAreaPaddingRight = 82;
@@ -35,10 +38,16 @@ const columnGap = 64;
 const wrapperGap = 18;
 const readAreaId = generateId(7);
 
-export default function ReadBook(data: { chapterService: IChapterService, bookService: IBookService, noteService: INoteService }) {
+export default function ReadBook(data: {
+  chapterService: IChapterService,
+  bookService: IBookService,
+  noteService: INoteService,
+  userService: IUserService
+}) {
   const [scrollPosX, setScrollPosX] = useState(0);
   const [imageScale, setScale] = useState(0);
   const [areChaptersSelected, setAreChaptersSelected] = useState(true);
+  const [loaded, setLoaded] = useState(false);
   const [isModalOpen, setModalOpen] = useState(false);
   const [isConfirmModalOpen, setisConfirmModalOpen] = useState(false);
   const [isConfirmModalExiting, setIsConfirmModalExiting] = useState(false);
@@ -82,9 +91,19 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
     if (noteId) {
       setCurrentNote(noteId);
     }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search]);
 
-  const handleResize = useCallback(() => {
+  useEffect(() => {
+    if (text !== "") {
+      loadChapterProgress();
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [text]);
+
+  const handleResize = useCallback((skipHighlight = false) => {
     const quill = $(`#${readAreaId}`).find(".ql-editor");
     const lastQuillWidth = quill.outerWidth() || 0;
 
@@ -114,8 +133,10 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
         firstElementOfThePage.current &&
         resizeTimeoutRef &&
         resizeTimeoutRef2) {
-        highlightElement(firstElementOfThePage.current[0], resizeTimeoutRef);
-        highlightElement(firstElementOfThePage.current[1], resizeTimeoutRef2);
+        if (!skipHighlight) {
+          highlightElement(firstElementOfThePage.current[0], resizeTimeoutRef);
+          // highlightElement(firstElementOfThePage.current[1], resizeTimeoutRef2);
+        }
       }
 
       const isTextUpdated = updateIfTextTooShort();
@@ -354,6 +375,10 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
       setCurrentChapterId(currentChapterId);
       setChapters(chapters);
       setNotes(notes);
+      setLoaded(true);
+      handleResize(true);
+      // const event = new Event('resize');
+      // window.dispatchEvent(event);
     }
 
   }
@@ -410,18 +435,24 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
 
   useEffect(() => {
     // updateIfTextTooShort();
-    handleResize();
+    handleResize(!loaded);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handleResize, text])
 
   useEffect(() => {
     const quill = $(`#${readAreaId}`).find(".ql-editor");
     quill.scrollLeft(scrollPosX * imageScale);
-    // const element = getFirstVisibleElement(quill);
     console.log("scroll pos x", quill.scrollLeft());
-    // firstElementOfThePage.current?.stop();
-    firstElementOfThePage.current = getFirstVisibleElement(quill);
-    // blinkElement(element);
-    // (window as any).recoverElement = element;
+
+    if (loaded) {
+      firstElementOfThePage.current = getFirstVisibleElement(quill);
+      const textReference = firstElementOfThePage.current[0][0].textContent
+      if (textReference) {
+        saveChapterProgress(textReference);
+        console.log(textReference);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scrollPosX, imageScale]);
 
   useEffect(() => {
@@ -452,9 +483,9 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
     handleResize(); // Initial calculation
     load();
 
-    $(window).on("resize", handleResize);
+    $(window).on("resize", () => handleResize());
     return () => {
-      $(window).off("resize", handleResize);
+      $(window).off("resize", () => handleResize());
     };
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -485,6 +516,99 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
       setScrollPosX(pos);
     }
   }
+
+  function saveChapterProgress(text: string): void {
+    const quill = $(`#${readAreaId}`).find(".ql-editor");
+    if (text.length < 10) {
+      const previousPageElement = quill.children().filter((index, element) => {
+        const elementOffset: number = element.offsetLeft || 0;
+        return (elementOffset >= (quill.scrollLeft() || 0) && (element.textContent?.length || 0) > 10);
+      }).first();
+
+      text = previousPageElement.text();
+    }
+
+    if (params.bookId && currentChapterId) {
+      const percentage = (quill.scrollLeft() || 0) / ((quill[0].scrollWidth - quill[0].clientWidth) || 0);
+
+      const progress: ISaveBookProgressRequest = {
+        bookId: params.bookId,
+        currentChapterId: currentChapterId,
+        restoreRefference: text.trim().toString(),
+        userId: authContext.user?.id || "",
+        chapterPercentage: isNaN(percentage) ? 1 : percentage,
+      }
+
+      const localStorageItem = localStorage.getItem(params.bookId);
+
+      let localStorageProgress: ISavedBookProgressResponse | undefined;
+      if (localStorageItem) {
+        localStorageProgress = JSON.parse(localStorageItem);
+      }
+
+      if (authContext.user) {
+        if (localStorageProgress) {
+          progress.restoreRefference = localStorageProgress.restoreRefference;
+        }
+
+        localStorage.removeItem(params.bookId);
+        progress.userId = authContext.user.id;
+        data.userService.saveBookProgress(progress);
+      } else {
+        localStorage.setItem(params.bookId, JSON.stringify({ currentChapterId: progress.currentChapterId, restoreRefference: progress.restoreRefference }));
+      }
+    }
+  }
+
+  async function loadChapterProgress(): Promise<void> {
+    let currentChapterId = searchParams.get("chapterId");
+    if (currentChapterId && params.bookId) {
+      const quill = $(`#${readAreaId}`).find(".ql-editor");
+      let progress: ISavedBookProgressResponse | undefined;
+
+      if (authContext.user) {
+        progress = await data.userService.getBookProgress({
+          bookId: params.bookId,
+          userId: authContext.user.id
+        });
+      }
+
+      if (!progress) {
+        const localStorageItem = localStorage.getItem(params.bookId);
+        if (localStorageItem) {
+          progress = JSON.parse(localStorageItem);
+        }
+      }
+
+      if (progress) {
+        const quillChildren = quill[0].children;
+        let tag: Element | null = null;
+
+        for (let i = 0; i < quillChildren.length; i++) {
+          const element = quillChildren[i];
+          if (element.textContent?.trim() === progress.restoreRefference) {
+            tag = element;
+            break;
+          }
+        }
+
+        if (tag) {
+          const tagLeft = tag.getBoundingClientRect().left;
+          setScrollPosX(tagLeft - quill[0].getBoundingClientRect().left);
+          firstElementOfThePage.current = [$(tag as HTMLElement), $(tag as HTMLElement)];
+
+          if (localStorage.getItem(params.bookId)) {
+            saveChapterProgress("");
+          }
+        } else {
+          saveChapterProgress("");
+        }
+      } else {
+        saveChapterProgress("");
+      }
+    }
+  }
+
 
   function highlightElement(element: JQuery<HTMLElement>, timeOut: MutableRefObject<NodeJS.Timeout | null>, duration = 1500) {
     if (timeOut.current) {
@@ -521,10 +645,12 @@ export default function ReadBook(data: { chapterService: IChapterService, bookSe
         <AddNoteIcon onClick={() => setNoteModalOpen(true)} />
       </IconsWrapepr>
       <ImageWrapper>
-        {(windowWidth > 600) && <Image id="book-image" src={bookPath} alt="SVG Image" onLoad={handleResize} />}
-        {(windowWidth <= 600) && <PageImage id="book-image" src={pagePath} alt="SVG Image" onLoad={handleResize} />}
+        {(windowWidth > 600) && <Image id="book-image" src={bookPath} alt="SVG Image" onLoad={() => handleResize()} />}
+        {(windowWidth <= 600) && <PageImage id="book-image" src={pagePath} alt="SVG Image" onLoad={() => handleResize()} />}
         <TextOverlay id="text-overlay">
-          <ReadArea id={readAreaId} data={{ setData: text, theme: "bubble", readonly: true }} />
+          <ReadArea onLoad={() => {
+            // loadChapterProgress()
+          }} id={readAreaId} data={{ setData: text, theme: "bubble", readonly: true }} />
         </TextOverlay>
       </ImageWrapper>
       <SideBar id="side-bar">

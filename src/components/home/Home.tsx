@@ -9,33 +9,49 @@ import IBookService from "../../interfaces/service/book/IBookService";
 import IDisplayBook from "../../interfaces/IDisplayBook";
 import { ServiceToBook } from "../../Converters/Book/ConvertBook";
 import { useAuthContext } from "../../hooks/useAuthContext";
-export default function Home(data: { bookService: IBookService }) {
+import IUserService from "../../interfaces/service/user/IUserService";
+import IStartedBookProgressResponse from "../../interfaces/service/user/IStartedBookProgressResponse";
+import { useNavigate } from "react-router-dom";
+export default function Home(data: { bookService: IBookService, userService: IUserService }) {
   const bookService = data.bookService;
+  const userService = data.userService;
 
-  let content = [];
+  // let content = [];
 
   const authContext = useAuthContext();
+  const navigate = useNavigate();
   const [favouriteBookIds, setfavouriteBookIds] = useState<string[]>([]);
   const [books, setBooks] = useState([] as IServiceBook[]);
   const [isBookPreveiewShown, setBookPreviewShown] = useState(false);
   const [isBookPreveiewExiting, setIsBookPreveiewExiting] = useState(false);
   const [toggle, setToggle] = useState(false);
   const [selectedBook, setSelectedBook] = useState<IDisplayBook>();
+  const [startedBooks, setStartedBooks] = useState<IStartedBookProgressResponse[]>();
 
-  for (let i = 0; i < 2; i++) {
-    content.push(<BookWithPercentage backCover="https://pictures.abebooks.com/isbn/9780345427656-us.jpg"
-      frontCover="https://pictures.abebooks.com/isbn/9780345427656-us.jpg"
-      width={130}
-      height={8}
-      percentage={20}
-      key={i}></BookWithPercentage>);
-  }
+  // for (let i = 0; i < 2; i++) {
+  //   content.push(<BookWithPercentage backCover="https://pictures.abebooks.com/isbn/9780345427656-us.jpg"
+  //     frontCover="https://pictures.abebooks.com/isbn/9780345427656-us.jpg"
+  //     width={130}
+  //     height={8}
+  //     percentage={20}
+  //     key={i}></BookWithPercentage>);
+  // }
 
   useEffect(() => {
-    bookService.fetchBooks().then((data: IServiceBook[]) => {
+    async function loadStartedBooks() {
+      if (authContext.user) {
+        const startedBooks = (await userService.startedBooksProgress(authContext.user.id)).filter(x => x.currentChapterOrderId !== x.allChaptersCount && x.chapterPercentage < 0.99);
+
+        setStartedBooks(startedBooks);
+      }
+    }
+
+    bookService.searchBooks({ skip: 0, take: 10 }).then((data: IServiceBook[]) => {
       setBooks(data);
     });
-  }, [bookService])
+
+    loadStartedBooks();
+  }, [authContext.user, bookService, userService])
 
   useEffect(() => {
     getFavouriteBooks();
@@ -73,12 +89,25 @@ export default function Home(data: { bookService: IBookService }) {
 
   return (
     <>
-      <Wrapper>
-        <Header>Continue Reading</Header>
-        <GridWrapper length={2}>
-          {content}
-        </GridWrapper>
-      </Wrapper>
+      {(startedBooks && startedBooks.length > 0) &&
+        <Wrapper>
+          <Header>Continue Reading</Header>
+          <GridWrapper length={startedBooks?.length || 0}>
+            {startedBooks && startedBooks.map((book: IStartedBookProgressResponse) => (
+              <BookWithPercentage
+                onClick={() => {
+                  navigate(`/read/${book.bookId}?chapterId=${book.currentChapterId}`)
+                }}
+                backCover={book.backCoverImage}
+                frontCover={book.coverImage}
+                width={130}
+                height={8}
+                percentage={Math.round(((book.currentChapterOrderId - (1 - book.chapterPercentage)) / book.allChaptersCount) * 100)}
+                key={book.currentChapterOrderId} />
+            ))}
+          </GridWrapper>
+        </Wrapper>
+      }
       <Wrapper>
         <BiggerHeader>Freshly Written</BiggerHeader>
         <GridWrapper length={5}>

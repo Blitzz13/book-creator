@@ -4,7 +4,7 @@ import { IAddedBook } from "../../interfaces/IAddedBook";
 
 export default function AddedBook(data: IAddedBook) {
   return (
-      <Wrapper>
+      <Wrapper onClick={() => data.onClick()}>
         <BackImage src={data.backCover}></BackImage>
         <Pages></Pages>
         <FrontImage src={data.frontCover}></FrontImage> 
@@ -18,6 +18,7 @@ const Wrapper = styled.div`
   display: grid;
   grid-auto-flow: column;
   isolation: isolate;
+  cursor: pointer;
 `;
 
 const FrontImage = styled.img`
