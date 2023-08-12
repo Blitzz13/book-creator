@@ -452,6 +452,7 @@ export default function WriteBook(data: IWriteBookData) {
             }} />
           <Text>This is how the book will apear when people are reading it</Text>
           <BookWithPercentage
+            onClick={() => { }}
             backCover={book.backCover}
             frontCover={book.frontConver}
             width={130}

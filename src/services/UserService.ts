@@ -7,12 +7,59 @@ import { UserAction } from "../enums/UserAction";
 import { StatusCodeError } from "../error/StatusCodeError";
 import IDetailsRequest from "../interfaces/service/user/IDetailsRequest";
 import IUpdateDetailsRequest from "../interfaces/service/user/IUpdateDetailsRequest";
+import ISaveBookProgressRequest from "../interfaces/service/user/ISaveBookProgressRequest";
+import ISavedBookProgressResponse from "../interfaces/service/user/ISavedBookProgressResponse";
+import IStartedBookProgressResponse from "../interfaces/service/user/IStartedBookProgressResponse";
 
 export default class UserService implements IUserService {
   private _url = "/api/users";
   private _auth = useAuthContext();
 
-  public async updateUser(request: IUpdateDetailsRequest): Promise<void> {  
+  public async saveBookProgress(request: ISaveBookProgressRequest): Promise<ISavedBookProgressResponse> {
+    const response = await fetch(`${this._url}/bookProgress`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request),
+    });
+
+    const json = await response.json();
+
+    if (response.ok) {
+      return json;
+    }
+
+    throw new Error(`Saving book progress failed with ${response.statusText}`);
+  }
+
+  public async getBookProgress(request: { bookId: string, userId: string }): Promise<ISavedBookProgressResponse> {
+    const response = await fetch(`${this._url}/bookProgress/${request.userId}/${request.bookId}`, {
+      method: "GET",
+    });
+
+    const json = await response.json();
+
+    if (response.ok) {
+      return json;
+    }
+
+    throw new Error(`Getting book progress failed with ${response.statusText}`);
+  }
+
+  public async startedBooksProgress(userId: string): Promise<IStartedBookProgressResponse[]> {
+    const response = await fetch(`${this._url}/startedBooks/${userId}`, {
+      method: "GET",
+    });
+
+    const json = await response.json();
+
+    if (response.ok) {
+      return json;
+    }
+
+    throw new Error(`Getting book progress failed with ${response.statusText}`);
+  }
+
+  public async updateUser(request: IUpdateDetailsRequest): Promise<void> {
     const stringified = JSON.stringify(request);
     const response = await fetch(`${this._url}/details/${request.userId}`, {
       method: "POST",
@@ -76,8 +123,8 @@ export default class UserService implements IUserService {
   }
 
   public async logout(): Promise<void> {
-      localStorage.removeItem("user");
-      this._auth.dispatch({ type: UserAction.Logout, payload: null });
+    localStorage.removeItem("user");
+    this._auth.dispatch({ type: UserAction.Logout, payload: null });
   }
 
   public async register(request: IRegisterRequest): Promise<void> {
