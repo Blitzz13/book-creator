@@ -4,7 +4,7 @@ import { Colors } from "../../Colors";
 import { IBookCover } from "../../interfaces/IBookCover";
 import bookPlaceholderImage from "../../assets/placeholder-image-portrait.png";
 import Button from "../Button/Button";
-import { RiBookmark3Line, RiBookmark3Fill } from "react-icons/ri"
+import { RiBookmark3Line, RiBookmark3Fill, RiDeleteBin5Fill } from "react-icons/ri"
 import { useAuthContext } from "../../hooks/useAuthContext";
 
 const height = 350;
@@ -77,28 +77,36 @@ export default function BookCover({ data, ...delegated }: IBookCover) {
             radius: 20,
             textSize: 16,
             onClick: () => {
-              if (data.onDeleteClick) {
-                data.onDeleteClick();
+              if (data.onEditClick) {
+                data.onEditClick();
               }
             }
           }}>
-            Delete
+            Edit
           </ReadButton>}
         </ButtonsWrapper>
-        {authContext.user && <> {
-          isFavourited?
-            <FavoriteFill onClick = { () => {
-              data.addToFavourites();
-          setFavourited(false);
-        }}
-        size={26} />
-        :
-        <Favorite onClick={() => {
-          data.addToFavourites();
-          setFavourited(true);
-        }} size={26} />
-        }</>}
-    </Details>
+        <IconsWrapper>
+          {authContext.user &&
+            <>{
+              isFavourited ?
+                <FavoriteFill onClick={() => {
+                  data.addToFavourites();
+                  setFavourited(false);
+                }}
+                  size={26} />
+                :
+                <Favorite onClick={() => {
+                  data.addToFavourites();
+                  setFavourited(true);
+                }} size={26} />
+            }</>}
+          {data.isMyBook === true && <DeleteIcon size={26} onClick={() => {
+            if (data.onDeleteClick) {
+              data.onDeleteClick();
+            }
+          }} />}
+        </IconsWrapper>
+      </Details>
     </Wrapper >
   );
 }
@@ -108,6 +116,10 @@ const Favorite = styled(RiBookmark3Line)`
 `;
 
 const FavoriteFill = styled(RiBookmark3Fill)`
+  cursor: pointer;
+`;
+
+const DeleteIcon = styled(RiDeleteBin5Fill)`
   cursor: pointer;
 `;
 
@@ -126,6 +138,12 @@ const ButtonsWrapper = styled.div`
         }
       `: ""}
   `}
+`;
+
+const IconsWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+  width: 100%;
 `;
 
 const Wrapper = styled.div`
