@@ -29,6 +29,7 @@ import { CommonContentModalStyle } from "../../commonStyledStyles/CommonContentM
 import IUserService from "../../interfaces/service/user/IUserService";
 import ISaveBookProgressRequest from "../../interfaces/service/user/ISaveBookProgressRequest";
 import ISavedBookProgressResponse from "../../interfaces/service/user/ISavedBookProgressResponse";
+import Loader from "../Loader/Loader";
 
 const initialReadAreaPaddingLeft = 98;
 const initialReadAreaPaddingRight = 82;
@@ -54,6 +55,7 @@ export default function ReadBook(data: {
   const [isModalExiting, setModalExiting] = useState(false);
   const [isNoteModalOpen, setNoteModalOpen] = useState(false);
   const [isNoteModalExiting, setNoteModalExiting] = useState(false);
+  const [showLoader, setShowLoader] = useState(true);
   const [text, setText] = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
   const [chapters, setChapters] = useState<IBaseChapter[]>([]);
@@ -86,6 +88,7 @@ export default function ReadBook(data: {
 
     if (chapterId) {
       setCurrentChapterId(chapterId);
+      setShowLoader(true);
     }
 
     if (noteId) {
@@ -189,8 +192,6 @@ export default function ReadBook(data: {
       const currentWidth = quill.outerWidth() || 0;
       console.log("move quill left by", (quill.scrollLeft() || 0) + (currentWidth - lastQuillWidth) + 34);
       quill.outerHeight(textOverlay.outerHeight() || 0);
-      const columnCount = ((quill[0].scrollWidth + 32) / quill[0].clientWidth) * 2
-      console.log(columnCount);
       quill.css("column-gap", `${columnGap * scale}px`);
 
       textOverlay.css("left", `${(bookImage.offset()?.left || 0) - 22.5}px`);
@@ -200,6 +201,7 @@ export default function ReadBook(data: {
       if (firstElementOfThePage.current && firstElementOfThePage.current[0] && (firstElementOfThePage.current[0][0].offsetLeft + columnGap / 4) !== quill.scrollLeft()) {
         if (quill[0]) {
           quill[0].scrollTo(firstElementOfThePage.current[0][0].offsetLeft - (columnGap / 4), 0);
+          setShowLoader(false);
         }
       }
 
@@ -447,10 +449,8 @@ export default function ReadBook(data: {
     if (loaded) {
       firstElementOfThePage.current = getFirstVisibleElement(quill);
       const textReference = firstElementOfThePage.current[0][0].textContent
-      if (textReference) {
         saveChapterProgress(textReference);
         console.log(textReference);
-      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scrollPosX, imageScale]);
@@ -517,9 +517,9 @@ export default function ReadBook(data: {
     }
   }
 
-  function saveChapterProgress(text: string): void {
+  function saveChapterProgress(text: string | null): void {
     const quill = $(`#${readAreaId}`).find(".ql-editor");
-    if (text.length < 10) {
+    if (!text || text.length < 10) {
       const previousPageElement = quill.children().filter((index, element) => {
         const elementOffset: number = element.offsetLeft || 0;
         return (elementOffset >= (quill.scrollLeft() || 0) && (element.textContent?.length || 0) > 10);
@@ -596,7 +596,6 @@ export default function ReadBook(data: {
           const tagLeft = tag.getBoundingClientRect().left;
           setScrollPosX(tagLeft - quill[0].getBoundingClientRect().left);
           firstElementOfThePage.current = [$(tag as HTMLElement), $(tag as HTMLElement)];
-
           if (localStorage.getItem(params.bookId)) {
             saveChapterProgress("");
           }
@@ -639,6 +638,7 @@ export default function ReadBook(data: {
 
   return (
     <Wrapper>
+      <Loader data={{ isLoading: showLoader }} />
       <IconsWrapepr id="read-icons">
         <BookIcon onClick={() => showModal(true)} />
         <NotesIcon onClick={() => showModal(false)} />

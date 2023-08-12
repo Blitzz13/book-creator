@@ -13,6 +13,7 @@ import { generateId } from "../../helpers/helpFunctions";
 import Button from "../Button/Button";
 import $ from "jquery";
 import { useAuthContext } from "../../hooks/useAuthContext";
+import Loader from "../Loader/Loader";
 let takeBooksAmount = 0;
 const authorInputId = generateId(7);
 const bookInputId = generateId(7);
@@ -29,6 +30,7 @@ export default function Search(data: ISearchData) {
   const [isAnimatedToggle, setAnimatedToggle] = useState(false);
   const [isAnimatedOpen, setAnimatedOpen] = useState(false);
   const [isAnimatedExiting, setAnimatedExiting] = useState(false);
+  const [showLoader, setShowLoader] = useState(true);
   const [author, setAuthor] = useState("");
   const [bookTitle, setBookTitle] = useState("");
   const [favouriteBookIds, setfavouriteBookIds] = useState<string[]>([]);
@@ -39,6 +41,10 @@ export default function Search(data: ISearchData) {
     getBooks(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currPage]);
+
+  useEffect(() => {
+    setShowLoader(false);
+  }, [currBooks]);
 
   useEffect(() => {
     load(true);
@@ -67,8 +73,10 @@ export default function Search(data: ISearchData) {
   }
 
   async function load(replaceCurrentBooks: boolean = false): Promise<void> {
+    setShowLoader(true);
     await getPageCount();
     await getBooks(replaceCurrentBooks);
+    setShowLoader(false);
   }
 
   async function addToFavourites(bookId: string): Promise<void> {
@@ -88,6 +96,7 @@ export default function Search(data: ISearchData) {
   }
 
   async function getBooks(replaceCurrentBooks: boolean): Promise<void> {
+    setShowLoader(true);
     calculateBooksPerPage();
     const generalSearch = (author !== "" || bookTitle !== "") ? false : true;
     const books = await data.bookService.searchBooks({
@@ -104,7 +113,6 @@ export default function Search(data: ISearchData) {
       setBooks(books);
       return;
     }
-
     setBooks([...currBooks, ...books]);
   }
 
@@ -141,6 +149,7 @@ export default function Search(data: ISearchData) {
 
   return (
     <Wrapper id={wrapperId}>
+      <Loader data={{isLoading: showLoader}}/>
       <ExtendedSearchWrapper onSubmit={onSubmit}>
         <Label htmlFor={authorInputId}>Author</Label>
         <Input placeholder="J.K. Rowling" id={authorInputId} onValueChange={(text: string) => { setAuthor(text) }} />

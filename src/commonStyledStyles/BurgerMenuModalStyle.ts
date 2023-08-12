@@ -6,7 +6,7 @@ export const BurgerMenuModalStyle = styled.div`
   position: absolute;
   right: 0;
   top: 0;
-  height: 100vh;
+  height: 100%;
   max-width: 700px;
   background-color: ${Colors.BACKGROUND};
   ${(data: IBurgerContentModalStyle) =>

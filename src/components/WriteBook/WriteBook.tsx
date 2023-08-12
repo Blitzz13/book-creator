@@ -35,6 +35,7 @@ import AnimatedBook from "../AnimatedBook/AnimatedBook";
 import ICommonContentModalStyle from "../../interfaces/modal/ICommonContentModalStyle";
 import Header from "../Header/Header";
 import IOverlayStyleData from "../../interfaces/modal/IOverlayStyleData";
+import Loader from "../Loader/Loader";
 
 function resizeContentTextarea() {
   const contentTextArea = $("#writing-area");
@@ -70,8 +71,9 @@ export default function WriteBook(data: IWriteBookData) {
   const [isAnimatedToggle, setAnimatedToggle] = useState(false);
   const [isAnimatedOpen, setAnimatedOpen] = useState(false);
   const [isAnimatedExiting, setAnimatedExiting] = useState(false);
+  const [showLoader, setShowLoader] = useState(true);
   const [chapterTitle, setChapterTitle] = useState("");
-  const [content, setEditorContent] = useState("");
+  const [content, setEditorContent] = useState<string>();
   const [delteConfirmationData, setDeleteConfirmationData] = useState<IDeleteConfirmation>({
     text: "",
     title: "",
@@ -162,6 +164,8 @@ export default function WriteBook(data: IWriteBookData) {
 
   async function deleteChapter(): Promise<void> {
     if (currentChapter && currentChapter.id) {
+      setShowLoader(false);
+
       const nextChapter = await data.chapterService.deleteChapter({ id: currentChapter.id });
 
       if (nextChapter && params.bookId) {
@@ -177,14 +181,17 @@ export default function WriteBook(data: IWriteBookData) {
     }
 
     setIsConfirmOpen(false);
+    setShowLoader(false);
   }
 
   async function onCreateChapterClick(): Promise<void> {
     if (params.bookId) {
+      setShowLoader(true)
       const chapterId = searchParams.get("chapterId");
       if (chapterId) {
         const chapter = await data.chapterService.updateChapter(chapterToUpdate(currentChapter));
         setChapterTitle(chapter.header);
+        setShowLoader(false);
       } else {
         if (validator.isEmpty(currentChapter.content) || validator.isEmpty(currentChapter.header)) {
           setIsAlertOpen(true);
@@ -194,6 +201,7 @@ export default function WriteBook(data: IWriteBookData) {
         const chapter = await data.chapterService.createChapter(chapterToCreate(currentChapter));
         await refreshChapterList();
         setSearchParams(`?chapterId=${chapter._id}`);
+        setShowLoader(false);
       }
     }
   }
@@ -202,12 +210,15 @@ export default function WriteBook(data: IWriteBookData) {
     if (params.bookId) {
       const currentChapterId = searchParams.get("chapterId");
       if (currentChapterId) {
+        setShowLoader(true);
         const chapter = await data.chapterService.updateChaptersOrder({ bookId: params.bookId, chapterId: chapterId, orderId: parseInt(id) });
         await refreshChapterList();
 
         if (currentChapter && chapterId === currentChapterId) {
           setCurrentChapter({ ...currentChapter, orderId: chapter.orderId });
         }
+
+        setShowLoader(false);
       }
     }
   }
@@ -224,6 +235,8 @@ export default function WriteBook(data: IWriteBookData) {
     const fetchData = async () => {
       try {
         if (params.bookId) {
+          setShowLoader(true);
+
           const book: IServiceBook = await data.bookService.fetchBook(params.bookId);
           await refreshChapterList();
 
@@ -238,6 +251,7 @@ export default function WriteBook(data: IWriteBookData) {
           const displayBook = ServiceToBook(book);
           setInitialBookDescription(book.description);
           setBook(displayBook);
+          setShowLoader(false);
         }
       } catch (error) {
         navigate("*");
@@ -255,10 +269,13 @@ export default function WriteBook(data: IWriteBookData) {
         if (params.bookId) {
           const chapterId = searchParams.get("chapterId");
           if (chapterId) {
+            setShowLoader(true);
             const chapter: IServiceChapter = await data.chapterService.fetchChapter(chapterId);
             const newChapter = ServiceToChapter(chapter);
             setCurrentChapter(newChapter);
+            setEditorContent(undefined);
             setEditorContent(chapter.content);
+            setShowLoader(false);
           }
         }
       } catch (error) {
@@ -288,6 +305,7 @@ export default function WriteBook(data: IWriteBookData) {
 
   return (
     <Wrapper onLoad={resizeContentTextarea}>
+      <Loader data={{ isLoading: showLoader }} />
       <HeaderWrapper id="header-textarea">
         <HeaderOverflowHide>
           <HeaderTextarea onChange={onChapterTitleChange} value={currentChapter?.header} name="header-textarea" placeholder="Enter chapter name here" />
@@ -300,7 +318,8 @@ export default function WriteBook(data: IWriteBookData) {
       </HeaderWrapper>
       <ContentTextarea data={{
         onValueChange: onEditorContentChange,
-        setData: content, modules: {
+        setData: content,
+        modules: {
           toolbar: {
             sizes: [{ size: [] }],
             headerSizes: [{ header: [1, 2, 3] }],

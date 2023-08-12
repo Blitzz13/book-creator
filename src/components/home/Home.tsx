@@ -16,8 +16,6 @@ export default function Home(data: { bookService: IBookService, userService: IUs
   const bookService = data.bookService;
   const userService = data.userService;
 
-  // let content = [];
-
   const authContext = useAuthContext();
   const navigate = useNavigate();
   const [favouriteBookIds, setfavouriteBookIds] = useState<string[]>([]);
@@ -28,21 +26,19 @@ export default function Home(data: { bookService: IBookService, userService: IUs
   const [selectedBook, setSelectedBook] = useState<IDisplayBook>();
   const [startedBooks, setStartedBooks] = useState<IStartedBookProgressResponse[]>();
 
-  // for (let i = 0; i < 2; i++) {
-  //   content.push(<BookWithPercentage backCover="https://pictures.abebooks.com/isbn/9780345427656-us.jpg"
-  //     frontCover="https://pictures.abebooks.com/isbn/9780345427656-us.jpg"
-  //     width={130}
-  //     height={8}
-  //     percentage={20}
-  //     key={i}></BookWithPercentage>);
-  // }
-
   useEffect(() => {
     async function loadStartedBooks() {
       if (authContext.user) {
-        const startedBooks = (await userService.startedBooksProgress(authContext.user.id)).filter(x => x.currentChapterOrderId !== x.allChaptersCount && x.chapterPercentage < 0.99);
+        const books = (await userService.startedBooksProgress(authContext.user.id));
+        const filteredBooks: IStartedBookProgressResponse[] = [];
+        for (const book of books) {
+          if (book.currentChapterOrderId >= book.allChaptersCount && book.chapterPercentage > 0.99) {
+            continue;
+          }
+          filteredBooks.push(book)
+        }
 
-        setStartedBooks(startedBooks);
+        setStartedBooks(filteredBooks);
       }
     }
 

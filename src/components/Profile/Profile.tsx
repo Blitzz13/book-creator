@@ -85,12 +85,29 @@ export default function Profile(data: { bookService: IBookService, userService: 
 
   useEffect(() => {
     switch (currentTab) {
-      case ProfileBookTabs.CurrentlyReading:
-        setProgressBooks(startedBooks.filter(x => x.currentChapterOrderId !== x.allChaptersCount && x.chapterPercentage < 0.99));
+      case ProfileBookTabs.CurrentlyReading: {
+        const filteredBooks: IStartedBookProgressResponse[] = [];
+        for (const book of startedBooks) {
+          if (book.currentChapterOrderId >= book.allChaptersCount && book.chapterPercentage > 0.99) {
+            continue;
+          }
+          filteredBooks.push(book)
+        }
+
+        setProgressBooks(filteredBooks);
         break;
-      case ProfileBookTabs.FinishedReading:
-        setProgressBooks(startedBooks.filter(x => x.currentChapterOrderId === x.allChaptersCount && x.chapterPercentage >= 0.99));
+      }
+      case ProfileBookTabs.FinishedReading: {
+        const filteredBooks: IStartedBookProgressResponse[] = [];
+        for (const book of startedBooks) {
+          if (book.currentChapterOrderId >= book.allChaptersCount && book.chapterPercentage > 0.99) {
+            filteredBooks.push(book)
+          }
+        }
+
+        setProgressBooks(filteredBooks);
         break;
+      }
       default:
         break;
     }

@@ -9,7 +9,6 @@ export default function HeaderWrapper({ data, children, ...delegated }: IHeaderW
 }
 
 const Wrapper = styled.div`
-  z-index: 1;
   background-color: ${Colors.ACCENT};
   height: 40px;
 

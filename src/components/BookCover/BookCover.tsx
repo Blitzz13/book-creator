@@ -131,6 +131,7 @@ const ButtonsWrapper = styled.div`
   display: flex;
   align-items: center;
   width: 100%;
+  gap: 10px;
   ${({ scaleBook, mediaMaxWidth }: { scaleBook?: boolean, mediaMaxWidth?: number }) => css`
       ${scaleBook ? `
         @media only screen and (max-width: ${mediaMaxWidth ?? defaultMediaMaxWidth}px) {
