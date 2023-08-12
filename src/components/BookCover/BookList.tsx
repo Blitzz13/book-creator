@@ -18,6 +18,9 @@ export default function BookList({ data, ...delegated }: IBookListData) {
                 <BookCover key={book._id}
                     data={{
                         isMyBook: auth.user?.id === book.authorId,
+                        onEditClick: () => {
+                            navigate(`/write/${book._id}`)
+                        },
                         onDeleteClick: () => {
                             if (data.onDeleteClick) {
                                 data.onDeleteClick(book._id);

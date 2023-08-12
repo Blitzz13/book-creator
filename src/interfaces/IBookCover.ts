@@ -7,6 +7,7 @@ export interface IBookCover {
     addToFavourites: Function;
     isMyBook: boolean;
     onDeleteClick?: Function;
+    onEditClick?: Function;
     backgroundColor?: string;
     cover?: string;
     scaleBook?: boolean;
