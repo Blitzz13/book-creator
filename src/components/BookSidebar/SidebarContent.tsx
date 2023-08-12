@@ -246,7 +246,6 @@ const OpenBookIcon = styled(BookOpen)`
 `
 
 const HeaderWrapper = styled.div`
-  z-index: 1;
   background-color: ${Colors.ACCENT};
   height: 40px;
   ${({ isFromModal }: { isFromModal: boolean }) => css`
