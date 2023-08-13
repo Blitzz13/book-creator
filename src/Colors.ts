@@ -5,4 +5,5 @@ export const Colors = {
     FOREGROUND: "#FAFAFA",
     ACCENT: "#77A97D",
     TEXT: "#444444",
+    BORDER: "#CCC",
 }

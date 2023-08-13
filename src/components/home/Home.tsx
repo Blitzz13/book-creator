@@ -85,7 +85,7 @@ export default function Home(data: { bookService: IBookService, userService: IUs
 
   return (
     <>
-      {(startedBooks && startedBooks.length > 0) &&
+      {(startedBooks && startedBooks.length > 0 && authContext.user) &&
         <Wrapper>
           <Header>Continue Reading</Header>
           <GridWrapper length={startedBooks?.length || 0}>
@@ -99,7 +99,7 @@ export default function Home(data: { bookService: IBookService, userService: IUs
                 width={130}
                 height={8}
                 percentage={Math.round(((book.currentChapterOrderId - (1 - book.chapterPercentage)) / book.allChaptersCount) * 100)}
-                key={book.currentChapterOrderId} />
+                key={book.currentChapterId} />
             ))}
           </GridWrapper>
         </Wrapper>

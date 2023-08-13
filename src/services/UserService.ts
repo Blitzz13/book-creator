@@ -10,8 +10,9 @@ import IUpdateDetailsRequest from "../interfaces/service/user/IUpdateDetailsRequ
 import ISaveBookProgressRequest from "../interfaces/service/user/ISaveBookProgressRequest";
 import ISavedBookProgressResponse from "../interfaces/service/user/ISavedBookProgressResponse";
 import IStartedBookProgressResponse from "../interfaces/service/user/IStartedBookProgressResponse";
+import BaseService from "./BaseService";
 
-export default class UserService implements IUserService {
+export default class UserService extends BaseService implements IUserService {
   private _url = "/api/users";
   private _auth = useAuthContext();
 
@@ -119,6 +120,33 @@ export default class UserService implements IUserService {
       });
     } else {
       throw new StatusCodeError(`Login failed with ${response.status}`, response.status);
+    }
+  }
+
+  public async refreshToken(): Promise<void> {
+    const response = await fetch(`${this._url}/refresh-token`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${this.user?.token}`
+      },
+    });
+
+    const json = await response.json();
+    if (this.user) {
+      const updatedUser = {
+        token: json.token,
+        displayName: this.user.displayName,
+        id: this.user.id,
+        email: this.user.email,
+      }
+      
+      const updatedUserData = JSON.stringify(updatedUser);
+      localStorage.setItem("user", updatedUserData);
+
+      this._auth.dispatch({
+        type: UserAction.Update,
+        payload: updatedUser,
+      });
     }
   }
 

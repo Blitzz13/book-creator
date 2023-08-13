@@ -55,7 +55,7 @@ export default function ReadBook(data: {
   const [isModalExiting, setModalExiting] = useState(false);
   const [isNoteModalOpen, setNoteModalOpen] = useState(false);
   const [isNoteModalExiting, setNoteModalExiting] = useState(false);
-  const [showLoader, setShowLoader] = useState(true);
+  const [showLoader, setShowLoader] = useState(false);
   const [text, setText] = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
   const [chapters, setChapters] = useState<IBaseChapter[]>([]);
@@ -93,6 +93,7 @@ export default function ReadBook(data: {
 
     if (noteId) {
       setCurrentNote(noteId);
+      setShowLoader(false);
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -367,9 +368,19 @@ export default function ReadBook(data: {
       let currentChapterId = searchParams.get("chapterId");
 
       if (!currentChapterId) {
-        //TODO: check what happen to book without chapters
-        currentChapterId = chapters.find(x => x.orderId === 1)?._id || ""
-        setSearchParams(`?chapterId=${currentChapterId}`);
+        if (authContext.user) {
+          const progress = await data.userService.getBookProgress({
+            bookId: params.bookId,
+            userId: authContext.user.id
+          });
+
+          currentChapterId = progress.currentChapterId;
+          setSearchParams(`?chapterId=${currentChapterId}`);
+        } else {
+          //TODO: check what happen to book without chapters
+          currentChapterId = chapters.find(x => x.orderId === 1)?._id || ""
+          setSearchParams(`?chapterId=${currentChapterId}`);
+        }
       }
 
       const notes = await data.noteService.getAllBaseNotes(params.bookId);
@@ -379,8 +390,6 @@ export default function ReadBook(data: {
       setNotes(notes);
       setLoaded(true);
       handleResize(true);
-      // const event = new Event('resize');
-      // window.dispatchEvent(event);
     }
 
   }
@@ -449,8 +458,8 @@ export default function ReadBook(data: {
     if (loaded) {
       firstElementOfThePage.current = getFirstVisibleElement(quill);
       const textReference = firstElementOfThePage.current[0][0].textContent
-        saveChapterProgress(textReference);
-        console.log(textReference);
+      saveChapterProgress(textReference);
+      console.log(textReference);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scrollPosX, imageScale]);
@@ -561,8 +570,7 @@ export default function ReadBook(data: {
   }
 
   async function loadChapterProgress(): Promise<void> {
-    let currentChapterId = searchParams.get("chapterId");
-    if (currentChapterId && params.bookId) {
+    if (params.bookId) {
       const quill = $(`#${readAreaId}`).find(".ql-editor");
       let progress: ISavedBookProgressResponse | undefined;
 
@@ -604,6 +612,7 @@ export default function ReadBook(data: {
         }
       } else {
         saveChapterProgress("");
+        setShowLoader(false);
       }
     }
   }
@@ -648,9 +657,7 @@ export default function ReadBook(data: {
         {(windowWidth > 600) && <Image id="book-image" src={bookPath} alt="SVG Image" onLoad={() => handleResize()} />}
         {(windowWidth <= 600) && <PageImage id="book-image" src={pagePath} alt="SVG Image" onLoad={() => handleResize()} />}
         <TextOverlay id="text-overlay">
-          <ReadArea onLoad={() => {
-            // loadChapterProgress()
-          }} id={readAreaId} data={{ setData: text, theme: "bubble", readonly: true }} />
+          <ReadArea id={readAreaId} data={{ setData: text, theme: "bubble", readonly: true }} />
         </TextOverlay>
       </ImageWrapper>
       <SideBar id="side-bar">
@@ -675,7 +682,7 @@ export default function ReadBook(data: {
           },
           onNoteCreateClick: () => {
             setNoteModalOpen(true);
-            setNoteModalData({ ...noteModalData, mode: NoteModalMode.Creating });
+            setNoteModalData({ ...noteModalData, header: "", currentContent: "", content: "", mode: NoteModalMode.Creating });
           }
         }} />
       </SideBar>

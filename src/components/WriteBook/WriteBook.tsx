@@ -36,6 +36,7 @@ import ICommonContentModalStyle from "../../interfaces/modal/ICommonContentModal
 import Header from "../Header/Header";
 import IOverlayStyleData from "../../interfaces/modal/IOverlayStyleData";
 import Loader from "../Loader/Loader";
+import { useAuthContext } from "../../hooks/useAuthContext";
 
 function resizeContentTextarea() {
   const contentTextArea = $("#writing-area");
@@ -56,6 +57,7 @@ function resizeContentTextarea() {
 
 export default function WriteBook(data: IWriteBookData) {
   const params = useParams();
+  const authContext = useAuthContext();
   const [searchParams, setSearchParams] = useSearchParams()
   const [isSettingsModalExiting, setIsSettingsModalExiting] = useState(false);
   const [isSettingsModalOpen, setIsSettingModalOpen] = useState(false);
@@ -97,6 +99,12 @@ export default function WriteBook(data: IWriteBookData) {
     state: ChapterState.Draft
   });
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (authContext.user === undefined) {
+      navigate('/');
+    }
+  }, [authContext.user, navigate]);
 
   window.addEventListener("resize", () => {
     resizeContentTextarea();
@@ -186,23 +194,28 @@ export default function WriteBook(data: IWriteBookData) {
 
   async function onCreateChapterClick(): Promise<void> {
     if (params.bookId) {
-      setShowLoader(true)
-      const chapterId = searchParams.get("chapterId");
-      if (chapterId) {
-        const chapter = await data.chapterService.updateChapter(chapterToUpdate(currentChapter));
-        setChapterTitle(chapter.header);
-        setShowLoader(false);
-      } else {
-        if (validator.isEmpty(currentChapter.content) || validator.isEmpty(currentChapter.header)) {
-          setIsAlertOpen(true);
-          return;
-        }
+      try {
+        setShowLoader(true)
+        const chapterId = searchParams.get("chapterId");
+        if (chapterId) {
+          const chapter = await data.chapterService.updateChapter(chapterToUpdate(currentChapter));
+          setChapterTitle(chapter.header);
+          setShowLoader(false);
+        } else {
+          if (validator.isEmpty(currentChapter.content) || validator.isEmpty(currentChapter.header)) {
+            setIsAlertOpen(true);
+            return;
+          }
 
-        const chapter = await data.chapterService.createChapter(chapterToCreate(currentChapter));
-        await refreshChapterList();
-        setSearchParams(`?chapterId=${chapter._id}`);
+          const chapter = await data.chapterService.createChapter(chapterToCreate(currentChapter));
+          await refreshChapterList();
+          setSearchParams(`?chapterId=${chapter._id}`);
+          setShowLoader(false);
+        }
+      } catch (error) {
         setShowLoader(false);
       }
+
     }
   }
 
@@ -263,7 +276,6 @@ export default function WriteBook(data: IWriteBookData) {
   }, [data.bookService, data.chapterService, navigate, params.bookId]);
 
   useEffect(() => {
-    ;
     const fetchData = async () => {
       try {
         if (params.bookId) {
@@ -569,6 +581,7 @@ const HeaderTextarea = styled.textarea`
   grid-area: a;
   font-size: ${32 / 16}rem;
   border-radius: 20px;
+  border-color: ${Colors.BORDER};
 `;
 
 const ContentTextarea = styled(Editor)`

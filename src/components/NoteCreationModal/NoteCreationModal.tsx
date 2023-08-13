@@ -209,7 +209,9 @@ const HeaderTextarea = styled.textarea`
   ${({ mode }: { mode: NoteModalMode }) => css`
     margin-bottom: ${mode === NoteModalMode.Reading ? "20px" : ""};
     background-color: ${mode === NoteModalMode.Reading ? "transparent" : ""};
-    border: none;
+    border-style: solid;
+    border-width: 1;
+    border-color: ${Colors.BORDER};
   `}
 
   @media only screen and (max-width: 413px) {

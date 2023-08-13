@@ -85,5 +85,6 @@ const ChapterName = styled.p`
   margin-right: 6px;
   font-size: ${18 / 16}rem;
   display: block;
-  text-align: justify;
+  text-align: center;
+  width: 100%;
 `

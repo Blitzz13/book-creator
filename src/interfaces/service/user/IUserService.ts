@@ -13,6 +13,7 @@ export default interface IUserService {
   getBookProgress(request: {bookId: string, userId:string}): Promise<ISavedBookProgressResponse>;
   startedBooksProgress(userId: string): Promise<IStartedBookProgressResponse[]>;
   logout(): Promise<void>;
+  refreshToken(): Promise<void>;
   register(request: IRegisterService): Promise<void>;
   updateUser(request: IUpdateDetailsRequest): Promise<void>;
   getDetails(userId: string, logedUserId: string): Promise<IDetailsRequest>;
