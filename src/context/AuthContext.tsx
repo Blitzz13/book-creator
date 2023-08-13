@@ -28,8 +28,11 @@ export function AuthContextProvider({ children }: any): JSX.Element {
     if (localStorageUser) {
       const user = JSON.parse(localStorageUser);
 
-      dispatch({ type: UserAction.Login, payload: user })
+      dispatch({ type: UserAction.Login, payload: user });
+      return;
     }
+
+    dispatch({ type: UserAction.Login, payload: undefined })
   }, []);
 
   console.log(`Auth context state`, state);

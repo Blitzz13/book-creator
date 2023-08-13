@@ -4,13 +4,18 @@ import INoteCreationRequest from "../interfaces/service/note/INoteCreationReques
 import INoteService from "../interfaces/service/note/INoteService";
 import INoteUpdateRequest from "../interfaces/service/note/INoteUpdateRequest";
 import { INoteSearchCriteria } from "../interfaces/service/note/ISearchCriteriaNote";
+import BaseService from "./BaseService";
 
-export default class NoteService implements INoteService {
+export default class NoteService extends BaseService implements INoteService {
   private _url = "/api/notes";
 
   public async getAllBaseNotes(bookId: string): Promise<IBaseNote[]> {
     const response = await fetch(`${this._url}/titles/${bookId}`, {
       method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${this.user?.token}`
+      },
     });
 
     const json = await response.json();
@@ -25,6 +30,10 @@ export default class NoteService implements INoteService {
   async getSpecificNote(noteId: string): Promise<INote> {
     const response = await fetch(`${this._url}/${noteId}`, {
       method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${this.user?.token}`
+      },
     });
 
     const json = await response.json();
@@ -39,7 +48,10 @@ export default class NoteService implements INoteService {
   public async createNote(request: INoteCreationRequest): Promise<void> {
     const response = await fetch(`${this._url}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${this.user?.token}`
+      },
       body: JSON.stringify(request),
     });
 
@@ -50,10 +62,13 @@ export default class NoteService implements INoteService {
     }
   }
 
-  public async updateNote(noteId: string,request: INoteUpdateRequest): Promise<INote> {
+  public async updateNote(noteId: string, request: INoteUpdateRequest): Promise<INote> {
     const response = await fetch(`${this._url}/${noteId}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${this.user?.token}`
+      },
       body: JSON.stringify(request),
     });
 
@@ -69,7 +84,10 @@ export default class NoteService implements INoteService {
   public async deleteNote(noteId: string): Promise<void> {
     const response = await fetch(`${this._url}/${noteId}`, {
       method: "DELETE",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${this.user?.token}`
+      },
     });
 
     const json = await response.json();

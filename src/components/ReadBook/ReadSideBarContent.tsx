@@ -7,13 +7,16 @@ import IReadSidebarData from "../../interfaces/IReadSidebarData";
 import NotesContent from "./NotesContent";
 import { MdNoteAdd } from "react-icons/md";
 import { Colors } from "../../Colors";
+import { useAuthContext } from "../../hooks/useAuthContext";
 
 export default function ReadSideBarContent({ data, ...delegated }: IReadSidebarData) {
+  const authContext = useAuthContext();
+
   return (
     <Wrapper {...delegated}>
       <Header data={{ noRoundedCorners: data.isFromModal }}>
         <BookIcon onClick={() => data.setChaptersSelected(true)} opacity={data.areChaptersSelected ? 0.5 : 1} />
-        <NotesIcon onClick={() => data.setChaptersSelected(false)} opacity={data.areChaptersSelected ? 1 : 0.5} />
+        {authContext.user && <NotesIcon onClick={() => data.setChaptersSelected(false)} opacity={data.areChaptersSelected ? 1 : 0.5} />}
       </Header>
       {data.areChaptersSelected ?
         <Chapters data={{
@@ -42,11 +45,12 @@ export default function ReadSideBarContent({ data, ...delegated }: IReadSidebarD
           }
         }} />
       }
-      <AddNoteIcon onClick={() => {
-        if (data.onNoteCreateClick) {
-          data.onNoteCreateClick();
-        }
-      }} />
+      {authContext.user &&
+        <AddNoteIcon onClick={() => {
+          if (data.onNoteCreateClick) {
+            data.onNoteCreateClick();
+          }
+        }} />}
     </Wrapper>
   );
 }

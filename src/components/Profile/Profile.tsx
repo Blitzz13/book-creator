@@ -328,8 +328,12 @@ export default function Profile(data: { bookService: IBookService, userService: 
             setIsFavouriteOpen(false);
           }
           } isSelected={currentTab === ProfileBookTabs.AuthoredBooks}>Authored books</TabTitle>
-          <TabTitle onClick={() => setCurrentTab(ProfileBookTabs.CurrentlyReading)} isSelected={currentTab === ProfileBookTabs.CurrentlyReading}>Reading</TabTitle>
-          <TabTitle onClick={() => setCurrentTab(ProfileBookTabs.FinishedReading)} isSelected={currentTab === ProfileBookTabs.FinishedReading}>Finished</TabTitle>
+          {authContext.user &&
+            <>
+              <TabTitle onClick={() => setCurrentTab(ProfileBookTabs.CurrentlyReading)} isSelected={currentTab === ProfileBookTabs.CurrentlyReading}>Reading</TabTitle>
+              <TabTitle onClick={() => setCurrentTab(ProfileBookTabs.FinishedReading)} isSelected={currentTab === ProfileBookTabs.FinishedReading}>Finished</TabTitle>
+            </>
+          }
         </TabsWrapper>
         {(currentTab === ProfileBookTabs.FavouriteBooks || currentTab === ProfileBookTabs.AuthoredBooks) &&
           <Books data={{

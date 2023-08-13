@@ -10,17 +10,17 @@ export default function NotesContent({ data, ...delegated }: INotesContentData) 
 
   return (
     <Wrapper {...delegated}>
-      {data.notes.map((note: IBaseNote) => (
+      {data.notes.length > 0 ? data.notes.map((note: IBaseNote) => (
         <NoteNameWrapper key={note._id}
           isSelected={false}
         >
           <NoteTitle onClick={() => {
-          if (data.onNoteClick) {
-            searchParams.set("noteId", `${note._id}`);
-            setSearchParams(searchParams);
-            data.onNoteClick();
-          }
-        }} >
+            if (data.onNoteClick) {
+              searchParams.set("noteId", `${note._id}`);
+              setSearchParams(searchParams);
+              data.onNoteClick();
+            }
+          }} >
             {note.header}
           </NoteTitle>
           <IconWrapper>
@@ -30,7 +30,7 @@ export default function NotesContent({ data, ...delegated }: INotesContentData) 
                 setSearchParams(searchParams);
                 data.onEditClick();
               }
-            }}/>
+            }} />
             <DeleteIcon onClick={() => {
               if (data.onDeleteClick) {
                 searchParams.set("noteId", `${note._id}`);
@@ -40,7 +40,7 @@ export default function NotesContent({ data, ...delegated }: INotesContentData) 
             }} />
           </IconWrapper>
         </NoteNameWrapper>
-      ))}
+      )) : "No notes found"}
 
     </Wrapper>
   );
@@ -50,7 +50,9 @@ interface INoteWrapperProps {
   isSelected: boolean;
 }
 
-const Wrapper = styled.div``;
+const Wrapper = styled.div`
+  text-align: center;
+`;
 
 const IconWrapper = styled.div`
   display: flex;
@@ -67,7 +69,7 @@ const NoteTitle = styled.p`
   margin-right: 6px;
   font-size: ${18 / 16}rem;
   display: block;
-  text-align: justify;
+  text-align: center;
   width: 100%;
 `;
 

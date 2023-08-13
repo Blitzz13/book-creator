@@ -4,14 +4,14 @@ import IBookSearchRequest from "../interfaces/service/book/IBookSearchRequest";
 import IBookService from "../interfaces/service/book/IBookService";
 import ICreateBookRequest from "../interfaces/service/book/ICreateBookRequest";
 import IFavouriteBookIdsResult from "../interfaces/service/book/IFavouriteBookIdsResult";
-import IFavouriteBookResult from "../interfaces/service/book/IFavouriteBookResult";
 import ISearchCountResult from "../interfaces/service/book/ISearchCountResult";
 import { IServiceBook } from "../interfaces/service/book/IServiceBook";
 import { IUpdateBookRequest } from "../interfaces/service/book/IUpdateBookRequest";
+import BaseService from "./BaseService";
 // import { injectable } from "inversify";
 
 // @injectable()
-export default class BookService implements IBookService {
+export default class BookService extends BaseService implements IBookService {
   public async searchBooks(
     request: IBookSearchRequest
   ): Promise<IServiceBook[]> {
@@ -31,7 +31,7 @@ export default class BookService implements IBookService {
   }
 
   public async addToFavourites(
-    request: IAddToFavouritesRequest
+    request: IAddToFavouritesRequest,
   ): Promise<void> {
     const response = await fetch(`${this._url}/favourites`, {
       method: "POST",
@@ -130,7 +130,10 @@ export default class BookService implements IBookService {
   public async createBook(data: ICreateBookRequest): Promise<IServiceBook> {
     const response = await fetch(`${this._url}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${this.user?.token}`
+      },
       body: JSON.stringify(data),
     });
     const json = await response.json();
@@ -148,7 +151,10 @@ export default class BookService implements IBookService {
   ): Promise<IServiceBook> {
     const response = await fetch(`${this._url}/${id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${this.user?.token}`
+      },
       body: JSON.stringify(data),
     });
     const json = await response.json();
@@ -163,6 +169,10 @@ export default class BookService implements IBookService {
   public async deleteBook(id: string): Promise<IServiceBook> {
     const response = await fetch(`${this._url}/${id}`, {
       method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${this.user?.token}`
+      },
     });
     const json = await response.json();
 

@@ -1,5 +1,5 @@
 import './App.css';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, useNavigate } from 'react-router-dom';
 import Home from './components/Home/Home';
 import About from './components/About/About';
 import GlobalStyle from './global';
@@ -11,14 +11,48 @@ import ReadBook from './components/ReadBook/ReadBook';
 import Search from './components/Search/Search';
 import Profile from './components/Profile/Profile';
 import { useAuthContext } from './hooks/useAuthContext';
+import { useEffect } from 'react';
+import { isTokenCloseToExpired, isTokenExpired } from './helpers/helpFunctions';
 
 function App() {
   const services = new Services();
   const authContext = useAuthContext();
+  const navigate = useNavigate();
+  useEffect(() => {
+    function checkTokenExpiration() {
+      if (authContext.user && authContext.user.token) {
+        const isExpired = isTokenExpired(authContext.user.token);
+        if (isExpired) {
+          console.warn("Session expired");
+          services.userService.logout();
+          navigate("/");
+          return;
+        }
+        
+        const isCloseToExpired = isTokenCloseToExpired(authContext.user.token)
+        if (isCloseToExpired) {
+          console.log("Session extended");
+          services.userService.refreshToken();
+        }
+      }
+    };
+
+    checkTokenExpiration();
+
+    const interval = setInterval(() => {
+      checkTokenExpiration();
+    }, 40 * 1000); // 40 seconds
+
+    // Clean up the interval when the component unmounts
+    return () => {
+      clearInterval(interval);
+    };
+  }, [authContext.user, navigate, services.userService]);
+
   return (
     <div id="App" className="App">
       <GlobalStyle />
-      {!authContext.user && <span> You are not logged in however the book progress will be saved localy</span>}
+      {!authContext.user && <span> You are not logged in however the book progress will be saved locally</span>}
       <NavBar bookService={services.bookService} userService={services.userService} />
       <Routes>
         <Route path="/" element={<Home bookService={services.bookService} userService={services.userService} />} />

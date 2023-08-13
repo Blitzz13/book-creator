@@ -6,5 +6,5 @@ export default interface IUserAction {
         email: string;
         id: string;
         token: string;
-    } | null;
+    } | null | undefined;
 }
