@@ -6,4 +6,5 @@ export const Colors = {
     ACCENT: "#77A97D",
     TEXT: "#444444",
     BORDER: "#CCC",
+    STAR: "#F0C500"
 }

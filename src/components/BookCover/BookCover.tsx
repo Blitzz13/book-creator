@@ -6,6 +6,7 @@ import bookPlaceholderImage from "../../assets/placeholder-image-portrait.png";
 import Button from "../Button/Button";
 import { RiBookmark3Line, RiBookmark3Fill, RiDeleteBin5Fill } from "react-icons/ri"
 import { useAuthContext } from "../../hooks/useAuthContext";
+import StarRating from "../StarRating/StarRating";
 
 const height = 350;
 const width = 233;
@@ -106,6 +107,17 @@ export default function BookCover({ data, ...delegated }: IBookCover) {
             }
           }} />}
         </IconsWrapper>
+        <StarRating data={{
+          numberOfRatings: data.numberOfRatings,
+          alreadyRated: data.alreadyRated,
+          averageRating: data.averageRating,
+          currentUserRating: data.currentUserRating,
+          onStarClick: (rating: number) => {
+            if (data.onStarClick) {
+              data.onStarClick(rating);
+            }
+          }
+        }} />
       </Details>
     </Wrapper >
   );

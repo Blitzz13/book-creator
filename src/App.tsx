@@ -55,7 +55,7 @@ function App() {
       {!authContext.user && <span> You are not logged in however the book progress will be saved locally</span>}
       <NavBar bookService={services.bookService} userService={services.userService} />
       <Routes>
-        <Route path="/" element={<Home bookService={services.bookService} userService={services.userService} />} />
+        <Route path="/" element={<Home bookService={services.bookService} userService={services.userService}/>} />
         <Route path="/about" element={<About />} />
         <Route path="/write/:bookId" element={<WriteBook chapterService={services.chapterService} bookService={services.bookService} />} />
         <Route path="/read/:bookId" element={<ReadBook chapterService={services.chapterService} bookService={services.bookService} noteService={services.noteService} userService={services.userService} />} />

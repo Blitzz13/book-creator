@@ -12,6 +12,7 @@ import { useAuthContext } from "../../hooks/useAuthContext";
 import IUserService from "../../interfaces/service/user/IUserService";
 import IStartedBookProgressResponse from "../../interfaces/service/user/IStartedBookProgressResponse";
 import { useNavigate } from "react-router-dom";
+
 export default function Home(data: { bookService: IBookService, userService: IUserService }) {
   const bookService = data.bookService;
   const userService = data.userService;
@@ -114,7 +115,7 @@ export default function Home(data: { bookService: IBookService, userService: IUs
             favouriteBooksIds: favouriteBookIds,
             books: books,
             verticalScroll: true,
-            onClick: onBookClick
+            onClick: onBookClick,
           }} />
         </GridWrapper>
       </Wrapper>

@@ -478,6 +478,9 @@ export default function WriteBook(data: IWriteBookData) {
               isFavourited: false,
               title: book.title,
               cover: book.frontConver,
+              alreadyRated: false,
+              averageRating: 4,
+              numberOfRatings: 35,
               onBookClick: () => { setAnimatedOpen(!isAnimatedOpen) },
               onReadClick: () => { }
             }} />
