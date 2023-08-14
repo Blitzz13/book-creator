@@ -14,6 +14,7 @@ import Button from "../Button/Button";
 import $ from "jquery";
 import { useAuthContext } from "../../hooks/useAuthContext";
 import Loader from "../Loader/Loader";
+
 let takeBooksAmount = 0;
 const authorInputId = generateId(7);
 const bookInputId = generateId(7);
@@ -149,7 +150,7 @@ export default function Search(data: ISearchData) {
 
   return (
     <Wrapper id={wrapperId}>
-      <Loader data={{isLoading: showLoader}}/>
+      <Loader data={{ isLoading: showLoader }} />
       <ExtendedSearchWrapper onSubmit={onSubmit}>
         <Label htmlFor={authorInputId}>Author</Label>
         <Input placeholder="J.K. Rowling" id={authorInputId} onValueChange={(text: string) => { setAuthor(text) }} />
@@ -184,7 +185,6 @@ export default function Search(data: ISearchData) {
           <PageNumber key={number} onClick={() => setCurrPage(number)}>{number}</PageNumber>
         ))} */}
         {allBooksCount > currBooks.length && <LoadMore onClick={() => setCurrPage(currPage + 1)}>Load More</LoadMore>}
-        {allBooksCount === 0 && <span>No books found</span>}
         <AnimatedBook
           modalData={{
             isOpen: isAnimatedOpen,

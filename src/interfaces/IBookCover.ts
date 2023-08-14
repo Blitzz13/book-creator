@@ -6,6 +6,11 @@ export interface IBookCover {
     isFavourited: boolean;
     addToFavourites: Function;
     isMyBook: boolean;
+    averageRating: number;
+    numberOfRatings: number;
+    alreadyRated: boolean;
+    currentUserRating?: number;
+    onStarClick?: Function;
     onDeleteClick?: Function;
     onEditClick?: Function;
     backgroundColor?: string;

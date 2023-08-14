@@ -23,12 +23,14 @@ import { CommonContentModalStyle } from "../../commonStyledStyles/CommonContentM
 import { ProfileBookTabs } from "../../enums/ProfileBookTabs";
 import BookWithPercentageList from "../BookWithPercentage/BookWithPercentageList";
 import IStartedBookProgressResponse from "../../interfaces/service/user/IStartedBookProgressResponse";
+import { useRatingService } from "../../hooks/useRatingServiceContext";
 
 const textAreaId = generateId(7);
 
 export default function Profile(data: { bookService: IBookService, userService: IUserService }) {
   const bookService = data.bookService;
   const userService = data.userService;
+  const ratingService = useRatingService();
   const [favouriteBooks, setFavouriteBooks] = useState([] as IServiceBook[]);
   const [authoredBooks, setAuthoredBooks] = useState([] as IServiceBook[]);
   const params = useParams();
