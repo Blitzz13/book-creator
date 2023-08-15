@@ -88,7 +88,8 @@ export default function WriteBook(data: IWriteBookData) {
     description: "",
     id: "",
     state: BookState.Draft,
-    title: ""
+    title: "",
+    genres: []
   });
 
   const [currentChapter, setCurrentChapter] = useState<IDisplayChapter>({
@@ -167,7 +168,12 @@ export default function WriteBook(data: IWriteBookData) {
   }
 
   async function updateBook(): Promise<void> {
+    setShowLoader(true);
     await data.bookService.updateBook(book.id, BookToUpdate(book));
+
+    setTimeout(() => {
+      setShowLoader(false);
+    }, 500);
   }
 
   async function deleteChapter(): Promise<void> {

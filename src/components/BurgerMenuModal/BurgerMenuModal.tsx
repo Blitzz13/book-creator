@@ -79,7 +79,6 @@ export default function BurgerMenuModal(data: IBurgerMenuModalData) {
                     </React.Fragment>}
 
                 <NavLink onClick={startExitAnimation} to="/search">Browse</NavLink>
-                <NavLink onClick={startExitAnimation} to="">Genre</NavLink>
                 {data.displayName &&
                     <React.Fragment>
                         <NavLink onClick={handleCreateBookClick} to="">Start new book</NavLink>

@@ -11,6 +11,7 @@ export function ServiceToBook(book: IServiceBook): IDisplayBook {
     title: book.title,
     backCover: book.backCoverImage,
     frontConver: book.coverImage,
+    genres: book.genre,
   };
 }
 
@@ -19,6 +20,7 @@ export function BookToUpdate(book: IDisplayBook): IUpdateBookRequest {
     description: book.description,
     state: BookStateToService(book.state),
     title: book.title,
+    genre: book.genres,
     backCoverImage: book.backCover,
     coverImage: book.frontConver,
   };

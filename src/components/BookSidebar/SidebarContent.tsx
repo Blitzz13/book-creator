@@ -2,16 +2,19 @@ import styled, { css } from "styled-components";
 import { Colors } from "../../Colors";
 import { Settings, BookOpen } from "react-feather";
 import BookSettingsSection from "../BookSettingsSection/BookSettingsSection";
-import { generateId } from "../../helpers/helpFunctions";
+import { generateId, isEqual } from "../../helpers/helpFunctions";
 import Button from "../Button/Button";
 import IBookSidebarData from "../../interfaces/IBookSidebarData";
 import { useNavigate, useParams } from "react-router-dom";
 import Input from "../Input/Input";
 import Dropdown from "../Dropdown/Dropdown";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChapterState } from "../../enums/ChapterState";
 import { BookState } from "../../enums/BookState";
 import ChaptersContent from "./ChaptersContent";
+import NativeDropdown from "../NativeDropdown/NativeDropdown";
+import { BookGenre } from "../../enums/Genre";
+import { IoMdClose } from "react-icons/io";
 const buttonAreaId = generateId(7);
 const titleId = generateId(7);
 
@@ -43,15 +46,33 @@ export default function SidebarContent({ data, ...delegated }: IBookSidebarData)
   const navigate = useNavigate();
 
   const [isChapterStateOpen, setIsChapterStateOpen] = useState(false);
-  const [isBookStateOpen, setIsBookStateOpen] = useState(false);
+  const [selectedGenres, setSelectedGenres] = useState<BookGenre[]>([]);
 
-  function onSelectChapterState(state: ChapterState): void {
+  function onSelectChapterState(state: string): void {
     data.updateCurrentChapter({ ...data.currentChapter, state: state })
   }
 
-  function onSelectBookState(state: BookState): void {
-    data.updateBook({ ...data.book, state: state })
+  function onSelectBookState(state: string): void {
+    data.updateBook({ ...data.book, state: state as BookState })
   }
+
+  const handleGenreChange = (selectedValue: string) => {
+    let updatedGenres = selectedGenres.slice();
+    if (selectedGenres.includes(selectedValue as BookGenre)) {
+      updatedGenres = selectedGenres.filter(x => x !== selectedValue)
+    } else {
+      updatedGenres.push(selectedValue as BookGenre);
+    }
+    
+    setSelectedGenres(updatedGenres);
+  };
+
+  useEffect(() => {
+    if (!isEqual(data.book.genres, selectedGenres)) {
+      setSelectedGenres(data.book.genres);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.book.genres]);
 
   return (
     <Wrapper isFromModal={data.isFromModal} {...delegated}>
@@ -86,14 +107,20 @@ export default function SidebarContent({ data, ...delegated }: IBookSidebarData)
                 data.updateBook({ ...data.book, backCover: text })
               }} value={data.book.backCover || "URL"} />
             </SettingsText>
-            <SettingsText onClick={() => { setIsBookStateOpen(!isBookStateOpen) }}>
-              State: <StateDropDown data={{
-                items: Object.values(BookState),
-                isOpen: isBookStateOpen,
-                selectedItem: data.book.state,
-                onItemClick: onSelectBookState
-              }} />
+            <SettingsText>
+              State: <EnumDropdown disableFirstOption={true} initialValue={data.book.state} onValueChange={onSelectBookState} enumType={BookState} data={{ items: Object.values(BookState) }} />
             </SettingsText>
+            <SettingsText>
+              Genre: <EnumDropdown disableFirstOption={true} onValueChange={handleGenreChange} enumType={BookGenre} data={{ items: Object.values(BookGenre) }} />
+            </SettingsText>
+            <SelecteGenreWrapper>
+              {selectedGenres.map((item, index) => (
+                <SelectedGenre onClick={() => handleGenreChange(item)} key={index}>
+                  {item}
+                  <XIcon size={16} />
+                </SelectedGenre>
+              ))}
+            </SelecteGenreWrapper>
             <SettingsTextButton onClick={() => data.showEditDescription(true)}>Edit Description</SettingsTextButton>
             <InlineWrapper>
               <SettingsTextButton onClick={() => data.setPreviewOpen(true)}>Preview</SettingsTextButton>
@@ -101,20 +128,11 @@ export default function SidebarContent({ data, ...delegated }: IBookSidebarData)
               <SettingsTextButton onClick={() => data.deleteConfirmation(false)}>Delete</SettingsTextButton>
             </InlineWrapper>
           </SettingsWrapper>
-          <SectionTitle data={{ title: "Header Settings", settingId: headerSettingsId }}></SectionTitle>
-          <SettingsWrapper id={headerSettingsId}>
-            <SettingsText>Stylize first letter: true</SettingsText>
-          </SettingsWrapper>
           <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle>
           <SettingsWrapper id={chapterSettingsId}>
             <SettingsText>Chapter name: {data.currentChapter?.header}</SettingsText>
             <SettingsText onClick={() => { setIsChapterStateOpen(!isChapterStateOpen) }}>
-              State: <StateDropDown data={{
-                items: Object.values(ChapterState),
-                isOpen: isChapterStateOpen,
-                selectedItem: data.currentChapter?.state ?? ChapterState.Draft,
-                onItemClick: onSelectChapterState
-              }} />
+            State: <EnumDropdown disableFirstOption={true} initialValue={data.currentChapter?.state} onValueChange={onSelectChapterState} enumType={ChapterState} data={{ items: Object.values(ChapterState) }} />
             </SettingsText>
             <SettingsText>Order:
               <SettingsInput onValueChange={(order: number) => { data.updateCurrentChapter({ ...data.currentChapter, orderId: order }) }}
@@ -157,6 +175,34 @@ export default function SidebarContent({ data, ...delegated }: IBookSidebarData)
 const InlineWrapper = styled.div`
   display: flex;
   gap: 16px;
+`
+
+const EnumDropdown = styled(NativeDropdown)`
+  display: flex;
+  gap: 16px;
+  margin-left: 8px;
+`
+
+const SelecteGenreWrapper = styled.div`
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  flex-wrap: wrap;
+`;
+
+const SelectedGenre = styled.span`
+  background-color: ${Colors.ACCENT};
+  border-radius: 20px;
+  padding: 4px;
+  padding-left: 8px;
+  gap: 4px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+`;
+
+const XIcon = styled(IoMdClose)`
+  
 `
 
 const NoWrapText = styled.p`
@@ -270,4 +316,4 @@ const SettingsWrapper = styled.div`
   display: none;
   flex-direction: column;
   gap: 6px;
-`
+`;

@@ -14,9 +14,12 @@ import Button from "../Button/Button";
 import $ from "jquery";
 import { useAuthContext } from "../../hooks/useAuthContext";
 import Loader from "../Loader/Loader";
+import NativeDropdown from "../NativeDropdown/NativeDropdown";
+import { BookGenre } from "../../enums/Genre";
 
 let takeBooksAmount = 0;
 const authorInputId = generateId(7);
+const genreId = generateId(7);
 const bookInputId = generateId(7);
 const wrapperId = generateId(7);
 const bookListId = generateId(7);
@@ -31,6 +34,7 @@ export default function Search(data: ISearchData) {
   const [isAnimatedToggle, setAnimatedToggle] = useState(false);
   const [isAnimatedOpen, setAnimatedOpen] = useState(false);
   const [isAnimatedExiting, setAnimatedExiting] = useState(false);
+  const [genre, setGenre] = useState<BookGenre>();
   const [showLoader, setShowLoader] = useState(true);
   const [author, setAuthor] = useState("");
   const [bookTitle, setBookTitle] = useState("");
@@ -39,7 +43,13 @@ export default function Search(data: ISearchData) {
   const [selectedBook, setSelectedBook] = useState<IDisplayBook>();
 
   useEffect(() => {
-    getBooks(false);
+    async function loadNewBooks(): Promise<void> {
+      setShowLoader(true);
+      await getBooks(false);
+      setShowLoader(false);
+    }
+
+    loadNewBooks();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currPage]);
 
@@ -67,6 +77,7 @@ export default function Search(data: ISearchData) {
     const result = await data.bookService.getSearchBooksCount({
       searchString: generalSearch ? searchParams.get("searchString") || undefined : undefined,
       authorName: author || undefined,
+      genre: genre,
       title: bookTitle || undefined,
     });
     // setPagesCount(Math.ceil(result.booksCount / pageSize));
@@ -97,7 +108,6 @@ export default function Search(data: ISearchData) {
   }
 
   async function getBooks(replaceCurrentBooks: boolean): Promise<void> {
-    setShowLoader(true);
     calculateBooksPerPage();
     const generalSearch = (author !== "" || bookTitle !== "") ? false : true;
     const books = await data.bookService.searchBooks({
@@ -105,6 +115,7 @@ export default function Search(data: ISearchData) {
       authorName: author || undefined,
       title: bookTitle || undefined,
       skip: replaceCurrentBooks ? 0 : skipBooks,
+      genre: genre,
       take: takeBooksAmount
     });
 
@@ -152,7 +163,12 @@ export default function Search(data: ISearchData) {
     <Wrapper id={wrapperId}>
       <Loader data={{ isLoading: showLoader }} />
       <ExtendedSearchWrapper onSubmit={onSubmit}>
-        <Label htmlFor={authorInputId}>Author</Label>
+        <Label>Genre</Label>
+        <GenreDropdown onValueChange={(selectedValue: string) => { setGenre((selectedValue as BookGenre) || undefined) }}
+          width={260}
+          enumType={BookGenre}
+          data={{ items: Object.values(BookGenre) }} />
+        <Label htmlFor={genreId}>Author</Label>
         <Input placeholder="J.K. Rowling" id={authorInputId} onValueChange={(text: string) => { setAuthor(text) }} />
         <Label htmlFor={bookInputId}>Book Title</Label>
         <Input placeholder="Harry Potter" id={bookInputId} onValueChange={(text: string) => { setBookTitle(text) }} />
@@ -212,8 +228,9 @@ const SubmitButton = styled(Button)`
 `
 
 const Input = styled(CustomInput)`
-  @media only screen and (max-width: 770px) {
+  @media only screen and (max-width: 1020px) {
     width: 100%;
+    max-width: 720px;
   }
 `;
 
@@ -224,13 +241,21 @@ const ExtendedSearchWrapper = styled.form`
   margin-bottom: 10px;
   gap: 10px;
 
-  @media only screen and (max-width: 770px) {
+  @media only screen and (max-width: 1020px) {
     flex-direction: column;
   }
 `;
 
 const Label = styled.label`
   font-size: ${18 / 16}rem;
+`
+
+const GenreDropdown = styled(NativeDropdown)`
+  font-size: ${22 / 16}rem;
+  padding: 2px;
+  padding-left: 20px;
+  min-width: 160px;
+  color: ${Colors.BUTTON_TEXT};
 `
 
 // const PageNumber = styled.div`
