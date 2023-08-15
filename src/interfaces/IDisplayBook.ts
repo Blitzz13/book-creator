@@ -1,4 +1,5 @@
 import { BookState } from "../enums/BookState";
+import { BookGenre } from "../enums/Genre";
 
 export default interface IDisplayBook {
   id: string;
@@ -7,4 +8,5 @@ export default interface IDisplayBook {
   backCover?: string;
   state: BookState;
   description: string;
+  genres: BookGenre[];
 }

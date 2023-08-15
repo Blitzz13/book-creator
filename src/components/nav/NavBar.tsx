@@ -41,8 +41,10 @@ export default function NavBar(data: { userService: IUserService, bookService: I
     data.userService.logout();
   }
 
-  function onSearchSubmit(event: FormEvent): void {
-    event.preventDefault();
+  function onSearchSubmit(event: FormEvent | null): void {
+    if (event) {
+      event.preventDefault();
+    }
     navigate(`/search?searchString=${searchString}`);
   }
 
@@ -74,7 +76,6 @@ export default function NavBar(data: { userService: IUserService, bookService: I
       <NavLinkWrapper>
         <Logo to="/">LOGO</Logo>
         <NavLink to="/search">Browse</NavLink>
-        <NavLink to="/about">Genres</NavLink>
       </NavLinkWrapper>
       <NavButtonWrapper>
         <NavSearch data={{

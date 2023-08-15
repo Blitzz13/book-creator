@@ -46,3 +46,21 @@ export function isTokenCloseToExpired(token: string | null): boolean {
 
   return decodedToken.exp - 300 < currentTime;
 }
+
+export function isEqual(arr1: any[], arr2: any[]): boolean {
+  if (arr1.length !== arr2.length) {
+    return false;
+  }
+
+  for (let i = 0; i < arr1.length; i++) {
+    if (Array.isArray(arr1[i]) && Array.isArray(arr2[i])) {
+      if (!isEqual(arr1[i], arr2[i])) {
+        return false;
+      }
+    } else if (arr1[i] !== arr2[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
