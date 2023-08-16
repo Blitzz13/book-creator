@@ -23,14 +23,14 @@ import { CommonContentModalStyle } from "../../commonStyledStyles/CommonContentM
 import { ProfileBookTabs } from "../../enums/ProfileBookTabs";
 import BookWithPercentageList from "../BookWithPercentage/BookWithPercentageList";
 import IStartedBookProgressResponse from "../../interfaces/service/user/IStartedBookProgressResponse";
-import { useRatingService } from "../../hooks/useRatingServiceContext";
+import { UserRole } from "../../enums/UserRole";
+import NativeDropdown from "../NativeDropdown/NativeDropdown";
 
 const textAreaId = generateId(7);
 
 export default function Profile(data: { bookService: IBookService, userService: IUserService }) {
   const bookService = data.bookService;
   const userService = data.userService;
-  const ratingService = useRatingService();
   const [favouriteBooks, setFavouriteBooks] = useState([] as IServiceBook[]);
   const [authoredBooks, setAuthoredBooks] = useState([] as IServiceBook[]);
   const params = useParams();
@@ -54,6 +54,7 @@ export default function Profile(data: { bookService: IBookService, userService: 
     email: "",
     favouriteBookIds: [],
     intialDisplayName: "",
+    role: UserRole.User,
   });
 
   useEffect(() => {
@@ -145,6 +146,7 @@ export default function Profile(data: { bookService: IBookService, userService: 
         displayName: details.displayName,
         profileImageUrl: details.imageUrl || "",
         email: details.email,
+        role: details.role,
         settings: details.settings,
         favouriteBookIds: result.favouriteBookIds,
       });
@@ -196,6 +198,7 @@ export default function Profile(data: { bookService: IBookService, userService: 
     await userService.updateUser({
       imageUrl: imageUrl,
       userId: profileModel.id,
+      role: profileModel.role,
       description: profileModel.description,
       displayName: displayName,
       settings: profileModel.settings
@@ -206,7 +209,7 @@ export default function Profile(data: { bookService: IBookService, userService: 
     <Wrapper>
       <DetailsWrapper>
         <ProfileImage src={profileModel.profileImageUrl || profilePlaceholder} />
-        {authContext.user?.id === profileModel.id && <Input placeholder="Image Url" value={profileModel.profileImageUrl} onValueChange={(value: string) => {
+        {(authContext.user?.id === profileModel.id || authContext.user?.role === UserRole.Admin) && <Input placeholder="Image Url" value={profileModel.profileImageUrl} onValueChange={(value: string) => {
           setProfileModel({ ...profileModel, profileImageUrl: value || "" });
         }} />}
         {/* {needsSlider && <SliderWrapper>
@@ -214,18 +217,24 @@ export default function Profile(data: { bookService: IBookService, userService: 
                     <Slider type="range" min="1" max="100" onChange={handleSliderChange} value={top} id="myRange" />
                 </SliderWrapper>} */}
         <TextLabel>Username:</TextLabel>
-        {authContext.user?.id === profileModel.id ? <Input value={profileModel.displayName} onValueChange={(value: string) => {
+        {(authContext.user?.id === profileModel.id || authContext.user?.role === UserRole.Admin) ? <Input value={profileModel.displayName} onValueChange={(value: string) => {
           setProfileModel({ ...profileModel, displayName: value });
         }} /> :
           <Text>{profileModel.displayName}</Text>
         }
-        {(!profileModel.settings?.hideEmail || authContext.user?.id === profileModel.id) &&
+        {(!profileModel.settings?.hideEmail || authContext.user?.id === profileModel.id || authContext.user?.role === UserRole.Admin) &&
           <>
             <TextLabel>Email:</TextLabel>
             <Text>{profileModel.email}</Text>
           </>
         }
-        {authContext.user?.id === profileModel.id && <TextArea
+        {(authContext.user?.role === UserRole.Admin) &&
+          <>
+            <TextLabel>Role:</TextLabel>
+            <EnumDropdown width={400} disableFirstOption={true} initialValue={profileModel.role} onValueChange={(value: string) => setProfileModel({ ...profileModel, role: value as UserRole })} enumType={UserRole} data={{ items: Object.values(UserRole) }} />
+          </>
+        }
+        {(authContext.user?.id === profileModel.id || authContext.user?.role === UserRole.Admin) && <TextArea
           id={textAreaId}
           onLoad={() => {
             setTextAreaCss();
@@ -249,7 +258,7 @@ export default function Profile(data: { bookService: IBookService, userService: 
               }
             }
           }}></TextArea>}
-        {authContext.user?.id !== profileModel.id && <TextArea
+        {(authContext.user?.id !== profileModel.id && authContext.user?.role !== UserRole.Admin) && <TextArea
           id={textAreaId}
           onLoad={() => {
             setTextAreaCss();
@@ -260,7 +269,7 @@ export default function Profile(data: { bookService: IBookService, userService: 
             theme: "bubble",
             readonly: true,
           }}></TextArea>}
-        {authContext.user?.id === profileModel.id &&
+        {(authContext.user?.id === profileModel.id || authContext.user?.role === UserRole.Admin) &&
           <>
             <ButtonsWrapper>
               <DetailsButton data={{
@@ -390,7 +399,7 @@ export default function Profile(data: { bookService: IBookService, userService: 
   function setTextAreaCss() {
     const textAreaContainer = $(`#${textAreaId}`).find(".ql-container");
     textAreaContainer.css("background-color", Colors.BACKGROUND);
-    if (authContext.user?.id !== profileModel.id) {
+    if (authContext.user?.id !== profileModel.id && authContext.user?.role !== UserRole.Admin) {
       textAreaContainer.css("border-radius", "22px");
     }
   }
@@ -514,6 +523,13 @@ const Books = styled(BookList)`
   /* margin: 12px; */
 `;
 
+const EnumDropdown = styled(NativeDropdown)`
+  padding: 6px;
+  font-size: ${22 / 16}rem;
+  @media only screen and (max-width: 888px) {
+    text-align: center;
+  }
+`
 // const Checkbox = styled.input`
 //   text-align: left;
 //   width: 25px;

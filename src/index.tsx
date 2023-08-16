@@ -6,19 +6,22 @@ import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthContextProvider } from './context/AuthContext';
 import { RatingServiceContextProvider } from './context/RatingServiceContext';
+import { BookServiceContextProvider } from './context/BookServiceContext';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 root.render(
   <React.StrictMode>
-    <RatingServiceContextProvider>
-      <AuthContextProvider>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
-      </AuthContextProvider>
-    </RatingServiceContextProvider>
+    <BookServiceContextProvider>
+      <RatingServiceContextProvider>
+        <AuthContextProvider>
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
+        </AuthContextProvider>
+      </RatingServiceContextProvider>
+    </BookServiceContextProvider>
   </React.StrictMode>
 );
 

@@ -65,6 +65,7 @@ export default function SidebarContent({ data, ...delegated }: IBookSidebarData)
     }
     
     setSelectedGenres(updatedGenres);
+    data.updateBook({ ...data.book, genres: updatedGenres })
   };
 
   useEffect(() => {

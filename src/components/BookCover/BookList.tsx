@@ -9,18 +9,26 @@ import { useRatingService } from "../../hooks/useRatingServiceContext";
 import { useEffect, useState } from "react";
 import { IRatingObjResponse } from "../../interfaces/service/rating/IRatingObjResponse";
 import { IAverageRatingResponse } from "../../interfaces/service/rating/IAverageRatingResponse";
+import ConfirmationModal from "../ConfirmationModal/ConfirmationModal";
+import { CommonContentModalStyle } from "../../commonStyledStyles/CommonContentModalStyle";
+import { useBookService } from "../../hooks/useBookServiceContext";
 export default function BookList({ data, ...delegated }: IBookListData) {
     const navigate = useNavigate();
     const authContext = useAuthContext();
     const ratingContext = useRatingService();
+    const bookContext = useBookService();
     const [currentUserRatedBooks, setCurrentUserRatedBooks] = useState<IRatingObjResponse[]>([]);
     const [averageRatings, setAverageRatings] = useState<IAverageRatingResponse[]>([]);
+    const [isConfirmModalOpen, setisConfirmModalOpen] = useState(false);
+    const [isConfirmModalExiting, setIsConfirmModalExiting] = useState(false);
+    const [deleteBookTitle, setDeleteBookTitle] = useState("");
+    const [deleteBookId, setdeleteBookId] = useState("");
 
     useEffect(() => {
         getCurrentUserRatedBooks();
         getAverageRatedBooks();
     }, [authContext.user, data.books, ratingContext])
-    
+
     async function getCurrentUserRatedBooks(): Promise<void> {
         if (authContext.user) {
             const ratings = await ratingContext.getAllUserRatings(authContext.user.id);
@@ -74,9 +82,9 @@ export default function BookList({ data, ...delegated }: IBookListData) {
                             navigate(`/write/${book._id}`)
                         },
                         onDeleteClick: () => {
-                            if (data.onDeleteClick) {
-                                data.onDeleteClick(book._id);
-                            }
+                            setisConfirmModalOpen(true);
+                            setDeleteBookTitle(book.title);
+                            setdeleteBookId(book._id);
                         },
                         onBookClick: () => {
                             if (data.onClick) {
@@ -101,6 +109,28 @@ export default function BookList({ data, ...delegated }: IBookListData) {
                         mediaMaxWidth: data.mediaMaxWidth,
                     }} />
             ))}
+            <ConfirmationModal data={{
+                isOpen: isConfirmModalOpen,
+                isExiting: isConfirmModalExiting,
+                ContentElement: CommonContentModalStyle,
+                contentData: {
+                    width: "400px",
+                },
+                setOpen: setisConfirmModalOpen,
+                setExiting: setIsConfirmModalExiting,
+            }}
+                confirmationData={{
+                    text: `Are you sure you want to delete "${deleteBookTitle}"?`,
+                    modalTitle: "Delete Book",
+                    funcToCall: () => {
+                        bookContext.deleteBook(deleteBookId);
+                        setIsConfirmModalExiting(true);
+                        if (data.onDeleteClick) {
+                            data.onDeleteClick(deleteBookId);
+                        }
+                    },
+                }}>
+            </ConfirmationModal>
             {data.books.length <= 0 && <Message>{data.noBooksMessage ?? "No books found"}</Message>}
         </BooksWrapper>
     );

@@ -193,6 +193,9 @@ export default function Search(data: ISearchData) {
           },
           books: currBooks,
           favouriteBooksIds: favouriteBookIds,
+          onDeleteClick: (bookId: string) => {
+            setBooks(currBooks.filter(x => x._id !== bookId));
+          },
           onClick: onBookClick,
           scaleBook: true,
         }} />

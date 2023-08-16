@@ -19,7 +19,10 @@ export default class UserService extends BaseService implements IUserService {
   public async saveBookProgress(request: ISaveBookProgressRequest): Promise<ISavedBookProgressResponse> {
     const response = await fetch(`${this._url}/bookProgress`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${this.user?.token}`
+       },
       body: JSON.stringify(request),
     });
 
@@ -64,13 +67,20 @@ export default class UserService extends BaseService implements IUserService {
     const stringified = JSON.stringify(request);
     const response = await fetch(`${this._url}/details/${request.userId}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${this.user?.token}`
+     },
       body: stringified,
     });
 
     const user = localStorage.getItem("user");
     if (user && request.displayName) {
       const parsedData = JSON.parse(user);
+      if (request.userId !== parsedData.id) {
+        return;
+      }
+
       parsedData.displayName = request.displayName;
       const updatedDataString = JSON.stringify(parsedData);
       localStorage.setItem("user", updatedDataString);
