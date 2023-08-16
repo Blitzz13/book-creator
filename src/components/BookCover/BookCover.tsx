@@ -7,6 +7,7 @@ import Button from "../Button/Button";
 import { RiBookmark3Line, RiBookmark3Fill, RiDeleteBin5Fill } from "react-icons/ri"
 import { useAuthContext } from "../../hooks/useAuthContext";
 import StarRating from "../StarRating/StarRating";
+import { UserRole } from "../../enums/UserRole";
 
 const height = 350;
 const width = 233;
@@ -71,7 +72,7 @@ export default function BookCover({ data, ...delegated }: IBookCover) {
           }}>
             Read
           </ReadButton>
-          {data.isMyBook === true && <ReadButton data={{
+          {(data.isMyBook === true || authContext.user?.role === UserRole.Admin) && <ReadButton data={{
             color: Colors.WARNING,
             height: 30,
             width: 90,
@@ -101,7 +102,7 @@ export default function BookCover({ data, ...delegated }: IBookCover) {
                   setFavourited(true);
                 }} size={26} />
             }</>}
-          {data.isMyBook === true && <DeleteIcon size={26} onClick={() => {
+          {(data.isMyBook === true || authContext.user?.role === UserRole.Admin) && <DeleteIcon size={26} onClick={() => {
             if (data.onDeleteClick) {
               data.onDeleteClick();
             }

@@ -1,4 +1,4 @@
-import React, { createContext } from 'react';
+import { createContext } from 'react';
 import RatingService from '../services/RatingService';
 import { IRatingServiceContext } from '../interfaces/IRatingServiceContext';
 

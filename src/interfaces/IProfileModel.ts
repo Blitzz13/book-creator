@@ -1,3 +1,4 @@
+import { UserRole } from "../enums/UserRole";
 import IUserSettings from "./service/user/IUserSettings";
 
 export interface IProfileModel {
@@ -7,6 +8,7 @@ export interface IProfileModel {
     favouriteBookIds: string[];
     email: string;
     profileImageUrl: string;
+    role: UserRole;
     initialDescription?: string;
     description?: string;
     settings?: IUserSettings;
