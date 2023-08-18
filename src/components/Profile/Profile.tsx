@@ -25,6 +25,8 @@ import BookWithPercentageList from "../BookWithPercentage/BookWithPercentageList
 import IStartedBookProgressResponse from "../../interfaces/service/user/IStartedBookProgressResponse";
 import { UserRole } from "../../enums/UserRole";
 import NativeDropdown from "../NativeDropdown/NativeDropdown";
+import { ServiceBookState } from "../../enums/ServiceBookState";
+import Loader from "../Loader/Loader";
 
 const textAreaId = generateId(7);
 
@@ -33,12 +35,14 @@ export default function Profile(data: { bookService: IBookService, userService: 
   const userService = data.userService;
   const [favouriteBooks, setFavouriteBooks] = useState([] as IServiceBook[]);
   const [authoredBooks, setAuthoredBooks] = useState([] as IServiceBook[]);
+  const [earlyAcessBooks, setEarlyAcessBooks] = useState([] as IServiceBook[]);
   const params = useParams();
   const navigate = useNavigate();
   const authContext = useAuthContext();
   const [isFavourteOpen, setIsFavouriteOpen] = useState(true);
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [isConfirmationExiting, setIsConfirmationExiting] = useState(false);
+  const [showLoader, setShowLoader] = useState(false);
   const [confirmationText, setConfirmationText] = useState("");
   const [confirmationTitle, setConfirmationTitle] = useState("");
   const [currentTab, setCurrentTab] = useState<ProfileBookTabs>(ProfileBookTabs.FavouriteBooks);
@@ -65,7 +69,7 @@ export default function Profile(data: { bookService: IBookService, userService: 
   useEffect(() => {
     loadDetails();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authContext.user]);
+  }, [authContext.user, params]);
 
   useEffect(() => {
     async function loadStartedBooks() {
@@ -85,6 +89,13 @@ export default function Profile(data: { bookService: IBookService, userService: 
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (profileModel.id !== "") {
+      load();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileModel.id]);
 
   useEffect(() => {
     switch (currentTab) {
@@ -117,7 +128,11 @@ export default function Profile(data: { bookService: IBookService, userService: 
   }, [currentTab, startedBooks]);
 
   async function load(): Promise<void> {
+    setShowLoader(true);
     await getAuthoredBooks();
+    await getEarlyAccessBooks();
+    await loadFavouriteBooks();
+    setShowLoader(false);
   }
 
   async function loadFavouriteBooks(): Promise<void> {
@@ -129,27 +144,30 @@ export default function Profile(data: { bookService: IBookService, userService: 
 
   async function loadDetails(): Promise<void> {
     try {
-      const details = await userService.getDetails(profileModel.id, authContext.user?.id ?? "");
-      const result = authContext.user?.id ? await bookService.getFavouriteBooksIds(profileModel.id) : { favouriteBookIds: [] } as IFavouriteBookIdsResult;
-
-      if (details.settings.hideFavouriteBooks && authContext.user?.id !== profileModel.id) {
-        setNoBooksMessage("The user has hidden their favourite books");
-      } else {
-        setNoBooksMessage(undefined);
-      }
-
-      // console.warn(`DETAILS: ${JSON.stringify(details)}`)
-      setProfileModel({
-        ...profileModel,
-        initialDescription: details.description,
-        intialDisplayName: details.displayName,
-        displayName: details.displayName,
-        profileImageUrl: details.imageUrl || "",
-        email: details.email,
-        role: details.role,
-        settings: details.settings,
-        favouriteBookIds: result.favouriteBookIds,
-      });
+      if (params.userId) {
+        const details = await userService.getDetails(params.userId, authContext.user?.id ?? "");
+        const result = authContext.user?.id ? await bookService.getFavouriteBooksIds(profileModel.id) : { favouriteBookIds: [] } as IFavouriteBookIdsResult;
+  
+        if (details.settings.hideFavouriteBooks && authContext.user?.id !== profileModel.id) {
+          setNoBooksMessage("The user has hidden their favourite books");
+        } else {
+          setNoBooksMessage(undefined);
+        }
+  
+        // console.warn(`DETAILS: ${JSON.stringify(details)}`)
+        setProfileModel({
+          ...profileModel,
+          id: params.userId,
+          initialDescription: details.description,
+          intialDisplayName: details.displayName,
+          displayName: details.displayName,
+          profileImageUrl: details.imageUrl || "",
+          email: details.email,
+          role: details.role,
+          settings: details.settings,
+          favouriteBookIds: result.favouriteBookIds,
+        });
+      } 
     } catch (error) {
       navigate("*");
       console.error(error);
@@ -177,6 +195,11 @@ export default function Profile(data: { bookService: IBookService, userService: 
     });
   }
 
+  async function getEarlyAccessBooks(): Promise<void> {
+    const data = await bookService.searchBooks({ userId: profileModel.id, state: ServiceBookState.InvitesOnly });
+    setEarlyAcessBooks(data);
+  }
+
   async function addToFavourites(bookId: string): Promise<void> {
     await data.bookService.addToFavourites({
       bookId: bookId,
@@ -192,9 +215,10 @@ export default function Profile(data: { bookService: IBookService, userService: 
   }
 
   async function updateProfile(): Promise<void> {
+    setShowLoader(true);
     const displayName = profileModel.intialDisplayName !== profileModel.displayName ? profileModel.displayName : undefined;
     const imageUrl = profileModel.profileImageUrl !== "" ? profileModel.profileImageUrl : undefined;
-
+    
     await userService.updateUser({
       imageUrl: imageUrl,
       userId: profileModel.id,
@@ -203,10 +227,13 @@ export default function Profile(data: { bookService: IBookService, userService: 
       displayName: displayName,
       settings: profileModel.settings
     });
+
+    setShowLoader(false);
   }
 
   return (
     <Wrapper>
+      <Loader data={{isLoading: showLoader}}></Loader>
       <DetailsWrapper>
         <ProfileImage src={profileModel.profileImageUrl || profilePlaceholder} />
         {(authContext.user?.id === profileModel.id || authContext.user?.role === UserRole.Admin) && <Input placeholder="Image Url" value={profileModel.profileImageUrl} onValueChange={(value: string) => {
@@ -280,7 +307,6 @@ export default function Profile(data: { bookService: IBookService, userService: 
                 textSize: 22,
                 type: "submit",
                 onClick: () => {
-                  console.log(profileModel);
                   updateProfile();
                 }
               }}>Save Changes</DetailsButton>
@@ -339,12 +365,16 @@ export default function Profile(data: { bookService: IBookService, userService: 
             setIsFavouriteOpen(false);
           }
           } isSelected={currentTab === ProfileBookTabs.AuthoredBooks}>Authored books</TabTitle>
-          {authContext.user &&
+          {authContext.user?.id === profileModel.id &&
             <>
               <TabTitle onClick={() => setCurrentTab(ProfileBookTabs.CurrentlyReading)} isSelected={currentTab === ProfileBookTabs.CurrentlyReading}>Reading</TabTitle>
               <TabTitle onClick={() => setCurrentTab(ProfileBookTabs.FinishedReading)} isSelected={currentTab === ProfileBookTabs.FinishedReading}>Finished</TabTitle>
             </>
           }
+          {authContext.user?.id === profileModel.id && <TabTitle onClick={() => {
+            setCurrentTab(ProfileBookTabs.EarlyAccess);
+            setIsFavouriteOpen(false);
+          }} isSelected={currentTab === ProfileBookTabs.EarlyAccess}>Early Access</TabTitle>}
         </TabsWrapper>
         {(currentTab === ProfileBookTabs.FavouriteBooks || currentTab === ProfileBookTabs.AuthoredBooks) &&
           <Books data={{
@@ -369,6 +399,17 @@ export default function Profile(data: { bookService: IBookService, userService: 
         {(currentTab === ProfileBookTabs.CurrentlyReading || currentTab === ProfileBookTabs.FinishedReading) &&
           <BookWithPercentageList data={{
             books: progressBooks
+          }} />}
+        {currentTab === ProfileBookTabs.EarlyAccess &&
+          <Books data={{
+            addToFavourites: (bookId: string) => {
+              addToFavourites(bookId)
+            },
+            favouriteBooksIds: profileModel.favouriteBookIds,
+            books: earlyAcessBooks,
+            noBooksMessage: "You are haven't been invited to any early access books",
+            scaleBook: true,
+            mediaMaxWidth: 945
           }} />}
       </BooksWrapper>
       <ConfirmationModal data={{
@@ -439,6 +480,7 @@ const TabsWrapper = styled.div`
   border-top-right-radius: 22px;
   border-top-left-radius: 22px;
   padding: 12px;
+  overflow-x: auto;
 `;
 
 const TabTitle = styled.span`

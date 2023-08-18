@@ -23,7 +23,8 @@ export default function ReadSideBarContent({ data, ...delegated }: IReadSidebarD
           baseChapters: data.baseChapters,
           isInWritingMode: data.isInWritingMode,
           currentChapterId: data.currentChapterId,
-          onChapterClick: data.onChapterClick
+          onChapterClick: data.onChapterClick,
+          isLoading: false
         }} />
         :
         <Notes data={{

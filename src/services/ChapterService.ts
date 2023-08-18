@@ -13,6 +13,9 @@ export default class ChapterService extends BaseService implements IChapterServi
   public async fetchAllChapterTitles(bookId: string): Promise<IBaseChapter[]> {
     const response = await fetch(`${this._url}/chapter/chapter-titles/${bookId}`, {
       method: "GET",
+      headers: {
+        "Authorization": `Bearer ${this.user?.token}`
+      },
     });
 
     const json = await response.json();
@@ -27,6 +30,9 @@ export default class ChapterService extends BaseService implements IChapterServi
   public async fetchChapter(chapterId: string): Promise<IServiceChapter> {
     const response = await fetch(`${this._url}/${chapterId}`, {
       method: "GET",
+      headers: {
+        "Authorization": `Bearer ${this.user?.token}`
+      },
     });
 
     const json = await response.json();

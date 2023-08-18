@@ -14,12 +14,15 @@ export default interface IBookSidebarData extends IHtmlElement {
     updateBook: (book: IDisplayBook) => void;
     deleteConfirmation: (isDeletingChapter: boolean) => void;
     setPreviewOpen: (isOpen: boolean) => void;
+    setDisplayBook: React.Dispatch<React.SetStateAction<IDisplayBook>>;
     saveBook: Function;
     setAreSettingsOpen: Function;
     updateCurrentChapter: Function;
     setOrderId: Function;
     showEditDescription: Function;
+    onInviteListClick: Function;
     onChapterClick?: Function;
     currentChapter?: IDisplayChapter;
+    areChaptersLoading?: boolean;
   };
 }

@@ -7,6 +7,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { AuthContextProvider } from './context/AuthContext';
 import { RatingServiceContextProvider } from './context/RatingServiceContext';
 import { BookServiceContextProvider } from './context/BookServiceContext';
+import { UserServiceContextProvider } from './context/UserServiceContext';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -16,9 +17,11 @@ root.render(
     <BookServiceContextProvider>
       <RatingServiceContextProvider>
         <AuthContextProvider>
-          <BrowserRouter>
-            <App />
-          </BrowserRouter>
+          <UserServiceContextProvider>
+            <BrowserRouter>
+              <App />
+            </BrowserRouter>
+          </UserServiceContextProvider>
         </AuthContextProvider>
       </RatingServiceContextProvider>
     </BookServiceContextProvider>

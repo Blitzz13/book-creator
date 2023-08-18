@@ -8,6 +8,7 @@ export default interface ICommonModalData<ContentStyle, OverlayStyle> {
     isExiting: boolean;
     ContentElement: StyledComponent<"div", any, any, never>;
     contentData: ContentStyle;
+    modalTitle?: string;
     OverlayElement?: StyledComponent<"div", any, any, never>;
     overlayData?: OverlayStyle;
     willPlayCloseAnimation?: boolean;

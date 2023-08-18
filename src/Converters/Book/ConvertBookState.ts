@@ -10,8 +10,10 @@ export function BookStateToService(state: BookState): ServiceBookState {
             return ServiceBookState.Finished;
         case BookState.InProgress:
             return ServiceBookState.InProgress;
+        case BookState.InvitesOnly:
+            return ServiceBookState.InvitesOnly;
         default:
-            return ServiceBookState.Draft;
+            throw new Error(`State does not exist ${state}`);
     }
 }
 
@@ -23,7 +25,9 @@ export function BookStateServiceToState(state: ServiceBookState): BookState {
             return BookState.Finished;
         case ServiceBookState.InProgress:
             return BookState.InProgress;
+        case ServiceBookState.InvitesOnly:
+            return BookState.InvitesOnly;
         default:
-            return BookState.Draft;
+            throw new Error(`State does not exist ${state}`);
     }
 }

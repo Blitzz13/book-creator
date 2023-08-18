@@ -6,6 +6,7 @@ export interface IUpdateBookRequest {
   title?: string;
   genre?: BookGenre[];
   description?: string;
+  userIds?: string[];
   state?: ServiceBookState;
   backCoverImage?: string;
 }

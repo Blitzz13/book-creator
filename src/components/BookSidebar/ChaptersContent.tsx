@@ -4,20 +4,24 @@ import IBaseChapter from "../../interfaces/service/chapter/IBaseChapter";
 import { Link, useParams } from "react-router-dom";
 import { IoIosArrowUp } from "react-icons/io";
 import IChapterContentData from "../../interfaces/IChapterContentData";
+import Loader from "../Loader/Loader";
 
 export default function ChaptersContent({ data, ...delegated }: IChapterContentData) {
     const params = useParams();
 
     return (
         <Wrapper {...delegated}>
+            <Loader data={{isLoading: data.isLoading}}></Loader>
             {data.baseChapters.map((chapter: IBaseChapter, index) => (
-                <ChapterNameWrapper onClick={() =>{
-                    if (data.onChapterClick) {
-                        data.onChapterClick();
-                    }
-                }}
-                 to={`/${data.isInWritingMode ? "write" : "read"}/${params.bookId}?chapterId=${chapter._id}`} isSelected={data.currentChapterId === chapter._id ? true : false} key={`wrapper_${chapter._id}`}>
-                    <ChapterName key={chapter._id}>
+                <ChapterNameWrapper
+                    isSelected={data.currentChapterId === chapter._id ? true : false} key={`wrapper_${chapter._id}`}>
+                    <ChapterName onClick={() => {
+                        if (data.onChapterClick) {
+                            data.onChapterClick();
+                        }
+                    }}
+                        to={`/${data.isInWritingMode ? "write" : "read"}/${params.bookId}?chapterId=${chapter._id}`}
+                        key={chapter._id}>
                         {chapter.header}
                     </ChapterName>
                     {data.isInWritingMode && <ArrowsWrapper>
@@ -36,6 +40,7 @@ export default function ChaptersContent({ data, ...delegated }: IChapterContentD
                     </ArrowsWrapper>}
                 </ChapterNameWrapper>
             ))}
+            {data.baseChapters.length <= 0 && <span>No chapters found</span>}
         </Wrapper>
     );
 }
@@ -65,9 +70,7 @@ const Wrapper = styled.div`
   flex-flow: column;
 `
 
-const ChapterNameWrapper = styled(({ isSelected, ...rest }: ChapterWrapperProps & React.ComponentProps<typeof Link>) => (
-    <Link {...rest} />
-)) <ChapterWrapperProps>`
+const ChapterNameWrapper = styled.div<ChapterWrapperProps>`
   text-decoration: none;
   color: ${Colors.TEXT};
   display: flex;
@@ -79,7 +82,7 @@ const ChapterNameWrapper = styled(({ isSelected, ...rest }: ChapterWrapperProps 
   background-color: ${(props) => (props.isSelected ? Colors.ACCENT : "")};
 `;
 
-const ChapterName = styled.p`
+const ChapterName = styled(Link)`
   text-decoration: none;
   color: ${Colors.TEXT};
   margin-right: 6px;

@@ -6,6 +6,7 @@ export interface IServiceBook extends IMongoDocument {
   coverImage?: string;
   title: string;
   genre: BookGenre[];
+  inviteList: string[];
   description: string;
   state: ServiceBookState;
   author: string;

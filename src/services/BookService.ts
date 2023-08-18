@@ -17,7 +17,10 @@ export default class BookService extends BaseService implements IBookService {
   ): Promise<IServiceBook[]> {
     const response = await fetch(`${this._url}/search`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${this.user?.token}`
+      },
       body: JSON.stringify(request),
     });
 
@@ -87,7 +90,10 @@ export default class BookService extends BaseService implements IBookService {
   ): Promise<ISearchCountResult> {
     const response = await fetch(`${this._url}/search/count`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${this.user?.token}`
+      },
       body: JSON.stringify(request),
     });
 

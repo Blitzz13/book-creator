@@ -7,7 +7,6 @@ import Button from "../Button/Button";
 import IBookSidebarData from "../../interfaces/IBookSidebarData";
 import { useNavigate, useParams } from "react-router-dom";
 import Input from "../Input/Input";
-import Dropdown from "../Dropdown/Dropdown";
 import { useEffect, useState } from "react";
 import { ChapterState } from "../../enums/ChapterState";
 import { BookState } from "../../enums/BookState";
@@ -40,7 +39,6 @@ const titleId = generateId(7);
 
 export default function SidebarContent({ data, ...delegated }: IBookSidebarData) {
   const bookSettingsId = generateId(7);
-  const headerSettingsId = generateId(7);
   const chapterSettingsId = generateId(7);
   const params = useParams();
   const navigate = useNavigate();
@@ -65,7 +63,7 @@ export default function SidebarContent({ data, ...delegated }: IBookSidebarData)
     }
     
     setSelectedGenres(updatedGenres);
-    data.updateBook({ ...data.book, genres: updatedGenres })
+    data.setDisplayBook({...data.book, genres: updatedGenres})
   };
 
   useEffect(() => {
@@ -123,6 +121,7 @@ export default function SidebarContent({ data, ...delegated }: IBookSidebarData)
               ))}
             </SelecteGenreWrapper>
             <SettingsTextButton onClick={() => data.showEditDescription(true)}>Edit Description</SettingsTextButton>
+            <SettingsTextButton onClick={() => data.onInviteListClick(false)}>Invite to book</SettingsTextButton>
             <InlineWrapper>
               <SettingsTextButton onClick={() => data.setPreviewOpen(true)}>Preview</SettingsTextButton>
               <SettingsTextButton onClick={() => data.saveBook()}>Save</SettingsTextButton>
@@ -147,6 +146,7 @@ export default function SidebarContent({ data, ...delegated }: IBookSidebarData)
         <SectionsWrapper id="sections-wrapper">
           <ChaptersContent data={
             {
+              isLoading: data.areChaptersLoading || false,
               baseChapters: data.baseChapters,
               setOrderId: data.setOrderId,
               currentChapterId: data.currentChapter?.id,
@@ -208,11 +208,6 @@ const XIcon = styled(IoMdClose)`
 
 const NoWrapText = styled.p`
   white-space: nowrap;
-`
-
-const StateDropDown = styled(Dropdown)`
-  margin-left: 6px;
-  width: 100%;
 `
 
 const SettingsInput = styled(Input)`
