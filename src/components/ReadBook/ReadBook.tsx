@@ -362,8 +362,9 @@ export default function ReadBook(data: {
 
   async function load(): Promise<void> {
     if (params.bookId) {
+      setShowLoader(true);
       // const book = await data.bookService.fetchBook(params.bookId);
-      const chapters = await data.chapterService.fetchAllChapterTitles(params.bookId);
+      const loadedChapters = await data.chapterService.fetchAllChapterTitles(params.bookId);
 
       let currentChapterId = searchParams.get("chapterId");
 
@@ -374,24 +375,34 @@ export default function ReadBook(data: {
             userId: authContext.user.id
           });
 
-          currentChapterId = progress.currentChapterId;
-          setSearchParams(`?chapterId=${currentChapterId}`);
+          if (progress) {
+            currentChapterId = progress.currentChapterId;
+            setSearchParams(`?chapterId=${currentChapterId}`);
+          } else {
+            currentChapterId = setFirstChapter(loadedChapters);
+          }
         } else {
           //TODO: check what happen to book without chapters
-          currentChapterId = chapters.find(x => x.orderId === 1)?._id || ""
-          setSearchParams(`?chapterId=${currentChapterId}`);
+          currentChapterId = setFirstChapter(loadedChapters);
         }
       }
 
       const notes = await data.noteService.getAllBaseNotes(params.bookId);
       await loadChapter(currentChapterId);
       setCurrentChapterId(currentChapterId);
-      setChapters(chapters);
+      setChapters(loadedChapters);
       setNotes(notes);
       setLoaded(true);
       handleResize(true);
     }
 
+  }
+
+  function setFirstChapter(chapters: IBaseChapter[]): string {
+    const currentChapterId = chapters.find(x => x.orderId === 1)?._id || ""
+    setSearchParams(`?chapterId=${currentChapterId}`);
+
+    return currentChapterId;
   }
 
   const loadChapter = useCallback(async (chapterId: string) => {

@@ -11,6 +11,8 @@ import ISaveBookProgressRequest from "../interfaces/service/user/ISaveBookProgre
 import ISavedBookProgressResponse from "../interfaces/service/user/ISavedBookProgressResponse";
 import IStartedBookProgressResponse from "../interfaces/service/user/IStartedBookProgressResponse";
 import BaseService from "./BaseService";
+import ISearchUserResponse from "../interfaces/service/user/ISearchUserResponse";
+import ISearchUserRequest from "../interfaces/service/user/ISearchUserRequest";
 
 export default class UserService extends BaseService implements IUserService {
   private _url = "/api/users";
@@ -19,10 +21,10 @@ export default class UserService extends BaseService implements IUserService {
   public async saveBookProgress(request: ISaveBookProgressRequest): Promise<ISavedBookProgressResponse> {
     const response = await fetch(`${this._url}/bookProgress`, {
       method: "POST",
-      headers: { 
+      headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${this.user?.token}`
-       },
+      },
       body: JSON.stringify(request),
     });
 
@@ -38,6 +40,10 @@ export default class UserService extends BaseService implements IUserService {
   public async getBookProgress(request: { bookId: string, userId: string }): Promise<ISavedBookProgressResponse> {
     const response = await fetch(`${this._url}/bookProgress/${request.userId}/${request.bookId}`, {
       method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${this.user?.token}`
+      },
     });
 
     const json = await response.json();
@@ -67,10 +73,10 @@ export default class UserService extends BaseService implements IUserService {
     const stringified = JSON.stringify(request);
     const response = await fetch(`${this._url}/details/${request.userId}`, {
       method: "POST",
-      headers: { 
+      headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${this.user?.token}`
-     },
+      },
       body: stringified,
     });
 
@@ -102,6 +108,43 @@ export default class UserService extends BaseService implements IUserService {
   public async getDetails(userId: string): Promise<IDetailsRequest> {
     const response = await fetch(`${this._url}/details/${userId}`, {
       method: "GET",
+    });
+
+    const json = await response.json();
+
+    if (response.ok) {
+      return json;
+    }
+
+    throw new Error(`Getting details for user failed with ${response.statusText}`);
+  }
+
+  public async searchUsers(request: ISearchUserRequest): Promise<ISearchUserResponse[]> {
+    const response = await fetch(`${this._url}/search`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${this.user?.token}`
+      },
+      body: JSON.stringify(request),
+    });
+
+    const json = await response.json();
+
+    if (response.ok) {
+      return json;
+    }
+
+    throw new Error(`Getting details for user failed with ${response.statusText}`);
+  }
+
+  public async searchUserIds(request: {userIds: string[]}): Promise<ISearchUserResponse[]>{
+    const response = await fetch(`${this._url}/search-by-ids`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(request),
     });
 
     const json = await response.json();
@@ -149,7 +192,7 @@ export default class UserService extends BaseService implements IUserService {
         id: this.user.id,
         email: this.user.email,
       }
-      
+
       const updatedUserData = JSON.stringify(updatedUser);
       localStorage.setItem("user", updatedUserData);
 

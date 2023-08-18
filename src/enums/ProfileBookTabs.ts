@@ -3,4 +3,5 @@ export enum ProfileBookTabs{
     AuthoredBooks = "AUTHORED_BOOKS",
     CurrentlyReading = "CURRENTLY_READING",
     FinishedReading = "FINISHED_READING",
+    EarlyAccess = "EARLY_ACCESS",
 }

@@ -37,6 +37,7 @@ import Header from "../Header/Header";
 import IOverlayStyleData from "../../interfaces/modal/IOverlayStyleData";
 import Loader from "../Loader/Loader";
 import { useAuthContext } from "../../hooks/useAuthContext";
+import EmailInviteList from "../EmailInviteList/EmailInviteList";
 
 function resizeContentTextarea() {
   const contentTextArea = $("#writing-area");
@@ -68,6 +69,8 @@ export default function WriteBook(data: IWriteBookData) {
   const [areSettingsOpen, setAreSettingsOpen] = useState(true);
   const [isEditDescriptionOpen, setisEditDescriptionOpen] = useState(false);
   const [isEditDescriptionExiting, setIsEditDescriptionExiting] = useState(false);
+  const [isInviteListOpen, setisInviteOpen] = useState(false);
+  const [isInviteListExiting, setIsInviteExiting] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isPreviewExiting, setIsPreviewExiting] = useState(false);
   const [isAnimatedToggle, setAnimatedToggle] = useState(false);
@@ -205,6 +208,7 @@ export default function WriteBook(data: IWriteBookData) {
         const chapterId = searchParams.get("chapterId");
         if (chapterId) {
           const chapter = await data.chapterService.updateChapter(chapterToUpdate(currentChapter));
+          refreshChapterList();
           setChapterTitle(chapter.header);
           setShowLoader(false);
         } else {
@@ -228,8 +232,8 @@ export default function WriteBook(data: IWriteBookData) {
   async function setChapterOrder(id: string, chapterId: string) {
     if (params.bookId) {
       const currentChapterId = searchParams.get("chapterId");
+      setShowLoader(true);
       if (currentChapterId) {
-        setShowLoader(true);
         const chapter = await data.chapterService.updateChaptersOrder({ bookId: params.bookId, chapterId: chapterId, orderId: parseInt(id) });
         await refreshChapterList();
 
@@ -237,8 +241,11 @@ export default function WriteBook(data: IWriteBookData) {
           setCurrentChapter({ ...currentChapter, orderId: chapter.orderId });
         }
 
-        setShowLoader(false);
+      } else {
+        await data.chapterService.updateChaptersOrder({ bookId: params.bookId, chapterId: chapterId, orderId: parseInt(id) });
+        await refreshChapterList();
       }
+      setShowLoader(false);
     }
   }
 
@@ -305,6 +312,23 @@ export default function WriteBook(data: IWriteBookData) {
   }, [data.chapterService, navigate, params.bookId, searchParams]);
 
   useEffect(() => {
+    async function getChapter(): Promise<void> {
+      const chapterId = searchParams.get("chapterId");
+      if (chapterId) {
+        setShowLoader(true);
+        const chapter: IServiceChapter = await data.chapterService.fetchChapter(chapterId);
+        const newChapter = ServiceToChapter(chapter);
+        setCurrentChapter(newChapter);
+        setEditorContent(undefined);
+        setEditorContent(chapter.content);
+        setShowLoader(false);
+      }
+    }
+
+    getChapter();
+  }, [searchParams])
+
+  useEffect(() => {
     resizeContentTextarea();
 
     const fetchData = async () => {
@@ -365,6 +389,8 @@ export default function WriteBook(data: IWriteBookData) {
           updateCurrentChapter: setCurrentChapter,
           deleteConfirmation: showDeleteConfirmation,
           showEditDescription: onEditDescriptionClick,
+          onInviteListClick: () => setisInviteOpen(true),
+          setDisplayBook: setBook,
           updateBook: setBook,
           setPreviewOpen: setIsPreviewOpen,
           saveBook: updateBook,
@@ -389,6 +415,7 @@ export default function WriteBook(data: IWriteBookData) {
             title: book.title,
             isFromModal: true,
             areSettingsOpen: areSettingsOpen,
+            onInviteListClick: () => { setisInviteOpen(true) },
             setAreSettingsOpen: setAreSettingsOpen,
             saveChapter: onCreateChapterClick,
             setOrderId: setChapterOrder,
@@ -399,6 +426,8 @@ export default function WriteBook(data: IWriteBookData) {
             onChapterClick: () => setIsSettingsModalExiting(true),
             updateBook: setBook,
             saveBook: updateBook,
+            setDisplayBook: setBook,
+            areChaptersLoading: showLoader,
             baseChapters: baseChapters,
             currentChapter: currentChapter,
             book: book,
@@ -458,6 +487,16 @@ export default function WriteBook(data: IWriteBookData) {
           },
         }}>
       </EditDescriptionModal>
+      <EmailInviteList data={{
+        modalTitle: "Invite to book",
+        contentData: { width: "400px" },
+        ContentElement: CommonContentModalStyle,
+        isExiting: isInviteListExiting,
+        isOpen: isInviteListOpen,
+        setExiting: setIsInviteExiting,
+        setOpen: setisInviteOpen,
+      }}>
+      </EmailInviteList>
       <PreviewModal data={{
         isOpen: isPreviewOpen,
         isExiting: isPreviewExiting,
