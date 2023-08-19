@@ -5,7 +5,9 @@ export default interface IDisplayBook {
   id: string;
   title: string;
   frontConver?: string;
+  frontConverPercent?: number;
   backCover?: string;
+  backCoverPercent?: number;
   state: BookState;
   description: string;
   genres: BookGenre[];

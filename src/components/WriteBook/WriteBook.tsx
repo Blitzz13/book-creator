@@ -326,6 +326,7 @@ export default function WriteBook(data: IWriteBookData) {
     }
 
     getChapter();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
 
   useEffect(() => {

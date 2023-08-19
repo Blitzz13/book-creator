@@ -14,6 +14,7 @@ import ChaptersContent from "./ChaptersContent";
 import NativeDropdown from "../NativeDropdown/NativeDropdown";
 import { BookGenre } from "../../enums/Genre";
 import { IoMdClose } from "react-icons/io";
+import ImageUploader from "../ImageUploader/ImageUploader";
 const buttonAreaId = generateId(7);
 const titleId = generateId(7);
 
@@ -44,6 +45,7 @@ export default function SidebarContent({ data, ...delegated }: IBookSidebarData)
   const navigate = useNavigate();
 
   const [isChapterStateOpen, setIsChapterStateOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [selectedGenres, setSelectedGenres] = useState<BookGenre[]>([]);
 
   function onSelectChapterState(state: string): void {
@@ -61,9 +63,9 @@ export default function SidebarContent({ data, ...delegated }: IBookSidebarData)
     } else {
       updatedGenres.push(selectedValue as BookGenre);
     }
-    
+
     setSelectedGenres(updatedGenres);
-    data.setDisplayBook({...data.book, genres: updatedGenres})
+    data.setDisplayBook({ ...data.book, genres: updatedGenres })
   };
 
   useEffect(() => {
@@ -94,17 +96,35 @@ export default function SidebarContent({ data, ...delegated }: IBookSidebarData)
               <NoWrapText>
                 Front Cover:
               </NoWrapText>
-              <SettingsInput onValueChange={(text: string) => {
-                data.updateBook({ ...data.book, frontConver: text })
-              }} value={data.book.frontConver || "URL"} />
+              <ImageUploader data={{
+                setImageUrl: (url: string) => {
+                  setIsUploading(false);
+                  data.updateBook({ ...data.book, frontConver: url });
+                },
+                setPercentage: (percent: number) => {
+                  if (percent < 100) {
+                    setIsUploading(true);
+                  }
+                  data.updateBook({ ...data.book, frontConverPercent: percent })
+                },
+              }} />
             </SettingsText>
             <SettingsText>
               <NoWrapText>
                 Back Cover:
               </NoWrapText>
-              <SettingsInput onValueChange={(text: string) => {
-                data.updateBook({ ...data.book, backCover: text })
-              }} value={data.book.backCover || "URL"} />
+              <ImageUploader data={{
+                setImageUrl: (url: string) => {
+                  setIsUploading(false);
+                  data.updateBook({ ...data.book, backCover: url });
+                },
+                setPercentage: (percent: number) => {
+                  if (percent < 100) {
+                    setIsUploading(true);
+                  }
+                  data.updateBook({ ...data.book, backCoverPercent: percent })
+                },
+              }} />
             </SettingsText>
             <SettingsText>
               State: <EnumDropdown disableFirstOption={true} initialValue={data.book.state} onValueChange={onSelectBookState} enumType={BookState} data={{ items: Object.values(BookState) }} />
@@ -124,15 +144,26 @@ export default function SidebarContent({ data, ...delegated }: IBookSidebarData)
             <SettingsTextButton onClick={() => data.onInviteListClick(false)}>Invite to book</SettingsTextButton>
             <InlineWrapper>
               <SettingsTextButton onClick={() => data.setPreviewOpen(true)}>Preview</SettingsTextButton>
-              <SettingsTextButton onClick={() => data.saveBook()}>Save</SettingsTextButton>
+              <SettingsTextButton onClick={() => {
+                if (data.book.frontConverPercent && data.book.frontConverPercent < 100) {
+                  return;
+                }
+
+                if (data.book.backCoverPercent && data.book.backCoverPercent < 100) {
+                  return;
+                }
+
+                data.saveBook();
+              }}>Save</SettingsTextButton>
               <SettingsTextButton onClick={() => data.deleteConfirmation(false)}>Delete</SettingsTextButton>
             </InlineWrapper>
+           {isUploading && <Warning>Images are still uploading, please wait.</Warning>}
           </SettingsWrapper>
           <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle>
           <SettingsWrapper id={chapterSettingsId}>
             <SettingsText>Chapter name: {data.currentChapter?.header}</SettingsText>
             <SettingsText onClick={() => { setIsChapterStateOpen(!isChapterStateOpen) }}>
-            State: <EnumDropdown disableFirstOption={true} initialValue={data.currentChapter?.state} onValueChange={onSelectChapterState} enumType={ChapterState} data={{ items: Object.values(ChapterState) }} />
+              State: <EnumDropdown disableFirstOption={true} initialValue={data.currentChapter?.state} onValueChange={onSelectChapterState} enumType={ChapterState} data={{ items: Object.values(ChapterState) }} />
             </SettingsText>
             <SettingsText>Order:
               <SettingsInput onValueChange={(order: number) => { data.updateCurrentChapter({ ...data.currentChapter, orderId: order }) }}
@@ -313,3 +344,7 @@ const SettingsWrapper = styled.div`
   flex-direction: column;
   gap: 6px;
 `;
+
+const Warning = styled.span`
+  color: ${Colors.WARNING};
+`
