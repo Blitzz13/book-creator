@@ -37,9 +37,13 @@ export default function Editor({ data, onLoad, ...delegated }: IEditorData) {
     function setContent(): void {
       const quill = quillRef.current?.getEditor();
       if (quill && data.setData) {
-        const content = JSON.parse(data.setData) as unknown as DeltaStatic;
-        quill.setText("");
-        quill.setContents(content);
+        try {
+          const content = JSON.parse(data.setData) as unknown as DeltaStatic;
+          quill.setText("");
+          quill.setContents(content);
+        } catch (error) {
+          quill.setText(data.setData);
+        }
       }
     }
     setContent();

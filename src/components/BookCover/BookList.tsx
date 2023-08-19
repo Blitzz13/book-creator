@@ -12,6 +12,10 @@ import { IAverageRatingResponse } from "../../interfaces/service/rating/IAverage
 import ConfirmationModal from "../ConfirmationModal/ConfirmationModal";
 import { CommonContentModalStyle } from "../../commonStyledStyles/CommonContentModalStyle";
 import { useBookService } from "../../hooks/useBookServiceContext";
+import NoteCreationModal from "../NoteCreationModal/NoteCreationModal";
+import { NoteModalMode } from "../../enums/NoteModalMode";
+import { NoBackgroundContentModalStyle } from "../../commonStyledStyles/NoBackgroundContentModalStyle";
+import IDescriptionBook from "../../interfaces/IDescriptionBook";
 export default function BookList({ data, ...delegated }: IBookListData) {
     const navigate = useNavigate();
     const authContext = useAuthContext();
@@ -21,12 +25,21 @@ export default function BookList({ data, ...delegated }: IBookListData) {
     const [averageRatings, setAverageRatings] = useState<IAverageRatingResponse[]>([]);
     const [isConfirmModalOpen, setisConfirmModalOpen] = useState(false);
     const [isConfirmModalExiting, setIsConfirmModalExiting] = useState(false);
+    const [descriptiomnModalOpen, setDescriptionModalOpen] = useState(false);
+    const [descriptiomnModalExiting, setDescriptionModalExiting] = useState(false);
     const [deleteBookTitle, setDeleteBookTitle] = useState("");
     const [deleteBookId, setdeleteBookId] = useState("");
+    const [currentBook, setCurrentBook] = useState<IDescriptionBook>({
+        description: "",
+        title: "",
+        displayName: "",
+        userId: "",
+    });
 
     useEffect(() => {
         getCurrentUserRatedBooks();
         getAverageRatedBooks();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [authContext.user, data.books, ratingContext])
 
     async function getCurrentUserRatedBooks(): Promise<void> {
@@ -87,8 +100,15 @@ export default function BookList({ data, ...delegated }: IBookListData) {
                             setdeleteBookId(book._id);
                         },
                         onBookClick: () => {
+                            setCurrentBook({
+                                description: book.description,
+                                displayName: book.author,
+                                title: book.title,
+                                userId: book.authorId,
+                            });
+                            setDescriptionModalOpen(true);
                             if (data.onClick) {
-                                data.onClick(book._id);
+                                // data.onClick(book._id);
                             }
                         },
                         onReadClick: () => {
@@ -109,6 +129,34 @@ export default function BookList({ data, ...delegated }: IBookListData) {
                         mediaMaxWidth: data.mediaMaxWidth,
                     }} />
             ))}
+            <NoteCreationModal data={{
+                isOpen: descriptiomnModalOpen,
+                isExiting: descriptiomnModalExiting,
+                ContentElement: NoBackgroundContentModalStyle,
+                contentData: {
+                    width: "400px",
+                    isExiting: descriptiomnModalExiting
+                },
+                setOpen: setDescriptionModalOpen,
+                setExiting: setDescriptionModalExiting,
+            }}
+                noteData={{
+                    modalTitle: "Description",
+                    initialDescription: currentBook.description || "No description has been written for this book",
+                    noteTitle: currentBook.title,
+                    currentContent: currentBook.description || "No description for this book",
+                    mode: NoteModalMode.Reading,
+                    displayName: currentBook.displayName,
+                    userId: currentBook.userId,
+                    onNoteTitleChange: (text: string) => {
+                        // setNoteModalData({ ...noteModalData, header: text });
+                    },
+                    onDescriptionChange: (text: string) => {
+                        // setNoteModalData({ ...noteModalData, currentContent: text });
+                    },
+                    onSaveClick: () => {},
+                }}>
+            </NoteCreationModal>
             <ConfirmationModal data={{
                 isOpen: isConfirmModalOpen,
                 isExiting: isConfirmModalExiting,

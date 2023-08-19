@@ -15,6 +15,7 @@ import IOverlayStyleData from '../../interfaces/modal/IOverlayStyleData';
 import { useEffect, useState } from 'react';
 import INoteModalData from '../../interfaces/modal/INoteModalData';
 import { NoteModalMode } from '../../enums/NoteModalMode';
+import { Link } from 'react-router-dom';
 const modalId = generateId(7);
 const imageId = generateId(7);
 const wrapperId = generateId(7);
@@ -87,11 +88,12 @@ export default function EditDescriptionModal({ data, noteData, ...delegated }: I
             }}>
             <Wrapper id={wrapperId}>
                 <Note onLoad={() => updateWrapperHeight()} src={NotePagePath} id={imageId} />
-                <HeaderTextarea value={noteData.noteTitle} onChange={(event: string | any) => {
-                    noteData.onNoteTitleChange(event.target.value);
-                }}
-                    readOnly={noteData.mode === NoteModalMode.Reading ? true : false}
-                    mode={noteData.mode} />
+                {noteData.mode !== NoteModalMode.Reading ?
+                    <HeaderTextarea value={noteData.noteTitle} onChange={(event: string | any) => {
+                        noteData.onNoteTitleChange(event.target.value);
+                    }}
+                        mode={noteData.mode} /> :
+                    <Header>{noteData.noteTitle}</Header>}
                 <TextArea id={textAreaId} data={{
                     onValueChange: noteData.onDescriptionChange,
                     setData: noteData.initialDescription,
@@ -121,7 +123,11 @@ export default function EditDescriptionModal({ data, noteData, ...delegated }: I
                             radius: 20,
                             textSize: 22,
                             type: "submit",
-                            onClick: () => noteData.onSaveClick(noteData.mode),
+                            onClick: () => {
+                                if (noteData.onSaveClick) {
+                                    noteData.onSaveClick(noteData.mode)
+                                }
+                            },
                         }}>Save</Button>
                         <Button data={{
                             color: Colors.WARNING,
@@ -134,8 +140,10 @@ export default function EditDescriptionModal({ data, noteData, ...delegated }: I
                         }}>Close</Button>
                     </ButtonWrapper> : null
                 }
-
             </Wrapper>
+            {(noteData.userId && noteData.displayName) && <Credits>
+                <CreditsText>Written by <CreditsLink to={`profile/${noteData.userId}`}>{noteData.displayName}</CreditsLink></CreditsText>
+            </Credits>}
         </EditDesc>
     );
 }
@@ -157,7 +165,7 @@ const Wrapper = styled.div`
   justify-content: left;
   flex-direction: column;
   gap: 10px;
-  height: 602px;
+  height: 590px;
   width: 413px;
   isolation: isolate;
   /* @media only screen and (max-height: 580px) {
@@ -189,6 +197,37 @@ const TextArea = styled(Editor)`
     margin-right: 60px;
     width: 80svw;
   }
+`
+
+const Header = styled.h2`
+  text-align: center;
+  z-index: 1;
+  width: 337px;
+  margin-top: 20px;
+  margin-right: auto;
+  margin-left: 10px;
+  @media only screen and (max-width: 413px) {
+  margin-right: 60px;
+  width: 80svw;
+}`
+
+const Credits = styled.div`
+  z-index: 1;
+  /* background-color: ${Colors.ACCENT};
+  width: fit-content;
+  border-radius: 22px;
+  padding: 6px;
+  padding-left: 10px;
+  padding-right: 10px; */
+`;
+
+const CreditsText = styled.span`
+color: ${Colors.BUTTON_TEXT};
+`;
+
+const CreditsLink = styled(Link)`
+color: ${Colors.ACCENT};
+font-weight: bold;
 `
 
 const HeaderTextarea = styled.textarea`
