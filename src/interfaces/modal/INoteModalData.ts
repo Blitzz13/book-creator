@@ -12,5 +12,7 @@ export default interface INoteModalData<ContentStyle, OverlayStyle>
     onDescriptionChange: Function;
     onNoteTitleChange: Function;
     mode: NoteModalMode;
+    displayName?: string;
+    userId?: string;
   };
 }
