@@ -45,6 +45,7 @@ export default function ReadBook(data: {
   noteService: INoteService,
   userService: IUserService
 }) {
+  const [chapterTitle, setChapterTitle] = useState("");
   const [scrollPosX, setScrollPosX] = useState(0);
   const [imageScale, setScale] = useState(0);
   const [areChaptersSelected, setAreChaptersSelected] = useState(true);
@@ -406,8 +407,10 @@ export default function ReadBook(data: {
   }
 
   const loadChapter = useCallback(async (chapterId: string) => {
+    setScrollPosX(0);
     const chapter = await data.chapterService.fetchChapter(chapterId);
     setText(chapter.content);
+    setChapterTitle(chapter.header);
 
     return chapter;
   }, [data.chapterService]);
@@ -453,7 +456,8 @@ export default function ReadBook(data: {
     if (currentChapterId) {
       loadChapter(currentChapterId);
     }
-  }, [currentChapterId, loadChapter])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentChapterId])
 
   useEffect(() => {
     // updateIfTextTooShort();
@@ -621,6 +625,7 @@ export default function ReadBook(data: {
         } else {
           saveChapterProgress("");
         }
+        setShowLoader(false);
       } else {
         saveChapterProgress("");
         setShowLoader(false);
@@ -660,9 +665,10 @@ export default function ReadBook(data: {
     <Wrapper>
       <Loader data={{ isLoading: showLoader }} />
       <IconsWrapepr id="read-icons">
-        <BookIcon onClick={() => showModal(true)} />
-        <NotesIcon onClick={() => showModal(false)} />
-        <AddNoteIcon onClick={() => setNoteModalOpen(true)} />
+        <BookIcon size={28} onClick={() => showModal(true)} />
+        <NotesIcon size={28} onClick={() => showModal(false)} />
+        <ChapterTitle> {chapterTitle}</ChapterTitle>
+        <AddNoteIcon size={28} onClick={() => setNoteModalOpen(true)} />
       </IconsWrapepr>
       <ImageWrapper>
         {(windowWidth > 600) && <Image id="book-image" src={bookPath} alt="SVG Image" onLoad={() => handleResize()} />}
@@ -789,19 +795,19 @@ export default function ReadBook(data: {
 }
 
 const NotesIcon = styled(GiNotebook)`
-  font-size: 160%;
+min-width: 28px;
   cursor: pointer;
 `;
 
 const AddNoteIcon = styled(MdNoteAdd)`
-  font-size: 178%;
+min-width: 28px;
   color: ${Colors.ACCENT};
   margin-left: auto;
   cursor: pointer;
 `;
 
 const BookIcon = styled(BsFillBookFill)`
-  font-size: 170%;
+min-width: 28px;
   cursor: pointer;
 `;
 
@@ -841,6 +847,7 @@ const Wrapper = styled.div`
 const IconsWrapepr = styled.div`
   display: none;
   justify-content: left;
+  align-items: center;
   gap: 14px;
   margin-bottom: 10px;
 
@@ -893,6 +900,10 @@ const TextOverlay = styled.div`
   position: absolute;
   text-align: justify;
 `;
+
+const ChapterTitle = styled.span`
+  
+`
 
 const ReadArea = styled(Editor)`
   padding-left: ${initialReadAreaPaddingLeft}px;

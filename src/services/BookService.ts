@@ -38,7 +38,10 @@ export default class BookService extends BaseService implements IBookService {
   ): Promise<void> {
     const response = await fetch(`${this._url}/favourites`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${this.user?.token}`
+      },
       body: JSON.stringify(request),
     });
 
