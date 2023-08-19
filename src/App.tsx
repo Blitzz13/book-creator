@@ -18,6 +18,7 @@ function App() {
   const services = new Services();
   const authContext = useAuthContext();
   const navigate = useNavigate();
+
   useEffect(() => {
     function checkTokenExpiration() {
       if (authContext.user && authContext.user.token) {

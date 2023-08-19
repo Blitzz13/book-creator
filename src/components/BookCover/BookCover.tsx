@@ -17,7 +17,7 @@ export default function BookCover({ data, ...delegated }: IBookCover) {
   const [, setLoaded] = React.useState(false);
   const [, setShowDetails] = React.useState(false);
   const [isFavourited, setFavourited] = useState(false);
-  const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth < (data.mediaMaxWidth ?? defaultMediaMaxWidth));
+  const [, setIsSmallScreen] = useState(window.innerWidth < (data.mediaMaxWidth ?? defaultMediaMaxWidth));
   const authContext = useAuthContext();
   useEffect(() => {
     setFavourited(data.isFavourited)
@@ -35,6 +35,7 @@ export default function BookCover({ data, ...delegated }: IBookCover) {
     return () => {
       window.removeEventListener('resize', handleResize);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function onLoad(): void {
@@ -134,10 +135,6 @@ const FavoriteFill = styled(RiBookmark3Fill)`
 
 const DeleteIcon = styled(RiDeleteBin5Fill)`
   cursor: pointer;
-`;
-
-const DummyIcon = styled(RiBookmark3Fill)`
-  opacity: 0;
 `;
 
 const ButtonsWrapper = styled.div`

@@ -7,7 +7,9 @@ export default function ProgressBar(data: IProgressBar) {
     <Wrapper>
       <BackgroundProgress width={data.width} height={data.height}></BackgroundProgress>
       <ForegroundProgress width={data.width} height={data.height} percentage={data.percentage}></ForegroundProgress>
-      <Percentage>{data.percentage}</Percentage>
+      {(data.dontShowText === false || data.dontShowText === undefined) &&
+        <Percentage>{data.percentage}</Percentage>
+      }
     </Wrapper>
   );
 }

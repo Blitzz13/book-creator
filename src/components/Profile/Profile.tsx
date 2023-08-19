@@ -27,6 +27,7 @@ import { UserRole } from "../../enums/UserRole";
 import NativeDropdown from "../NativeDropdown/NativeDropdown";
 import { ServiceBookState } from "../../enums/ServiceBookState";
 import Loader from "../Loader/Loader";
+import ImageUploader from "../ImageUploader/ImageUploader";
 
 const textAreaId = generateId(7);
 
@@ -40,6 +41,7 @@ export default function Profile(data: { bookService: IBookService, userService: 
   const navigate = useNavigate();
   const authContext = useAuthContext();
   const [isFavourteOpen, setIsFavouriteOpen] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [isConfirmationExiting, setIsConfirmationExiting] = useState(false);
   const [showLoader, setShowLoader] = useState(false);
@@ -147,14 +149,13 @@ export default function Profile(data: { bookService: IBookService, userService: 
       if (params.userId) {
         const details = await userService.getDetails(params.userId, authContext.user?.id ?? "");
         const result = authContext.user?.id ? await bookService.getFavouriteBooksIds(profileModel.id) : { favouriteBookIds: [] } as IFavouriteBookIdsResult;
-  
+
         if (details.settings.hideFavouriteBooks && authContext.user?.id !== profileModel.id) {
           setNoBooksMessage("The user has hidden their favourite books");
         } else {
           setNoBooksMessage(undefined);
         }
-  
-        // console.warn(`DETAILS: ${JSON.stringify(details)}`)
+
         setProfileModel({
           ...profileModel,
           id: params.userId,
@@ -167,7 +168,7 @@ export default function Profile(data: { bookService: IBookService, userService: 
           settings: details.settings,
           favouriteBookIds: result.favouriteBookIds,
         });
-      } 
+      }
     } catch (error) {
       navigate("*");
       console.error(error);
@@ -218,7 +219,7 @@ export default function Profile(data: { bookService: IBookService, userService: 
     setShowLoader(true);
     const displayName = profileModel.intialDisplayName !== profileModel.displayName ? profileModel.displayName : undefined;
     const imageUrl = profileModel.profileImageUrl !== "" ? profileModel.profileImageUrl : undefined;
-    
+
     await userService.updateUser({
       imageUrl: imageUrl,
       userId: profileModel.id,
@@ -233,12 +234,25 @@ export default function Profile(data: { bookService: IBookService, userService: 
 
   return (
     <Wrapper>
-      <Loader data={{isLoading: showLoader}}></Loader>
+      <Loader data={{ isLoading: showLoader }}></Loader>
       <DetailsWrapper>
         <ProfileImage src={profileModel.profileImageUrl || profilePlaceholder} />
-        {(authContext.user?.id === profileModel.id || authContext.user?.role === UserRole.Admin) && <Input placeholder="Image Url" value={profileModel.profileImageUrl} onValueChange={(value: string) => {
-          setProfileModel({ ...profileModel, profileImageUrl: value || "" });
-        }} />}
+        {(authContext.user?.id === profileModel.id || authContext.user?.role === UserRole.Admin) &&
+          <>
+          <TextLabel>Change Profile Image</TextLabel>
+            <Uploader data={{
+              setImageUrl: (url: string) => {
+                setIsUploading(false);
+                setProfileModel({ ...profileModel, profileImageUrl: url });
+              },
+              setPercentage: (percent: number) => {
+                if (percent < 100) {
+                  setIsUploading(true);
+                }
+              },
+            }} />
+          </>
+        }
         {/* {needsSlider && <SliderWrapper>
                     <TextLabel>Top:</TextLabel>
                     <Slider type="range" min="1" max="100" onChange={handleSliderChange} value={top} id="myRange" />
@@ -296,6 +310,7 @@ export default function Profile(data: { bookService: IBookService, userService: 
             theme: "bubble",
             readonly: true,
           }}></TextArea>}
+          {isUploading && <Warning>Image is still uploading, please wait.</Warning>}
         {(authContext.user?.id === profileModel.id || authContext.user?.role === UserRole.Admin) &&
           <>
             <ButtonsWrapper>
@@ -572,6 +587,17 @@ const EnumDropdown = styled(NativeDropdown)`
     text-align: center;
   }
 `
+
+const Uploader = styled(ImageUploader)`
+  padding-left: 8px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+`;
+
+const Warning = styled.span`
+  color: ${Colors.WARNING}
+`
+
 // const Checkbox = styled.input`
 //   text-align: left;
 //   width: 25px;
