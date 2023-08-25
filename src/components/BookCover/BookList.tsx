@@ -49,7 +49,8 @@ export default function BookList({ data, ...delegated }: IBookListData) {
         }
     }
     async function getAverageRatedBooks(): Promise<void> {
-        const ratings = await ratingContext.getAverageRatingForMultipleBooks(data.books.map(x => x._id));
+        const bookIds = data.books.map(x => x._id);
+        const ratings = await ratingContext.getAverageRatingForMultipleBooks(bookIds);
         setAverageRatings(ratings);
     }
 
@@ -83,6 +84,7 @@ export default function BookList({ data, ...delegated }: IBookListData) {
             {data.books.map((book: IServiceBook) => (
                 <BookCover key={book._id}
                     data={{
+                        bookId: book._id,
                         averageRating: averageRatings.find(x => x.bookId === book._id)?.averageRating || 0,
                         numberOfRatings: averageRatings.find(x => x.bookId === book._id)?.numberOfRatings || 0,
                         alreadyRated: currentUserRatedBooks.findIndex(x => x.bookId === book._id) > -1,
@@ -127,6 +129,7 @@ export default function BookList({ data, ...delegated }: IBookListData) {
                         backgroundColor: Colors.FOREGROUND,
                         scaleBook: data.scaleBook,
                         mediaMaxWidth: data.mediaMaxWidth,
+                        starsInteractive: data.starsInteractive,
                     }} />
             ))}
             <NoteCreationModal data={{

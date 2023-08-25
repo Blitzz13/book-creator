@@ -1,7 +1,9 @@
 import { IAverageRatingResponse } from "../interfaces/service/rating/IAverageRatingResponse";
 import ICreateRatingRequest from "../interfaces/service/rating/ICreateRatingRequest";
+import { IRating } from "../interfaces/service/rating/IRating";
 import { IRatingObjResponse } from "../interfaces/service/rating/IRatingObjResponse";
 import IRatingService from "../interfaces/service/rating/IRatingService";
+import { IRatingsRequest } from "../interfaces/service/rating/IRatingsRequest";
 import IUpdateRatingRequest from "../interfaces/service/rating/IUpdateRatingRequest";
 import BaseService from "./BaseService";
 
@@ -83,6 +85,24 @@ export default class RatingService extends BaseService implements IRatingService
     public async getAverageRatingForBook(bookId: string): Promise<IAverageRatingResponse> {
         const response = await fetch(`${this._url}/average/${bookId}`, {
             method: "GET",
+        });
+
+        const json = await response.json()
+
+        if (response.ok) {
+            return json;
+        }
+
+        throw new Error(`getting average ratings for a book failed with ${response.statusText}`);
+    }
+
+    public async getRatingsOfBook(request: IRatingsRequest): Promise<IRating[]> {
+        const response = await fetch(`${this._url}/${request.bookId}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(request)
         });
 
         const json = await response.json()
