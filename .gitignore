@@ -3,6 +3,7 @@
 # dependencies
 /node_modules
 /.pnp
+firebaseConfig.js
 .pnp.js
 
 # testing

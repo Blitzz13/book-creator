@@ -13,6 +13,7 @@ import Profile from './components/Profile/Profile';
 import { useAuthContext } from './hooks/useAuthContext';
 import { useEffect } from 'react';
 import { isTokenCloseToExpired, isTokenExpired } from './helpers/helpFunctions';
+import Ratings from './components/Ratings/Ratings';
 
 function App() {
   const services = new Services();
@@ -62,6 +63,7 @@ function App() {
         <Route path="/read/:bookId" element={<ReadBook chapterService={services.chapterService} bookService={services.bookService} noteService={services.noteService} userService={services.userService} />} />
         <Route path="/search" element={<Search bookService={services.bookService} />} />
         <Route path="/profile/:userId" element={<Profile userService={services.userService} bookService={services.bookService} />} />
+        <Route path="/reviews/:bookId" element={<Ratings />} />
         <Route path="*" element={<PageNotFound />} />
       </Routes>
     </div>

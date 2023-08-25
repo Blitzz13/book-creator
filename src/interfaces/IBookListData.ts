@@ -12,6 +12,7 @@ export default interface IBookListData extends IHtmlElement {
     onClick?: Function;
     verticalScroll?: boolean;
     scaleBook?: boolean;
+    starsInteractive?: boolean;
     mediaMaxWidth?: number;
     align?: string;
   };

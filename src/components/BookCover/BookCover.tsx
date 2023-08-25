@@ -114,6 +114,8 @@ export default function BookCover({ data, ...delegated }: IBookCover) {
           alreadyRated: data.alreadyRated,
           averageRating: data.averageRating,
           currentUserRating: data.currentUserRating,
+          bookId: data.bookId,
+          interactive: data.starsInteractive,
           onStarClick: (rating: number) => {
             if (data.onStarClick) {
               data.onStarClick(rating);

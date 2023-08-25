@@ -1,5 +1,6 @@
 export interface IBookCover {
   data: {
+    bookId: string;
     onBookClick: Function;
     onReadClick: Function;
     title: string;
@@ -9,6 +10,7 @@ export interface IBookCover {
     averageRating: number;
     numberOfRatings: number;
     alreadyRated: boolean;
+    starsInteractive?: boolean;
     currentUserRating?: number;
     onStarClick?: Function;
     onDeleteClick?: Function;
