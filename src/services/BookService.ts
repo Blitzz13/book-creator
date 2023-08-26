@@ -8,6 +8,7 @@ import ISearchCountResult from "../interfaces/service/book/ISearchCountResult";
 import { IServiceBook } from "../interfaces/service/book/IServiceBook";
 import { IUpdateBookRequest } from "../interfaces/service/book/IUpdateBookRequest";
 import BaseService from "./BaseService";
+import { Buffer } from "buffer";
 // import { injectable } from "inversify";
 
 // @injectable()
@@ -65,6 +66,24 @@ export default class BookService extends BaseService implements IBookService {
 
     if (response.ok) {
       return json;
+    }
+
+    throw new Error(
+      `Retrieving favourite books failed with ${response.statusText}`
+    );
+  }
+
+  public async download(bookId: string): Promise<Buffer> {
+    const response = await fetch(`${this._url}/download/${bookId}`, {
+      method: "GET",
+    });
+
+    // const json = await response.json();
+
+    if (response.ok) {
+      const arrBuff = await response.arrayBuffer();
+      const buffer = Buffer.from(arrBuff);
+      return buffer;
     }
 
     throw new Error(

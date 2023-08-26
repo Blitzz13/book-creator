@@ -8,23 +8,26 @@ import { AuthContextProvider } from './context/AuthContext';
 import { RatingServiceContextProvider } from './context/RatingServiceContext';
 import { BookServiceContextProvider } from './context/BookServiceContext';
 import { UserServiceContextProvider } from './context/UserServiceContext';
+import { ChapterServiceContextProvider } from './context/ChapterServiceContext';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 root.render(
   <React.StrictMode>
-    <BookServiceContextProvider>
-      <RatingServiceContextProvider>
-        <AuthContextProvider>
-          <UserServiceContextProvider>
-            <BrowserRouter>
-              <App />
-            </BrowserRouter>
-          </UserServiceContextProvider>
-        </AuthContextProvider>
-      </RatingServiceContextProvider>
-    </BookServiceContextProvider>
+    <ChapterServiceContextProvider>
+      <BookServiceContextProvider>
+        <RatingServiceContextProvider>
+          <AuthContextProvider>
+            <UserServiceContextProvider>
+              <BrowserRouter>
+                <App />
+              </BrowserRouter>
+            </UserServiceContextProvider>
+          </AuthContextProvider>
+        </RatingServiceContextProvider>
+      </BookServiceContextProvider>
+    </ChapterServiceContextProvider>
   </React.StrictMode>
 );
 
