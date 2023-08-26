@@ -17,4 +17,5 @@ export default interface IBookService {
   createBook(data: ICreateBookRequest): Promise<IServiceBook>;
   updateBook(id: string, data: IUpdateBookRequest): Promise<IServiceBook>;
   deleteBook(id: string): Promise<IServiceBook>;
+  download(id: string): Promise<Buffer>;
 }

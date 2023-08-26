@@ -5,12 +5,11 @@ import Editor from "../Editor/Editor";
 import { useEffect, useState } from "react";
 import { generateId } from "../../helpers/helpFunctions";
 import $ from "jquery";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useAuthContext } from "../../hooks/useAuthContext";
 import profilePlaceholder from "../../assets/placeholder-image-portrait.png"
 import Loader from "../Loader/Loader";
 import { useBookService } from "../../hooks/useBookServiceContext";
-import { useUserService } from "../../hooks/useUserServiceContext";
 import StarRating from "../StarRating/StarRating";
 import { useRatingService } from "../../hooks/useRatingServiceContext";
 import { IRating } from "../../interfaces/service/rating/IRating";
@@ -31,18 +30,14 @@ const textAreaId = generateId(7);
 
 export default function Ratings() {
   const bookService = useBookService();
-  const userService = useUserService();
   const ratingService = useRatingService();
   const params = useParams();
-  const navigate = useNavigate();
   const authContext = useAuthContext();
   const [ratings, setRatings] = useState<IRating[]>([]);
   const [myRating, setMyRating] = useState<IRatingObjResponse>();
   const [book, setBook] = useState<IDisplayBook>();
   const [averageRating, setAverageRating] = useState(0);
   const [numberOfRatings, setNumberOfRatings] = useState(0);
-  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
-  const [isConfirmationExiting, setIsConfirmationExiting] = useState(false);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [isAlertExiting, setIsAlertExiting] = useState(false);
   const [showLoader, setShowLoader] = useState(false);
@@ -94,10 +89,12 @@ export default function Ratings() {
 
   useEffect(() => {
     getRatings();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authContext]);
 
   useEffect(() => {
     getRatings();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ratingsFilter]);
 
   function setTextAreaCss() {
