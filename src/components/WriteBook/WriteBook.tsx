@@ -181,8 +181,8 @@ export default function WriteBook(data: IWriteBookData) {
 
   async function deleteChapter(): Promise<void> {
     if (currentChapter && currentChapter.id) {
-      setShowLoader(false);
-
+      setShowLoader(true);
+      setIsConfirmOpen(false);
       const nextChapter = await data.chapterService.deleteChapter({ id: currentChapter.id });
 
       if (nextChapter && params.bookId) {
@@ -197,7 +197,6 @@ export default function WriteBook(data: IWriteBookData) {
       }
     }
 
-    setIsConfirmOpen(false);
     setShowLoader(false);
   }
 
@@ -326,7 +325,7 @@ export default function WriteBook(data: IWriteBookData) {
     }
 
     getChapter();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
 
   useEffect(() => {
@@ -395,6 +394,12 @@ export default function WriteBook(data: IWriteBookData) {
           updateBook: setBook,
           setPreviewOpen: setIsPreviewOpen,
           saveBook: updateBook,
+          setShowLoader: setShowLoader,
+          setChapters: async (chapters: { title: string, content: string }[]) => {
+            // setEditorContent(chapters[6].content);
+            await refreshChapterList();
+            setShowLoader(false);
+          },
           baseChapters: baseChapters,
           currentChapter: currentChapter,
           book: book,
@@ -431,6 +436,13 @@ export default function WriteBook(data: IWriteBookData) {
             areChaptersLoading: showLoader,
             baseChapters: baseChapters,
             currentChapter: currentChapter,
+            setShowLoader: setShowLoader,
+            setChapters: async (chapters: { title: string, content: string }[]) => {
+              // const asd = chapters.filter(x => x.title === "Chapter 1");
+              // setEditorContent(asd[0].content);
+              await refreshChapterList();
+              setShowLoader(false);
+            },
             book: book,
           }
         } />

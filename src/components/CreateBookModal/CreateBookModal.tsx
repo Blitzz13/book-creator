@@ -56,7 +56,7 @@ export default function CreateBookModal(data: ICreateBookModalData) {
 
     async function handleBookCreateClick(event: FormEvent) {
         event.preventDefault();
-
+        data.setOpen(false);
         if (isValidTitle && authContext.user) {
             const book = await data.bookService.createBook({ title, authorId: authContext.user?.id, description });
             navigate(`/write/${book._id}`);

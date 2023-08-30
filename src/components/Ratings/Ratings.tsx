@@ -390,6 +390,7 @@ const TextArea = styled(Editor)`
   flex-flow: column;
   height: 400px;
   width: 100%;
+  max-width: 512px;
   @media only screen and (max-width: 888px) {
     height: 400px;
   }

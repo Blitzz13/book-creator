@@ -2,12 +2,12 @@ import styled, { css } from "styled-components";
 import { Colors } from "../../Colors";
 import { Settings, BookOpen } from "react-feather";
 import BookSettingsSection from "../BookSettingsSection/BookSettingsSection";
-import { generateId, isEqual } from "../../helpers/helpFunctions";
+import { generateId } from "../../helpers/helpFunctions";
 import Button from "../Button/Button";
 import IBookSidebarData from "../../interfaces/IBookSidebarData";
 import { useNavigate, useParams } from "react-router-dom";
 import Input from "../Input/Input";
-import { useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { ChapterState } from "../../enums/ChapterState";
 import { BookState } from "../../enums/BookState";
 import ChaptersContent from "./ChaptersContent";
@@ -15,6 +15,9 @@ import NativeDropdown from "../NativeDropdown/NativeDropdown";
 import { BookGenre } from "../../enums/Genre";
 import { IoMdClose } from "react-icons/io";
 import ImageUploader from "../ImageUploader/ImageUploader";
+import FileInput from "../FileInput/FileInput";
+import { useBookService } from "../../hooks/useBookServiceContext";
+import { Buffer } from "buffer";
 const buttonAreaId = generateId(7);
 const titleId = generateId(7);
 
@@ -43,8 +46,10 @@ export default function SidebarContent({ data, ...delegated }: IBookSidebarData)
   const chapterSettingsId = generateId(7);
   const params = useParams();
   const navigate = useNavigate();
+  const bookService = useBookService();
 
   const [isChapterStateOpen, setIsChapterStateOpen] = useState(false);
+  const [epubBook, setEpubBook] = useState<Buffer>();
   const [isUploading, setIsUploading] = useState(false);
   const [selectedGenres, setSelectedGenres] = useState<BookGenre[]>([]);
 
@@ -69,11 +74,27 @@ export default function SidebarContent({ data, ...delegated }: IBookSidebarData)
   };
 
   useEffect(() => {
-    if (!isEqual(data.book.genres, selectedGenres)) {
-      setSelectedGenres(data.book.genres);
-    }
+    setSelectedGenres(data.book.genres);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data.book.genres]);
+
+  async function readFileAsBuffer(file: File): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (reader.result instanceof ArrayBuffer) {
+          const buffer = Buffer.from(reader.result);
+          resolve(buffer);
+        } else {
+          reject(new Error('Error reading file'));
+        }
+      };
+      reader.onerror = (error) => {
+        reject(error);
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  };
 
   return (
     <Wrapper isFromModal={data.isFromModal} {...delegated}>
@@ -140,6 +161,30 @@ export default function SidebarContent({ data, ...delegated }: IBookSidebarData)
                 </SelectedGenre>
               ))}
             </SelecteGenreWrapper>
+            <SettingsText>
+              <NoWrapText>
+                Select EPUB:
+              </NoWrapText>
+              <FileInput data={{
+                onChange: async (event: ChangeEvent<HTMLInputElement>) => {
+                  const selectedFile = event.target.files?.[0];
+                  if (selectedFile) {
+                    const buffer = await readFileAsBuffer(selectedFile);
+                    setEpubBook(buffer);
+                  }
+                },
+                accept: ".epub",
+              }} />
+            </SettingsText>
+            <SettingsTextButton onClick={async () => {
+              if (params.bookId && epubBook) {
+                data.setShowLoader(true);
+                const chapters = await bookService.upload(params.bookId, epubBook);
+                if (data.setChapters) {
+                  data.setChapters(chapters);
+                }
+              }
+            }}>Upload Chapters</SettingsTextButton>
             <SettingsTextButton onClick={() => data.showEditDescription(true)}>Edit Description</SettingsTextButton>
             <SettingsTextButton onClick={() => data.onInviteListClick(false)}>Invite to book</SettingsTextButton>
             <InlineWrapper>
@@ -157,7 +202,7 @@ export default function SidebarContent({ data, ...delegated }: IBookSidebarData)
               }}>Save</SettingsTextButton>
               <SettingsTextButton onClick={() => data.deleteConfirmation(false)}>Delete</SettingsTextButton>
             </InlineWrapper>
-           {isUploading && <Warning>Images are still uploading, please wait.</Warning>}
+            {isUploading && <Warning>Images are still uploading, please wait.</Warning>}
           </SettingsWrapper>
           <SectionTitle data={{ title: "Chapter Settings", settingId: chapterSettingsId }}></SectionTitle>
           <SettingsWrapper id={chapterSettingsId}>

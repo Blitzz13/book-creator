@@ -39,7 +39,7 @@ export default function BookList({ data, ...delegated }: IBookListData) {
     useEffect(() => {
         getCurrentUserRatedBooks();
         getAverageRatedBooks();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [authContext.user, data.books, ratingContext])
 
     async function getCurrentUserRatedBooks(): Promise<void> {
@@ -157,7 +157,7 @@ export default function BookList({ data, ...delegated }: IBookListData) {
                     onDescriptionChange: (text: string) => {
                         // setNoteModalData({ ...noteModalData, currentContent: text });
                     },
-                    onSaveClick: () => {},
+                    onSaveClick: () => { },
                 }}>
             </NoteCreationModal>
             <ConfirmationModal data={{
@@ -174,8 +174,9 @@ export default function BookList({ data, ...delegated }: IBookListData) {
                     text: `Are you sure you want to delete "${deleteBookTitle}"?`,
                     modalTitle: "Delete Book",
                     funcToCall: () => {
-                        bookContext.deleteBook(deleteBookId);
                         setIsConfirmModalExiting(true);
+                        bookContext.deleteBook(deleteBookId);
+                        data.books = data.books.filter(x => x._id !== deleteBookId);
                         if (data.onDeleteClick) {
                             data.onDeleteClick(deleteBookId);
                         }

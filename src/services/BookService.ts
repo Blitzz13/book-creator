@@ -91,6 +91,33 @@ export default class BookService extends BaseService implements IBookService {
     );
   }
 
+  public async upload(bookId: string, file: Buffer): Promise<{title: string, content: string}> {
+    const content = {
+      epubBuffer: Array.from(file),
+      bookId: bookId,
+    }
+
+    const response = await fetch(`${this._url}/upload`, {
+      method: "POST",
+      
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${this.user?.token}`
+      },
+      body: JSON.stringify(content)
+    });
+
+    // const json = await response.json();
+
+    if (response.ok) {
+      return response.json();
+    }
+
+    throw new Error(
+      `Retrieving favourite books failed with ${response.statusText}`
+    );
+  }
+
   public async getFavouriteBooks(userId: string): Promise<IServiceBook[]> {
     const response = await fetch(`${this._url}/favourites/${userId}`, {
       method: "GET",

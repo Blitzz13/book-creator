@@ -110,6 +110,7 @@ const TextArea = styled(Editor)`
   display: flex;
   flex-flow: column;
   height: 100%;
+  max-height: 384px;
   margin-left: 30px;
   margin-right: 30px;
 `
