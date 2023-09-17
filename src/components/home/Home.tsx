@@ -12,6 +12,7 @@ import { useAuthContext } from "../../hooks/useAuthContext";
 import IUserService from "../../interfaces/service/user/IUserService";
 import IStartedBookProgressResponse from "../../interfaces/service/user/IStartedBookProgressResponse";
 import { useNavigate } from "react-router-dom";
+import { BookGenre } from "../../enums/Genre";
 
 export default function Home(data: { bookService: IBookService, userService: IUserService }) {
   const bookService = data.bookService;
@@ -21,6 +22,8 @@ export default function Home(data: { bookService: IBookService, userService: IUs
   const navigate = useNavigate();
   const [favouriteBookIds, setfavouriteBookIds] = useState<string[]>([]);
   const [books, setBooks] = useState([] as IServiceBook[]);
+  const [fantasy, setFantasy] = useState([] as IServiceBook[]);
+  const [scifi, setScifi] = useState([] as IServiceBook[]);
   const [isBookPreveiewShown, setBookPreviewShown] = useState(false);
   const [isBookPreveiewExiting, setIsBookPreveiewExiting] = useState(false);
   const [toggle, setToggle] = useState(false);
@@ -45,6 +48,14 @@ export default function Home(data: { bookService: IBookService, userService: IUs
 
     bookService.searchBooks({ skip: 0, take: 10 }).then((data: IServiceBook[]) => {
       setBooks(data);
+    });
+
+    bookService.searchBooks({ skip: 0, take: 10, genre: BookGenre.Fantasy }).then((data: IServiceBook[]) => {
+      setFantasy(data);
+    });
+
+    bookService.searchBooks({ skip: 0, take: 10, genre: BookGenre.ScienceFiction }).then((data: IServiceBook[]) => {
+      setScifi(data);
     });
 
     loadStartedBooks();
@@ -114,6 +125,34 @@ export default function Home(data: { bookService: IBookService, userService: IUs
             },
             favouriteBooksIds: favouriteBookIds,
             books: books,
+            verticalScroll: true,
+            onClick: onBookClick,
+          }} />
+        </GridWrapper>
+      </Wrapper>
+      <Wrapper>
+        <BiggerHeader>Fantasy</BiggerHeader>
+        <GridWrapper length={5}>
+          <BookList data={{
+            addToFavourites: (bookId: string) => {
+              addToFavourites(bookId);
+            },
+            favouriteBooksIds: favouriteBookIds,
+            books: fantasy,
+            verticalScroll: true,
+            onClick: onBookClick,
+          }} />
+        </GridWrapper>
+      </Wrapper>
+      <Wrapper>
+        <BiggerHeader>Science Fiction</BiggerHeader>
+        <GridWrapper length={5}>
+          <BookList data={{
+            addToFavourites: (bookId: string) => {
+              addToFavourites(bookId);
+            },
+            favouriteBooksIds: favouriteBookIds,
+            books: scifi,
             verticalScroll: true,
             onClick: onBookClick,
           }} />

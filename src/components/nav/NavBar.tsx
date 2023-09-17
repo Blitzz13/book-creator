@@ -74,7 +74,7 @@ export default function NavBar(data: { userService: IUserService, bookService: I
   return (
     <Wrapper id="nav-bar">
       <NavLinkWrapper>
-        <Logo to="/">LOGO</Logo>
+        <Logo to="/">Tale Forge</Logo>
         <NavLink to="/search">Browse</NavLink>
       </NavLinkWrapper>
       <NavButtonWrapper>
@@ -202,7 +202,7 @@ const Logo = styled(NavLink)`
     display: inline;
   }
 
-  @media only screen and (max-width: 630px  ) {
+  @media only screen and (max-width: 664px) {
     display: none;
   }
 `;

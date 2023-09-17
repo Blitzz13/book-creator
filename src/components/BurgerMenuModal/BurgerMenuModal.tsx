@@ -66,7 +66,7 @@ export default function BurgerMenuModal(data: IBurgerMenuModalData) {
             )}
             isOpen={data.isOpen}>
             <Header>
-                <Logo onClick={startExitAnimation} to="/">LOGO</Logo>
+                <Logo onClick={startExitAnimation} to="/">Tale Forge</Logo>
                 <CloseIcon onClick={startExitAnimation} />
             </Header>
             <Wrapper>
@@ -126,4 +126,5 @@ const NavLink = styled(Link)`
 const Logo = styled(NavLink)`
   font-size: ${56 / 16}rem;
   margin-left: 24px;
+  text-align: center;
 `

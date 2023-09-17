@@ -193,7 +193,6 @@ export default function WriteBook(data: IWriteBookData) {
         await refreshChapterList();
       } else {
         navigate(`/write/${params.bookId}`);
-        window.location.reload();
       }
     }
 
@@ -258,32 +257,28 @@ export default function WriteBook(data: IWriteBookData) {
   useEffect(() => {
     resizeContentTextarea();
     const fetchData = async () => {
-      try {
-        if (params.bookId) {
-          setShowLoader(true);
+      if (params.bookId) {
+        setShowLoader(true);
 
-          const book: IServiceBook = await data.bookService.fetchBook(params.bookId);
-          await refreshChapterList();
+        const book: IServiceBook = await data.bookService.fetchBook(params.bookId);
+        await refreshChapterList();
 
-          const chapterId = searchParams.get("chapterId");
-          if (chapterId) {
-            const chapter: IServiceChapter = await data.chapterService.fetchChapter(chapterId);
+        const chapterId = searchParams.get("chapterId");
+        if (chapterId) {
+          const chapter: IServiceChapter = await data.chapterService.fetchChapter(chapterId);
 
-            setCurrentChapter(ServiceToChapter(chapter));
-            setEditorContent(chapter.content);
-          }
-
-          const displayBook = ServiceToBook(book);
-          setInitialBookDescription(book.description);
-          setBook(displayBook);
-          setShowLoader(false);
+          setCurrentChapter(ServiceToChapter(chapter));
+          setEditorContent(chapter.content);
         }
-      } catch (error) {
-        navigate("*");
+
+        const displayBook = ServiceToBook(book);
+        setInitialBookDescription(book.description);
+        setBook(displayBook);
+        setShowLoader(false);
       }
     }
-
-    fetchData().catch();
+    
+    fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data.bookService, data.chapterService, navigate, params.bookId]);
 
