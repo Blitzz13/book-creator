@@ -142,7 +142,7 @@ export default function EditDescriptionModal({ data, noteData, ...delegated }: I
                 }
             </Wrapper>
             {(noteData.userId && noteData.displayName) && <Credits>
-                <CreditsText>Written by <CreditsLink to={`profile/${noteData.userId}`}>{noteData.displayName}</CreditsLink></CreditsText>
+                <CreditsText>Written by <CreditsLink to={`/profile/${noteData.userId}`}>{noteData.displayName}</CreditsLink></CreditsText>
             </Credits>}
         </EditDesc>
     );
@@ -226,7 +226,7 @@ color: ${Colors.BUTTON_TEXT};
 `;
 
 const CreditsLink = styled(Link)`
-color: ${Colors.ACCENT};
+color: white;
 font-weight: bold;
 `
 

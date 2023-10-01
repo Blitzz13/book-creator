@@ -21,7 +21,9 @@ export default interface IBookSidebarData extends IHtmlElement {
     setOrderId: Function;
     showEditDescription: Function;
     onInviteListClick: Function;
+    setShowLoader: Function;
     onChapterClick?: Function;
+    setChapters?: Function;
     currentChapter?: IDisplayChapter;
     areChaptersLoading?: boolean;
   };

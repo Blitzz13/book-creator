@@ -181,8 +181,8 @@ export default function WriteBook(data: IWriteBookData) {
 
   async function deleteChapter(): Promise<void> {
     if (currentChapter && currentChapter.id) {
-      setShowLoader(false);
-
+      setShowLoader(true);
+      setIsConfirmOpen(false);
       const nextChapter = await data.chapterService.deleteChapter({ id: currentChapter.id });
 
       if (nextChapter && params.bookId) {
@@ -193,11 +193,9 @@ export default function WriteBook(data: IWriteBookData) {
         await refreshChapterList();
       } else {
         navigate(`/write/${params.bookId}`);
-        window.location.reload();
       }
     }
 
-    setIsConfirmOpen(false);
     setShowLoader(false);
   }
 
@@ -259,32 +257,28 @@ export default function WriteBook(data: IWriteBookData) {
   useEffect(() => {
     resizeContentTextarea();
     const fetchData = async () => {
-      try {
-        if (params.bookId) {
-          setShowLoader(true);
+      if (params.bookId) {
+        setShowLoader(true);
 
-          const book: IServiceBook = await data.bookService.fetchBook(params.bookId);
-          await refreshChapterList();
+        const book: IServiceBook = await data.bookService.fetchBook(params.bookId);
+        await refreshChapterList();
 
-          const chapterId = searchParams.get("chapterId");
-          if (chapterId) {
-            const chapter: IServiceChapter = await data.chapterService.fetchChapter(chapterId);
+        const chapterId = searchParams.get("chapterId");
+        if (chapterId) {
+          const chapter: IServiceChapter = await data.chapterService.fetchChapter(chapterId);
 
-            setCurrentChapter(ServiceToChapter(chapter));
-            setEditorContent(chapter.content);
-          }
-
-          const displayBook = ServiceToBook(book);
-          setInitialBookDescription(book.description);
-          setBook(displayBook);
-          setShowLoader(false);
+          setCurrentChapter(ServiceToChapter(chapter));
+          setEditorContent(chapter.content);
         }
-      } catch (error) {
-        navigate("*");
+
+        const displayBook = ServiceToBook(book);
+        setInitialBookDescription(book.description);
+        setBook(displayBook);
+        setShowLoader(false);
       }
     }
-
-    fetchData().catch();
+    
+    fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data.bookService, data.chapterService, navigate, params.bookId]);
 
@@ -326,7 +320,7 @@ export default function WriteBook(data: IWriteBookData) {
     }
 
     getChapter();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
 
   useEffect(() => {
@@ -395,6 +389,12 @@ export default function WriteBook(data: IWriteBookData) {
           updateBook: setBook,
           setPreviewOpen: setIsPreviewOpen,
           saveBook: updateBook,
+          setShowLoader: setShowLoader,
+          setChapters: async (chapters: { title: string, content: string }[]) => {
+            // setEditorContent(chapters[6].content);
+            await refreshChapterList();
+            setShowLoader(false);
+          },
           baseChapters: baseChapters,
           currentChapter: currentChapter,
           book: book,
@@ -431,6 +431,13 @@ export default function WriteBook(data: IWriteBookData) {
             areChaptersLoading: showLoader,
             baseChapters: baseChapters,
             currentChapter: currentChapter,
+            setShowLoader: setShowLoader,
+            setChapters: async (chapters: { title: string, content: string }[]) => {
+              // const asd = chapters.filter(x => x.title === "Chapter 1");
+              // setEditorContent(asd[0].content);
+              await refreshChapterList();
+              setShowLoader(false);
+            },
             book: book,
           }
         } />

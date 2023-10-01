@@ -400,14 +400,6 @@ export default function Profile(data: { bookService: IBookService, userService: 
             books: isFavourteOpen ? favouriteBooks : authoredBooks,
             noBooksMessage: noBooksMessage,
             onClick: () => { },
-            onDeleteClick: (bookId: string) => {
-              const bookTitle = authoredBooks.find(x => x._id === bookId)?.title;
-              setConfirmationText(`Are sure you want to delete "${bookTitle}"`);
-              setConfirmationTitle(`Delete Book`);
-              setIsConfirmationOpen(true);
-              setBookDeleteId(bookId);
-              setCallDeleteBook(true);
-            },
             scaleBook: true,
             mediaMaxWidth: 945
           }} />}
