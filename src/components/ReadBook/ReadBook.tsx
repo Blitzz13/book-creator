@@ -456,7 +456,7 @@ export default function ReadBook(data: {
     if (currentChapterId) {
       loadChapter(currentChapterId);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentChapterId])
 
   useEffect(() => {
@@ -692,6 +692,10 @@ export default function ReadBook(data: {
           },
           onNoteEditClick: () => {
             setNoteModalOpen(true);
+            const noteId = searchParams.get("noteId");
+            if (noteId) {
+              setCurrentNote(noteId);
+            }
             setNoteModalData({ ...noteModalData, mode: NoteModalMode.Editing });
           },
           onNoteDeleteClick: () => {

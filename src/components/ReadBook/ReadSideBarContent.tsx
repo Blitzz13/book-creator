@@ -47,7 +47,7 @@ export default function ReadSideBarContent({ data, ...delegated }: IReadSidebarD
         }} />
       }
       {authContext.user &&
-        <AddNoteIcon onClick={() => {
+        <AddNoteIcon size={40} onClick={() => {
           if (data.onNoteCreateClick) {
             data.onNoteCreateClick();
           }
@@ -57,7 +57,6 @@ export default function ReadSideBarContent({ data, ...delegated }: IReadSidebarD
 }
 
 const AddNoteIcon = styled(MdNoteAdd)`
-  font-size: 260%;
   color: ${Colors.ACCENT};
   margin-left: auto;
   cursor: pointer;

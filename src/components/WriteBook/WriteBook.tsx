@@ -212,6 +212,7 @@ export default function WriteBook(data: IWriteBookData) {
         } else {
           if (validator.isEmpty(currentChapter.content) || validator.isEmpty(currentChapter.header)) {
             setIsAlertOpen(true);
+            setShowLoader(false);
             return;
           }
 

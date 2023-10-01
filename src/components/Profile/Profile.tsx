@@ -51,6 +51,7 @@ export default function Profile(data: { bookService: IBookService, userService: 
   const [startedBooks, setStartedBooks] = useState<IStartedBookProgressResponse[]>([]);
   const [progressBooks, setProgressBooks] = useState<IStartedBookProgressResponse[]>([]);
   const [callDeleteBook, setCallDeleteBook] = useState<boolean>();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [bookDeleteId, setBookDeleteId] = useState("");
   const [noBooksMessage, setNoBooksMessage] = useState<string>();
   const [profileModel, setProfileModel] = useState<IProfileModel>({
